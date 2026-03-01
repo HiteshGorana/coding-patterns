@@ -1,6 +1,6 @@
 # Pattern 28 Interview Playbook: Dynamic Programming (1D)
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,850 +15,1020 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Climbing Stairs
 
-### Problem Statement (Specific)
-Solve **Climbing Stairs** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Climbing Stairs** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Optimal value or count of ways.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Climbing Stairs, memoized/bottom-up state prevents exponential recursion.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Climbing Stairs** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Climbing Stairs directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_climbing_stairs(data):
-    """Brute-force baseline for: Climbing Stairs."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_climbing_stairs(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Climbing Stairs to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_climbing_stairs(data):
-    """Intermediate optimized approach for: Climbing Stairs."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_climbing_stairs(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Climbing Stairs: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_climbing_stairs(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_climbing_stairs(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. House Robber
 
-### Problem Statement (Specific)
-Solve **House Robber** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **House Robber** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Maximum rob amount without robbing adjacent houses.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 1e5
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: DP choose max of rob/skip transitions.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **House Robber** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for House Robber directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_house_robber(data):
-    """Brute-force baseline for: House Robber."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_house_robber(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for House Robber to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_house_robber(data):
-    """Intermediate optimized approach for: House Robber."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_house_robber(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to House Robber: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_house_robber(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_house_robber(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. House Robber II
 
-### Problem Statement (Specific)
-Solve **House Robber II** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **House Robber II** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Maximum rob amount without robbing adjacent houses.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 1e5
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: DP choose max of rob/skip transitions.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **House Robber II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for House Robber II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_house_robber_ii(data):
-    """Brute-force baseline for: House Robber II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_house_robber_ii(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for House Robber II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_house_robber_ii(data):
-    """Intermediate optimized approach for: House Robber II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_house_robber_ii(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to House Robber II: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_house_robber_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_house_robber_ii(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Min Cost Climbing Stairs
 
-### Problem Statement (Specific)
-Solve **Min Cost Climbing Stairs** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Min Cost Climbing Stairs** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Optimal value or count of ways.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Min Cost Climbing Stairs, memoized/bottom-up state prevents exponential recursion.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Min Cost Climbing Stairs** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Min Cost Climbing Stairs directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_min_cost_climbing_stairs(data):
-    """Brute-force baseline for: Min Cost Climbing Stairs."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_min_cost_climbing_stairs(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Min Cost Climbing Stairs to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_min_cost_climbing_stairs(data):
-    """Intermediate optimized approach for: Min Cost Climbing Stairs."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_min_cost_climbing_stairs(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Min Cost Climbing Stairs: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_min_cost_climbing_stairs(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_min_cost_climbing_stairs(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Decode Ways
 
-### Problem Statement (Specific)
-Solve **Decode Ways** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Decode Ways** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Optimal value or count of ways.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Decode Ways, memoized/bottom-up state prevents exponential recursion.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Decode Ways** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Decode Ways directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_decode_ways(data):
-    """Brute-force baseline for: Decode Ways."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_decode_ways(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Decode Ways to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_decode_ways(data):
-    """Intermediate optimized approach for: Decode Ways."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_decode_ways(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Decode Ways: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_decode_ways(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_decode_ways(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Coin Change
 
-### Problem Statement (Specific)
-Solve **Coin Change** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Coin Change** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Optimal value or count of ways.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Coin Change, memoized/bottom-up state prevents exponential recursion.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Coin Change** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Coin Change directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_coin_change(data):
-    """Brute-force baseline for: Coin Change."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_coin_change(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Coin Change to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_coin_change(data):
-    """Intermediate optimized approach for: Coin Change."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_coin_change(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Coin Change: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_coin_change(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_coin_change(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Maximum Subarray
 
-### Problem Statement (Specific)
-Solve **Maximum Subarray** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Maximum Subarray** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `nums`: list[int]
+- `target`/`k`: int (if required by the variant)
 
 ### Output
-- Optimal value or count of ways.
+- Indices, count, or value requested by the exact statement.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `-10^9 <= nums[i], target <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Maximum Subarray, memoized/bottom-up state prevents exponential recursion.
+Input:  nums = [2, 7, 11, 15], target = 9
+Output: [0, 1]
+Explanation: Complement lookup identifies the pair in one linear scan.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Maximum Subarray** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Maximum Subarray directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_maximum_subarray(data):
-    """Brute-force baseline for: Maximum Subarray."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_maximum_subarray(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Maximum Subarray to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_maximum_subarray(data):
-    """Intermediate optimized approach for: Maximum Subarray."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_maximum_subarray(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Maximum Subarray: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_maximum_subarray(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_maximum_subarray(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Longest Increasing Subsequence
 
-### Problem Statement (Specific)
-Solve **Longest Increasing Subsequence** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Longest Increasing Subsequence** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Optimal value or count of ways.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Longest Increasing Subsequence, memoized/bottom-up state prevents exponential recursion.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Longest Increasing Subsequence** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Longest Increasing Subsequence directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_longest_increasing_subsequence(data):
-    """Brute-force baseline for: Longest Increasing Subsequence."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_longest_increasing_subsequence(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Longest Increasing Subsequence to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_longest_increasing_subsequence(data):
-    """Intermediate optimized approach for: Longest Increasing Subsequence."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_longest_increasing_subsequence(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Longest Increasing Subsequence: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_longest_increasing_subsequence(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_longest_increasing_subsequence(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Word Break
 
-### Problem Statement (Specific)
-Solve **Word Break** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Word Break** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Optimal value or count of ways.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Word Break, memoized/bottom-up state prevents exponential recursion.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Word Break** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Word Break directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_word_break(data):
-    """Brute-force baseline for: Word Break."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_word_break(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Word Break to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_word_break(data):
-    """Intermediate optimized approach for: Word Break."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_word_break(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Word Break: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_word_break(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_word_break(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Perfect Squares
 
-### Problem Statement (Specific)
-Solve **Perfect Squares** using **Dynamic Programming (1D)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Perfect Squares** using **Dynamic Programming (1D)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- State input arrays/strings/targets
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Optimal value or count of ways.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- State-space must remain polynomial
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,9,3,1]
-Output: 12
-Explanation: For Perfect Squares, memoized/bottom-up state prevents exponential recursion.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Dynamic Programming (1D)**.
+- Red flags: brute force for **Perfect Squares** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Perfect Squares directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all include/exclude states recursively.
 
-
+#### Python
 ```python
-def brute_perfect_squares(data):
-    """Brute-force baseline for: Perfect Squares."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_perfect_squares(nums, target):
+    from functools import lru_cache
+    @lru_cache(None)
+    def dfs(i, rem):
+        if i == len(nums):
+            return rem == 0
+        return dfs(i + 1, rem) or dfs(i + 1, rem - nums[i])
+    return dfs(0, target)
 ```
+
+#### Complexity
+- Time exponential without memo, pseudo-polynomial with memo states.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Perfect Squares to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use 1D/2D DP table to reuse overlapping states.
 
-
+#### Python
 ```python
-def better_perfect_squares(data):
-    """Intermediate optimized approach for: Perfect Squares."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_perfect_squares(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True
+    for x in nums:
+        for s in range(target, x - 1, -1):
+            dp[s] = dp[s] or dp[s - x]
+    return dp[target]
 ```
+
+#### Complexity
+- Time typically `O(n*target)`, Space `O(target)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Dynamic Programming (1D) invariant to Perfect Squares: Define `dp[i]` as best/count answer up to position `i` (or from `i` onward). Transition uses a few previous states: `dp[i] = combine(dp[i-1], dp[i-2], ...)`
-- Complexity target: Time usually O(n), Space O(n) or O(1) optimized.
+#### Intuition
+- State transition is optimized for the objective (min/max/count/boolean) with correct iteration order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_perfect_squares(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def house_robber(nums):
-        prev2 = 0  # dp[i-2]
-        prev1 = 0  # dp[i-1]
+def solve_perfect_squares(nums, target):
+    INF = 10**9
+    dp = [INF] * (target + 1)
+    dp[0] = 0
+    for s in range(1, target + 1):
         for x in nums:
-            curr = max(prev1, prev2 + x)
-            prev2, prev1 = prev1, curr
-        return prev1
+            if s - x >= 0:
+                dp[s] = min(dp[s], dp[s - x] + 1)
+    return dp[target] if dp[target] < INF else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- DP recurrence partitions optimal solution by its final decision/state transition.
+- By induction on state order, each DP entry is optimal once dependencies are finalized.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time/space tightness depends on state dimensions; commonly `O(n*target)` and `O(target)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

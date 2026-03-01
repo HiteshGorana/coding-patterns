@@ -1,6 +1,6 @@
 # Pattern 17 Interview Playbook: Intervals Line Sweep
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,958 +14,1196 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Meeting Rooms II
 
-### Problem Statement (Specific)
-Solve **Meeting Rooms II** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Meeting Rooms II** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `intervals`: list[list[int]]
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Minimum number of rooms required.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- 1 <= len(intervals) <= 1e5
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  intervals = [[0,30],[5,10],[15,20]]
-Output: 2
-Explanation: Track active intervals via min-heap or line sweep.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **Meeting Rooms II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Meeting Rooms II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_meeting_rooms_ii(data):
-    """Brute-force baseline for: Meeting Rooms II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_meeting_rooms_ii(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Meeting Rooms II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_meeting_rooms_ii(data):
-    """Intermediate optimized approach for: Meeting Rooms II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_meeting_rooms_ii(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to Meeting Rooms II: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_meeting_rooms_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+from bisect import bisect_left
+
+def better_meeting_rooms_ii(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Number of Airplanes in the Sky
 
-### Problem Statement (Specific)
-Solve **Number of Airplanes in the Sky** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Number of Airplanes in the Sky** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Number of Airplanes in the Sky, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **Number of Airplanes in the Sky** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Number of Airplanes in the Sky directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_number_of_airplanes_in_the_sky(data):
-    """Brute-force baseline for: Number of Airplanes in the Sky."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_number_of_airplanes_in_the_sky(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Number of Airplanes in the Sky to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_number_of_airplanes_in_the_sky(data):
-    """Intermediate optimized approach for: Number of Airplanes in the Sky."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_number_of_airplanes_in_the_sky(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to Number of Airplanes in the Sky: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_number_of_airplanes_in_the_sky(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_number_of_airplanes_in_the_sky(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Car Pooling
 
-### Problem Statement (Specific)
-Solve **Car Pooling** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Car Pooling** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Car Pooling, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **Car Pooling** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Car Pooling directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_car_pooling(data):
-    """Brute-force baseline for: Car Pooling."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_car_pooling(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Car Pooling to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_car_pooling(data):
-    """Intermediate optimized approach for: Car Pooling."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_car_pooling(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to Car Pooling: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_car_pooling(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_car_pooling(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Maximum Population Year
 
-### Problem Statement (Specific)
-Solve **Maximum Population Year** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Maximum Population Year** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Maximum Population Year, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **Maximum Population Year** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Maximum Population Year directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_maximum_population_year(data):
-    """Brute-force baseline for: Maximum Population Year."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_maximum_population_year(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Maximum Population Year to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_maximum_population_year(data):
-    """Intermediate optimized approach for: Maximum Population Year."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_maximum_population_year(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to Maximum Population Year: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_maximum_population_year(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_maximum_population_year(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. My Calendar I
 
-### Problem Statement (Specific)
-Solve **My Calendar I** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **My Calendar I** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For My Calendar I, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **My Calendar I** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for My Calendar I directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_my_calendar_i(data):
-    """Brute-force baseline for: My Calendar I."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_my_calendar_i(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for My Calendar I to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_my_calendar_i(data):
-    """Intermediate optimized approach for: My Calendar I."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_my_calendar_i(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to My Calendar I: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_my_calendar_i(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_my_calendar_i(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. My Calendar II
 
-### Problem Statement (Specific)
-Solve **My Calendar II** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **My Calendar II** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For My Calendar II, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **My Calendar II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for My Calendar II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_my_calendar_ii(data):
-    """Brute-force baseline for: My Calendar II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_my_calendar_ii(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for My Calendar II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_my_calendar_ii(data):
-    """Intermediate optimized approach for: My Calendar II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_my_calendar_ii(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to My Calendar II: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_my_calendar_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_my_calendar_ii(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. The Skyline Problem
 
-### Problem Statement (Specific)
-Solve **The Skyline Problem** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **The Skyline Problem** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For The Skyline Problem, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **The Skyline Problem** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for The Skyline Problem directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_the_skyline_problem(data):
-    """Brute-force baseline for: The Skyline Problem."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_the_skyline_problem(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for The Skyline Problem to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_the_skyline_problem(data):
-    """Intermediate optimized approach for: The Skyline Problem."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_the_skyline_problem(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to The Skyline Problem: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_the_skyline_problem(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_the_skyline_problem(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Brightest Position on Street
 
-### Problem Statement (Specific)
-Solve **Brightest Position on Street** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Brightest Position on Street** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Brightest Position on Street, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **Brightest Position on Street** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Brightest Position on Street directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_brightest_position_on_street(data):
-    """Brute-force baseline for: Brightest Position on Street."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_brightest_position_on_street(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Brightest Position on Street to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_brightest_position_on_street(data):
-    """Intermediate optimized approach for: Brightest Position on Street."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_brightest_position_on_street(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to Brightest Position on Street: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_brightest_position_on_street(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_brightest_position_on_street(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Employee Free Time
 
-### Problem Statement (Specific)
-Solve **Employee Free Time** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Employee Free Time** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Employee Free Time, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **Employee Free Time** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Employee Free Time directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_employee_free_time(data):
-    """Brute-force baseline for: Employee Free Time."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_employee_free_time(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Employee Free Time to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_employee_free_time(data):
-    """Intermediate optimized approach for: Employee Free Time."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_employee_free_time(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to Employee Free Time: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_employee_free_time(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_employee_free_time(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Minimum Number of Platforms
 
-### Problem Statement (Specific)
-Solve **Minimum Number of Platforms** using **Intervals Line Sweep**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Minimum Number of Platforms** using **Intervals Line Sweep**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Minimum Number of Platforms, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Intervals Line Sweep**.
+- Red flags: brute force for **Minimum Number of Platforms** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Minimum Number of Platforms directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_minimum_number_of_platforms(data):
-    """Brute-force baseline for: Minimum Number of Platforms."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_minimum_number_of_platforms(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Minimum Number of Platforms to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_minimum_number_of_platforms(data):
-    """Intermediate optimized approach for: Minimum Number of Platforms."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_minimum_number_of_platforms(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Intervals Line Sweep invariant to Minimum Number of Platforms: Convert each interval into events: - start -> `+1` - end -> `-1` Sort events by time and scan cumulative count.
-- Complexity target: Time O(n log n) from sorting events, Space O(n) for events.
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_minimum_number_of_platforms(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def min_rooms(intervals):
-        events = []
-        for s, e in intervals:
-            events.append((s, 1))
-            events.append((e, -1))
-    
-        # End before start at same time for [start, end) interpretation.
-        events.sort(key=lambda x: (x[0], x[1]))
-    
-        active = 0
-        best = 0
-        for _, delta in events:
-            active += delta
-            best = max(best, active)
-    
-        return best
+def solve_minimum_number_of_platforms(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

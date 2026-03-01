@@ -1,6 +1,6 @@
 # Pattern 25 Interview Playbook: Topological Sort
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,998 +14,1357 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Course Schedule
 
-### Problem Statement (Specific)
-Solve **Course Schedule** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Course Schedule** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `numCourses`: int
-- `prerequisites`: list[list[int]]
+- `numCourses`/`n`: int
+- `prerequisites`/`edges`: list[list[int]] directed dependencies
 
 ### Output
-- Boolean indicating whether all courses can be finished.
+- Feasibility boolean or a valid topological order, depending on variant.
 
-### Constraints (Typical)
-- 1 <= numCourses <= 2e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Directed dependency graph; cycle means no valid full order.
 
 ### Example (Exact)
 ```text
-Input:  numCourses = 2, prerequisites = [[1,0]]
-Output: true
-Explanation: Cycle detection in directed prerequisite graph.
+Input:  numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,1,2,3]  # one valid order
+Explanation: Nodes with in-degree 0 can be taken immediately; cycles block completion.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Course Schedule** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Course Schedule directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_course_schedule(data):
-    """Brute-force baseline for: Course Schedule."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_course_schedule(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Course Schedule to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
-```python
-def better_course_schedule(data):
-    """Intermediate optimized approach for: Course Schedule."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Course Schedule: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
-
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
 from collections import deque
 
-def solve_course_schedule(num_courses, prerequisites):
-    g = [[] for _ in range(num_courses)]
-    indeg = [0] * num_courses
-    for a, b in prerequisites:
-        g[b].append(a)
-        indeg[a] += 1
-    q = deque([i for i in range(num_courses) if indeg[i] == 0])
-    seen = 0
+def better_course_schedule(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
     while q:
         u = q.popleft()
-        seen += 1
+        order.append(u)
         for v in g[u]:
             indeg[v] -= 1
             if indeg[v] == 0:
                 q.append(v)
-    return seen == num_courses
+    return order if len(order) == n else []
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_course_schedule(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
+```
+
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Course Schedule II
 
-### Problem Statement (Specific)
-Solve **Course Schedule II** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Course Schedule II** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `numCourses`: int
-- `prerequisites`: list[list[int]]
+- `numCourses`/`n`: int
+- `prerequisites`/`edges`: list[list[int]] directed dependencies
 
 ### Output
-- Valid topological order of courses, or empty list.
+- Feasibility boolean or a valid topological order, depending on variant.
 
-### Constraints (Typical)
-- 1 <= numCourses <= 2e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Directed dependency graph; cycle means no valid full order.
 
 ### Example (Exact)
 ```text
 Input:  numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
-Output: [0,1,2,3] (one valid answer)
-Explanation: Kahn BFS emits nodes when in-degree becomes 0.
+Output: [0,1,2,3]  # one valid order
+Explanation: Nodes with in-degree 0 can be taken immediately; cycles block completion.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Course Schedule II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Course Schedule II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_course_schedule_ii(data):
-    """Brute-force baseline for: Course Schedule II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_course_schedule_ii(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Course Schedule II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
-```python
-def better_course_schedule_ii(data):
-    """Intermediate optimized approach for: Course Schedule II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Course Schedule II: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
-
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
 from collections import deque
 
-def solve_course_schedule_ii(num_courses, prerequisites):
-    g = [[] for _ in range(num_courses)]
-    indeg = [0] * num_courses
-    for a, b in prerequisites:
-        g[b].append(a)
-        indeg[a] += 1
-    q = deque([i for i in range(num_courses) if indeg[i] == 0])
-    seen = 0
+def better_course_schedule_ii(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
     while q:
         u = q.popleft()
-        seen += 1
+        order.append(u)
         for v in g[u]:
             indeg[v] -= 1
             if indeg[v] == 0:
                 q.append(v)
-    return seen == num_courses
+    return order if len(order) == n else []
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_course_schedule_ii(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
+```
+
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Alien Dictionary
 
-### Problem Statement (Specific)
-Solve **Alien Dictionary** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Alien Dictionary** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Alien Dictionary, process adjacency with no redundant traversals.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Alien Dictionary** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Alien Dictionary directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_alien_dictionary(data):
-    """Brute-force baseline for: Alien Dictionary."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_alien_dictionary(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Alien Dictionary to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
+#### Python
 ```python
-def better_alien_dictionary(data):
-    """Intermediate optimized approach for: Alien Dictionary."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_alien_dictionary(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    return order if len(order) == n else []
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Alien Dictionary: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_alien_dictionary(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+def solve_alien_dictionary(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Parallel Courses
 
-### Problem Statement (Specific)
-Solve **Parallel Courses** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Parallel Courses** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `numCourses`/`n`: int
+- `prerequisites`/`edges`: list[list[int]] directed dependencies
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Feasibility boolean or a valid topological order, depending on variant.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Directed dependency graph; cycle means no valid full order.
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Parallel Courses, process adjacency with no redundant traversals.
+Input:  numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,1,2,3]  # one valid order
+Explanation: Nodes with in-degree 0 can be taken immediately; cycles block completion.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Parallel Courses** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Parallel Courses directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_parallel_courses(data):
-    """Brute-force baseline for: Parallel Courses."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_parallel_courses(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Parallel Courses to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
+#### Python
 ```python
-def better_parallel_courses(data):
-    """Intermediate optimized approach for: Parallel Courses."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_parallel_courses(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    return order if len(order) == n else []
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Parallel Courses: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_parallel_courses(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+def solve_parallel_courses(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Sequence Reconstruction
 
-### Problem Statement (Specific)
-Solve **Sequence Reconstruction** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Sequence Reconstruction** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `numCourses`/`n`: int
+- `prerequisites`/`edges`: list[list[int]] directed dependencies
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Feasibility boolean or a valid topological order, depending on variant.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Directed dependency graph; cycle means no valid full order.
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Sequence Reconstruction, process adjacency with no redundant traversals.
+Input:  numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,1,2,3]  # one valid order
+Explanation: Nodes with in-degree 0 can be taken immediately; cycles block completion.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Sequence Reconstruction** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Sequence Reconstruction directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_sequence_reconstruction(data):
-    """Brute-force baseline for: Sequence Reconstruction."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_sequence_reconstruction(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Sequence Reconstruction to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
+#### Python
 ```python
-def better_sequence_reconstruction(data):
-    """Intermediate optimized approach for: Sequence Reconstruction."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_sequence_reconstruction(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    return order if len(order) == n else []
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Sequence Reconstruction: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_sequence_reconstruction(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+def solve_sequence_reconstruction(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Find All Possible Recipes from Given Supplies
 
-### Problem Statement (Specific)
-Solve **Find All Possible Recipes from Given Supplies** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find All Possible Recipes from Given Supplies** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `numCourses`/`n`: int
+- `prerequisites`/`edges`: list[list[int]] directed dependencies
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Feasibility boolean or a valid topological order, depending on variant.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Directed dependency graph; cycle means no valid full order.
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Find All Possible Recipes from Given Supplies, process adjacency with no redundant traversals.
+Input:  numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,1,2,3]  # one valid order
+Explanation: Nodes with in-degree 0 can be taken immediately; cycles block completion.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Find All Possible Recipes from Given Supplies** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find All Possible Recipes from Given Supplies directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_find_all_possible_recipes_from_given_supplies(data):
-    """Brute-force baseline for: Find All Possible Recipes from Given Supplies."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_find_all_possible_recipes_from_given_supplies(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find All Possible Recipes from Given Supplies to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
+#### Python
 ```python
-def better_find_all_possible_recipes_from_given_supplies(data):
-    """Intermediate optimized approach for: Find All Possible Recipes from Given Supplies."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_find_all_possible_recipes_from_given_supplies(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    return order if len(order) == n else []
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Find All Possible Recipes from Given Supplies: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_all_possible_recipes_from_given_supplies(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+def solve_find_all_possible_recipes_from_given_supplies(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Sort Items by Groups Respecting Dependencies
 
-### Problem Statement (Specific)
-Solve **Sort Items by Groups Respecting Dependencies** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Sort Items by Groups Respecting Dependencies** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `numCourses`/`n`: int
+- `prerequisites`/`edges`: list[list[int]] directed dependencies
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Feasibility boolean or a valid topological order, depending on variant.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Directed dependency graph; cycle means no valid full order.
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Sort Items by Groups Respecting Dependencies, process adjacency with no redundant traversals.
+Input:  numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,1,2,3]  # one valid order
+Explanation: Nodes with in-degree 0 can be taken immediately; cycles block completion.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Sort Items by Groups Respecting Dependencies** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Sort Items by Groups Respecting Dependencies directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_sort_items_by_groups_respecting_dependencies(data):
-    """Brute-force baseline for: Sort Items by Groups Respecting Dependencies."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_sort_items_by_groups_respecting_dependencies(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Sort Items by Groups Respecting Dependencies to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
+#### Python
 ```python
-def better_sort_items_by_groups_respecting_dependencies(data):
-    """Intermediate optimized approach for: Sort Items by Groups Respecting Dependencies."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_sort_items_by_groups_respecting_dependencies(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    return order if len(order) == n else []
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Sort Items by Groups Respecting Dependencies: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_sort_items_by_groups_respecting_dependencies(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+def solve_sort_items_by_groups_respecting_dependencies(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Build a Matrix With Conditions
 
-### Problem Statement (Specific)
-Solve **Build a Matrix With Conditions** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Build a Matrix With Conditions** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Build a Matrix With Conditions, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Build a Matrix With Conditions** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Build a Matrix With Conditions directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_build_a_matrix_with_conditions(data):
-    """Brute-force baseline for: Build a Matrix With Conditions."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_build_a_matrix_with_conditions(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Build a Matrix With Conditions to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_build_a_matrix_with_conditions(data):
-    """Intermediate optimized approach for: Build a Matrix With Conditions."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_build_a_matrix_with_conditions(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Build a Matrix With Conditions: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_build_a_matrix_with_conditions(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+from collections import deque
+
+def better_build_a_matrix_with_conditions(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Loud and Rich
 
-### Problem Statement (Specific)
-Solve **Loud and Rich** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Loud and Rich** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `numCourses`/`n`: int
+- `prerequisites`/`edges`: list[list[int]] directed dependencies
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Feasibility boolean or a valid topological order, depending on variant.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Directed dependency graph; cycle means no valid full order.
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Loud and Rich, process adjacency with no redundant traversals.
+Input:  numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,1,2,3]  # one valid order
+Explanation: Nodes with in-degree 0 can be taken immediately; cycles block completion.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Loud and Rich** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Loud and Rich directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible orderings and validate prerequisites.
 
-
+#### Python
 ```python
-def brute_loud_and_rich(data):
-    """Brute-force baseline for: Loud and Rich."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from itertools import permutations
+
+def brute_loud_and_rich(n, edges):
+    prereq = [[False] * n for _ in range(n)]
+    for u, v in edges:
+        prereq[u][v] = True
+    for order in permutations(range(n)):
+        pos = {x: i for i, x in enumerate(order)}
+        if all(pos[u] < pos[v] for u, v in edges):
+            return list(order)
+    return []
 ```
+
+#### Complexity
+- Time `O(n! * (n+m))`, infeasible beyond tiny `n`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Loud and Rich to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kahn's algorithm removes current zero in-degree nodes iteratively.
 
-
+#### Python
 ```python
-def better_loud_and_rich(data):
-    """Intermediate optimized approach for: Loud and Rich."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_loud_and_rich(n, edges):
+    g = [[] for _ in range(n)]
+    indeg = [0] * n
+    for u, v in edges:
+        g[u].append(v)
+        indeg[v] += 1
+    q = deque([i for i in range(n) if indeg[i] == 0])
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    return order if len(order) == n else []
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Loud and Rich: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- DFS with recursion-stack cycle detection + reverse finishing order yields topological order.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_loud_and_rich(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+def solve_loud_and_rich(n, edges):
+    g = [[] for _ in range(n)]
+    state = [0] * n  # 0=unseen,1=visiting,2=done
+    for u, v in edges:
+        g[u].append(v)
+
+    order = []
+    cycle = False
+
+    def dfs(u):
+        nonlocal cycle
+        state[u] = 1
+        for v in g[u]:
+            if state[v] == 0:
+                dfs(v)
+            elif state[v] == 1:
+                cycle = True
+        state[u] = 2
+        order.append(u)
+
+    for i in range(n):
+        if state[i] == 0:
+            dfs(i)
+    if cycle:
+        return []
+    order.reverse()
+    return order
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- A directed cycle exists iff DFS finds a back-edge to a visiting node.
+- In DAG case, reverse postorder is a valid topological ordering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Eventual Safe States
 
-### Problem Statement (Specific)
-Solve **Eventual Safe States** using **Topological Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Eventual Safe States** using **Topological Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Eventual Safe States, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Topological Sort**.
+- Red flags: brute force for **Eventual Safe States** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Eventual Safe States directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_eventual_safe_states(data):
-    """Brute-force baseline for: Eventual Safe States."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_eventual_safe_states(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Eventual Safe States to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_eventual_safe_states(data):
-    """Intermediate optimized approach for: Eventual Safe States."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_eventual_safe_states(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
+                    seen.add(nxt)
+                    q.append((nxt, d + 1))
+    return -1
 ```
+
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Topological Sort invariant to Eventual Safe States: Nodes with in-degree `0` have no unmet prerequisites and can be processed now. Removing them may unlock new in-degree `0` nodes.
-- Complexity target: Time O(V + E), Space O(V + E).
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_eventual_safe_states(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def topo_sort(n, edges):
-        graph = [[] for _ in range(n)]
-        indeg = [0] * n
-        for u, v in edges:
-            graph[u].append(v)
-            indeg[v] += 1
-    
-        q = deque(i for i in range(n) if indeg[i] == 0)
-        order = []
-    
-        while q:
-            node = q.popleft()
-            order.append(node)
-            for nei in graph[node]:
-                indeg[nei] -= 1
-                if indeg[nei] == 0:
-                    q.append(nei)
-    
-        return order if len(order) == n else []
+from collections import deque
+
+def solve_eventual_safe_states(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

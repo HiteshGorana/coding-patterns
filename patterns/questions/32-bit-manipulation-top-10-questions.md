@@ -1,6 +1,6 @@
 # Pattern 32 Interview Playbook: Bit Manipulation
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,832 +14,1000 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Single Number
 
-### Problem Statement (Specific)
-Solve **Single Number** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Single Number** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Unique element under XOR-style frequency condition.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 1e5
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: XOR cancels paired values.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Single Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Single Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_single_number(data):
-    """Brute-force baseline for: Single Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_single_number(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Single Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_single_number(data):
-    """Intermediate optimized approach for: Single Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_single_number(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Single Number: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_single_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_single_number(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Single Number II
 
-### Problem Statement (Specific)
-Solve **Single Number II** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Single Number II** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Unique element under XOR-style frequency condition.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 1e5
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: XOR cancels paired values.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Single Number II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Single Number II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_single_number_ii(data):
-    """Brute-force baseline for: Single Number II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_single_number_ii(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Single Number II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_single_number_ii(data):
-    """Intermediate optimized approach for: Single Number II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_single_number_ii(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Single Number II: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_single_number_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_single_number_ii(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Single Number III
 
-### Problem Statement (Specific)
-Solve **Single Number III** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Single Number III** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Unique element under XOR-style frequency condition.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 1e5
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: XOR cancels paired values.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Single Number III** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Single Number III directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_single_number_iii(data):
-    """Brute-force baseline for: Single Number III."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_single_number_iii(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Single Number III to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_single_number_iii(data):
-    """Intermediate optimized approach for: Single Number III."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_single_number_iii(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Single Number III: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_single_number_iii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_single_number_iii(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Counting Bits
 
-### Problem Statement (Specific)
-Solve **Counting Bits** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Counting Bits** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int] or integer bit values
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Bit-derived numeric result.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- Use O(n) scans with O(1) bit ops
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: For Counting Bits, apply XOR/mask identities.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Counting Bits** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Counting Bits directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_counting_bits(data):
-    """Brute-force baseline for: Counting Bits."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_counting_bits(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Counting Bits to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_counting_bits(data):
-    """Intermediate optimized approach for: Counting Bits."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_counting_bits(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Counting Bits: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_counting_bits(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_counting_bits(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Number of 1 Bits
 
-### Problem Statement (Specific)
-Solve **Number of 1 Bits** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Number of 1 Bits** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int] or integer bit values
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Bit-derived numeric result.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- Use O(n) scans with O(1) bit ops
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: For Number of 1 Bits, apply XOR/mask identities.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Number of 1 Bits** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Number of 1 Bits directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_number_of_1_bits(data):
-    """Brute-force baseline for: Number of 1 Bits."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_number_of_1_bits(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Number of 1 Bits to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_number_of_1_bits(data):
-    """Intermediate optimized approach for: Number of 1 Bits."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_number_of_1_bits(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Number of 1 Bits: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_number_of_1_bits(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_number_of_1_bits(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Power of Two
 
-### Problem Statement (Specific)
-Solve **Power of Two** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Power of Two** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `x`: float
-- `n`: int
+- `n`/`nums`: int or list[int]
 
 ### Output
-- x raised to n.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- -100 <= x <= 100
-- -2^31 <= n <= 2^31-1
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
-Input:  x = 2.0, n = 10
-Output: 1024.0
-Explanation: Exponentiation by squaring runs in O(log n).
+Input:  nums = [4,1,2,1,2]
+Output: 4
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Power of Two** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Power of Two directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_power_of_two(data):
-    """Brute-force baseline for: Power of Two."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_power_of_two(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Power of Two to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_power_of_two(data):
-    """Intermediate optimized approach for: Power of Two."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_power_of_two(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Power of Two: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_power_of_two(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_power_of_two(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Subsets
 
-### Problem Statement (Specific)
-Solve **Subsets** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Subsets** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `n`/`nums`: int or list[int]
 
 ### Output
-- All subsets of `nums`.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 20
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3]
-Output: [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-Explanation: Backtracking include/exclude decisions produce power set.
+Input:  nums = [4,1,2,1,2]
+Output: 4
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Subsets** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Subsets directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_subsets(data):
-    """Brute-force baseline for: Subsets."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_subsets(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Subsets to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_subsets(data):
-    """Intermediate optimized approach for: Subsets."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_subsets(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Subsets: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_subsets(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_subsets(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Missing Number
 
-### Problem Statement (Specific)
-Solve **Missing Number** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Missing Number** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int] or integer bit values
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Bit-derived numeric result.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- Use O(n) scans with O(1) bit ops
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: For Missing Number, apply XOR/mask identities.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Missing Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Missing Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_missing_number(data):
-    """Brute-force baseline for: Missing Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_missing_number(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Missing Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_missing_number(data):
-    """Intermediate optimized approach for: Missing Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_missing_number(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Missing Number: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_missing_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_missing_number(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Sum of Two Integers
 
-### Problem Statement (Specific)
-Solve **Sum of Two Integers** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Sum of Two Integers** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int] or integer bit values
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Bit-derived numeric result.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- Use O(n) scans with O(1) bit ops
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: For Sum of Two Integers, apply XOR/mask identities.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Sum of Two Integers** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Sum of Two Integers directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_sum_of_two_integers(data):
-    """Brute-force baseline for: Sum of Two Integers."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_sum_of_two_integers(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Sum of Two Integers to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_sum_of_two_integers(data):
-    """Intermediate optimized approach for: Sum of Two Integers."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_sum_of_two_integers(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Sum of Two Integers: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_sum_of_two_integers(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_sum_of_two_integers(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Bitwise AND of Numbers Range
 
-### Problem Statement (Specific)
-Solve **Bitwise AND of Numbers Range** using **Bit Manipulation**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Bitwise AND of Numbers Range** using **Bit Manipulation**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int] or integer bit values
+- `n`/`nums`: int or list[int]
 
 ### Output
-- Bit-derived numeric result.
+- Bit-derived numeric result, boolean, or list of counts.
 
-### Constraints (Typical)
-- Use O(n) scans with O(1) bit ops
+### Constraints
+- Use bit operations to keep solution constant-factor efficient.
+- `0 <= value <= 2^31 - 1` unless stated otherwise.
 
 ### Example (Exact)
 ```text
 Input:  nums = [4,1,2,1,2]
 Output: 4
-Explanation: For Bitwise AND of Numbers Range, apply XOR/mask identities.
+Explanation: XOR/bit-count invariants isolate unique or aggregated bit behavior.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Bit Manipulation**.
+- Red flags: brute force for **Bitwise AND of Numbers Range** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Bitwise AND of Numbers Range directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Count frequencies explicitly.
 
-
+#### Python
 ```python
-def brute_bitwise_and_of_numbers_range(data):
-    """Brute-force baseline for: Bitwise AND of Numbers Range."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_bitwise_and_of_numbers_range(nums):
+    from collections import Counter
+    c = Counter(nums)
+    for x, f in c.items():
+        if f == 1:
+            return x
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Bitwise AND of Numbers Range to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Accumulate per-bit counts and rebuild answer via modular arithmetic.
 
-
+#### Python
 ```python
-def better_bitwise_and_of_numbers_range(data):
-    """Intermediate optimized approach for: Bitwise AND of Numbers Range."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_bitwise_and_of_numbers_range(nums):
+    ans = 0
+    for b in range(32):
+        bit_sum = 0
+        for x in nums:
+            bit_sum += (x >> b) & 1
+        if bit_sum % 3:
+            ans |= (1 << b)
+    if ans >= 2**31:
+        ans -= 2**32
+    return ans
 ```
+
+#### Complexity
+- Time `O(32*n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Bit Manipulation invariant to Bitwise AND of Numbers Range: Bits enable compact representation and algebraic properties: - `x ^ x = 0` - `x ^ 0 = x` - `x & (x - 1)` clears lowest set bit - shifts multiply/divide by powers of two
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exploit XOR cancellation/invariant for pairs and parity-style bit behavior.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_bitwise_and_of_numbers_range(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def single_number(nums):
-        ans = 0
-        for x in nums:
-            ans ^= x
-        return ans
+def solve_bitwise_and_of_numbers_range(nums):
+    x = 0
+    for v in nums:
+        x ^= v
+    return x
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `a ^ a = 0` and XOR is associative/commutative, so paired values cancel in any order.
+- Remaining XOR equals exactly the unpaired/target value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

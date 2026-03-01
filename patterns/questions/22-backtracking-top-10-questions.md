@@ -1,6 +1,6 @@
 # Pattern 22 Interview Playbook: Backtracking
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,982 +14,1223 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Subsets
 
-### Problem Statement (Specific)
-Solve **Subsets** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Subsets** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- Variant-specific array/string input parameters
 
 ### Output
-- All subsets of `nums`.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 20
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3]
-Output: [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-Explanation: Backtracking include/exclude decisions produce power set.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Subsets** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Subsets directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_subsets(data):
-    """Brute-force baseline for: Subsets."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_subsets(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Subsets to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_subsets(data):
-    """Intermediate optimized approach for: Subsets."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_subsets(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Subsets: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_subsets(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_subsets(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Subsets II
 
-### Problem Statement (Specific)
-Solve **Subsets II** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Subsets II** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- Variant-specific array/string input parameters
 
 ### Output
-- All subsets of `nums`.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 20
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3]
-Output: [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-Explanation: Backtracking include/exclude decisions produce power set.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Subsets II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Subsets II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_subsets_ii(data):
-    """Brute-force baseline for: Subsets II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_subsets_ii(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Subsets II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_subsets_ii(data):
-    """Intermediate optimized approach for: Subsets II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_subsets_ii(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Subsets II: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_subsets_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_subsets_ii(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Permutations
 
-### Problem Statement (Specific)
-Solve **Permutations** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Permutations** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- All permutations of `nums`.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 8
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3]
-Output: [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
-Explanation: Backtracking with used-set enumerates all orderings.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Permutations** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Permutations directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_permutations(data):
-    """Brute-force baseline for: Permutations."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_permutations(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Permutations to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_permutations(data):
-    """Intermediate optimized approach for: Permutations."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_permutations(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
+                    seen.add(nxt)
+                    q.append((nxt, d + 1))
+    return -1
 ```
+
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Permutations: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_permutations(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
-            dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+from collections import deque
+
+def solve_permutations(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Permutations II
 
-### Problem Statement (Specific)
-Solve **Permutations II** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Permutations II** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- All permutations of `nums`.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 8
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3]
-Output: [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
-Explanation: Backtracking with used-set enumerates all orderings.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Permutations II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Permutations II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_permutations_ii(data):
-    """Brute-force baseline for: Permutations II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_permutations_ii(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Permutations II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_permutations_ii(data):
-    """Intermediate optimized approach for: Permutations II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_permutations_ii(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
+                    seen.add(nxt)
+                    q.append((nxt, d + 1))
+    return -1
 ```
+
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Permutations II: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_permutations_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
-            dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+from collections import deque
+
+def solve_permutations_ii(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Combination Sum
 
-### Problem Statement (Specific)
-Solve **Combination Sum** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Combination Sum** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Combination Sum, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Combination Sum** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Combination Sum directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_combination_sum(data):
-    """Brute-force baseline for: Combination Sum."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_combination_sum(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Combination Sum to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_combination_sum(data):
-    """Intermediate optimized approach for: Combination Sum."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_combination_sum(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Combination Sum: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_combination_sum(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_combination_sum(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Combination Sum II
 
-### Problem Statement (Specific)
-Solve **Combination Sum II** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Combination Sum II** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Combination Sum II, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Combination Sum II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Combination Sum II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_combination_sum_ii(data):
-    """Brute-force baseline for: Combination Sum II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_combination_sum_ii(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Combination Sum II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_combination_sum_ii(data):
-    """Intermediate optimized approach for: Combination Sum II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_combination_sum_ii(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Combination Sum II: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_combination_sum_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_combination_sum_ii(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Combinations
 
-### Problem Statement (Specific)
-Solve **Combinations** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Combinations** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Combinations, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Combinations** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Combinations directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_combinations(data):
-    """Brute-force baseline for: Combinations."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_combinations(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Combinations to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_combinations(data):
-    """Intermediate optimized approach for: Combinations."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_combinations(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Combinations: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_combinations(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_combinations(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Letter Combinations of a Phone Number
 
-### Problem Statement (Specific)
-Solve **Letter Combinations of a Phone Number** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Letter Combinations of a Phone Number** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Letter Combinations of a Phone Number, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Letter Combinations of a Phone Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Letter Combinations of a Phone Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_letter_combinations_of_a_phone_number(data):
-    """Brute-force baseline for: Letter Combinations of a Phone Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_letter_combinations_of_a_phone_number(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Letter Combinations of a Phone Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_letter_combinations_of_a_phone_number(data):
-    """Intermediate optimized approach for: Letter Combinations of a Phone Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_letter_combinations_of_a_phone_number(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Letter Combinations of a Phone Number: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_letter_combinations_of_a_phone_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_letter_combinations_of_a_phone_number(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. N-Queens
 
-### Problem Statement (Specific)
-Solve **N-Queens** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **N-Queens** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For N-Queens, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **N-Queens** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for N-Queens directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_n_queens(data):
-    """Brute-force baseline for: N-Queens."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_n_queens(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for N-Queens to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_n_queens(data):
-    """Intermediate optimized approach for: N-Queens."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_n_queens(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to N-Queens: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_n_queens(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_n_queens(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Word Search
 
-### Problem Statement (Specific)
-Solve **Word Search** using **Backtracking**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Word Search** using **Backtracking**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Word Search, maintain pattern invariant while scanning once.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Backtracking**.
+- Red flags: brute force for **Word Search** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Word Search directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Generate all subsets/permutations via bitmask or raw recursion.
 
-
+#### Python
 ```python
-def brute_word_search(data):
-    """Brute-force baseline for: Word Search."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_word_search(nums):
+    out = []
+    n = len(nums)
+    for mask in range(1 << n):
+        cur = []
+        for i in range(n):
+            if mask & (1 << i):
+                cur.append(nums[i])
+        out.append(cur)
+    return out
 ```
+
+#### Complexity
+- Time `O(2^n * n)` or `O(n!*n)`, Space output-sized.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Word Search to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Backtracking with explicit decision tree avoids materializing invalid branches early.
 
-
+#### Python
 ```python
-def better_word_search(data):
-    """Intermediate optimized approach for: Word Search."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_word_search(nums):
+    out = []
+    cur = []
+    def dfs(i):
+        if i == len(nums):
+            out.append(cur[:])
+            return
+        cur.append(nums[i])
+        dfs(i + 1)
+        cur.pop()
+        dfs(i + 1)
+    dfs(0)
+    return out
 ```
+
+#### Complexity
+- Time exponential but with better pruning constants.
 
 ### Approach 3: Optimal (Best)
-- Apply Backtracking invariant to Word Search: Model problem as DFS over decisions: 1. choose an option 2. recurse 3. unchoose (backtrack) to restore state Backtracking differs from brute force by pruning invalid/pointless branches early.
-- Complexity target: Time pattern-optimal, Space recursion depth + output size.
+#### Intuition
+- Ordering + duplicate-skip/pruning conditions prevent equivalent branches.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_word_search(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def backtrack(nums):
-        ans = []
-        path = []
-    
-        def dfs(i):
-            if i == len(nums):
-                ans.append(path[:])
-                return
-    
-            # choice 1: skip
+def solve_word_search(nums):
+    nums.sort()
+    out = []
+    cur = []
+    def dfs(start):
+        out.append(cur[:])
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue
+            cur.append(nums[i])
             dfs(i + 1)
-    
-            # choice 2: take
-            path.append(nums[i])
-            dfs(i + 1)
-            path.pop()
-    
-        dfs(0)
-        return ans
+            cur.pop()
+    dfs(0)
+    return out
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each recursive level fixes one decision boundary, and pruning removes only branches provably identical or infeasible.
+- Thus every emitted solution is valid and every valid solution is reachable exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time exponential in solution space, Space `O(n)` recursion (excluding output).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

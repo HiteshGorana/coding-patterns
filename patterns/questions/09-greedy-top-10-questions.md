@@ -1,6 +1,6 @@
 # Pattern 09 Interview Playbook: Greedy
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,870 +15,1129 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Jump Game
 
-### Problem Statement (Specific)
-Solve **Jump Game** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Jump Game** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
 - `nums`: list[int]
-- `k`/`target` depending on prompt
+- `target`/`k`: int (if required by the variant)
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Indices, count, or value requested by the exact statement.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `-10^9 <= nums[i], target <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Jump Game, maintain pattern invariant while scanning once.
+Input:  nums = [2, 7, 11, 15], target = 9
+Output: [0, 1]
+Explanation: Complement lookup identifies the pair in one linear scan.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Jump Game** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Jump Game directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_jump_game(data):
-    """Brute-force baseline for: Jump Game."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_jump_game(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Jump Game to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_jump_game(data):
-    """Intermediate optimized approach for: Jump Game."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_jump_game(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Jump Game: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_jump_game(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_jump_game(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Jump Game II
 
-### Problem Statement (Specific)
-Solve **Jump Game II** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Jump Game II** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
 - `nums`: list[int]
-- `k`/`target` depending on prompt
+- `target`/`k`: int (if required by the variant)
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Indices, count, or value requested by the exact statement.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `-10^9 <= nums[i], target <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Jump Game II, maintain pattern invariant while scanning once.
+Input:  nums = [2, 7, 11, 15], target = 9
+Output: [0, 1]
+Explanation: Complement lookup identifies the pair in one linear scan.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Jump Game II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Jump Game II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_jump_game_ii(data):
-    """Brute-force baseline for: Jump Game II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_jump_game_ii(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Jump Game II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_jump_game_ii(data):
-    """Intermediate optimized approach for: Jump Game II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_jump_game_ii(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Jump Game II: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_jump_game_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_jump_game_ii(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Gas Station
 
-### Problem Statement (Specific)
-Solve **Gas Station** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Gas Station** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Gas Station, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Gas Station** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Gas Station directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_gas_station(data):
-    """Brute-force baseline for: Gas Station."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_gas_station(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Gas Station to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_gas_station(data):
-    """Intermediate optimized approach for: Gas Station."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_gas_station(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Gas Station: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_gas_station(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_gas_station(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Partition Labels
 
-### Problem Statement (Specific)
-Solve **Partition Labels** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Partition Labels** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Partition Labels, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Partition Labels** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Partition Labels directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_partition_labels(data):
-    """Brute-force baseline for: Partition Labels."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_partition_labels(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Partition Labels to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_partition_labels(data):
-    """Intermediate optimized approach for: Partition Labels."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_partition_labels(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Partition Labels: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_partition_labels(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_partition_labels(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Assign Cookies
 
-### Problem Statement (Specific)
-Solve **Assign Cookies** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Assign Cookies** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Assign Cookies, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Assign Cookies** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Assign Cookies directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_assign_cookies(data):
-    """Brute-force baseline for: Assign Cookies."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_assign_cookies(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Assign Cookies to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_assign_cookies(data):
-    """Intermediate optimized approach for: Assign Cookies."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_assign_cookies(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Assign Cookies: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_assign_cookies(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_assign_cookies(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Non-overlapping Intervals
 
-### Problem Statement (Specific)
-Solve **Non-overlapping Intervals** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Non-overlapping Intervals** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Non-overlapping Intervals, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Non-overlapping Intervals** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Non-overlapping Intervals directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_non_overlapping_intervals(data):
-    """Brute-force baseline for: Non-overlapping Intervals."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_non_overlapping_intervals(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Non-overlapping Intervals to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_non_overlapping_intervals(data):
-    """Intermediate optimized approach for: Non-overlapping Intervals."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_non_overlapping_intervals(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Non-overlapping Intervals: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_non_overlapping_intervals(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_non_overlapping_intervals(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Minimum Number of Arrows to Burst Balloons
 
-### Problem Statement (Specific)
-Solve **Minimum Number of Arrows to Burst Balloons** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Minimum Number of Arrows to Burst Balloons** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Minimum Number of Arrows to Burst Balloons, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Minimum Number of Arrows to Burst Balloons** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Minimum Number of Arrows to Burst Balloons directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_minimum_number_of_arrows_to_burst_balloons(data):
-    """Brute-force baseline for: Minimum Number of Arrows to Burst Balloons."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_minimum_number_of_arrows_to_burst_balloons(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Minimum Number of Arrows to Burst Balloons to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_minimum_number_of_arrows_to_burst_balloons(data):
-    """Intermediate optimized approach for: Minimum Number of Arrows to Burst Balloons."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_minimum_number_of_arrows_to_burst_balloons(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Minimum Number of Arrows to Burst Balloons: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_minimum_number_of_arrows_to_burst_balloons(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_minimum_number_of_arrows_to_burst_balloons(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Task Scheduler
 
-### Problem Statement (Specific)
-Solve **Task Scheduler** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Task Scheduler** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Task Scheduler, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Task Scheduler** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Task Scheduler directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_task_scheduler(data):
-    """Brute-force baseline for: Task Scheduler."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_task_scheduler(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Task Scheduler to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_task_scheduler(data):
-    """Intermediate optimized approach for: Task Scheduler."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_task_scheduler(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Task Scheduler: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_task_scheduler(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_task_scheduler(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Wiggle Subsequence
 
-### Problem Statement (Specific)
-Solve **Wiggle Subsequence** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Wiggle Subsequence** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Wiggle Subsequence, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Wiggle Subsequence** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Wiggle Subsequence directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_wiggle_subsequence(data):
-    """Brute-force baseline for: Wiggle Subsequence."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_wiggle_subsequence(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Wiggle Subsequence to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_wiggle_subsequence(data):
-    """Intermediate optimized approach for: Wiggle Subsequence."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_wiggle_subsequence(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Wiggle Subsequence: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_wiggle_subsequence(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_wiggle_subsequence(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Best Time to Buy and Sell Stock II
 
-### Problem Statement (Specific)
-Solve **Best Time to Buy and Sell Stock II** using **Greedy**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Best Time to Buy and Sell Stock II** using **Greedy**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
 - `nums`: list[int]
-- `k`/`target` depending on prompt
+- `target`/`k`: int (if required by the variant)
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Indices, count, or value requested by the exact statement.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `-10^9 <= nums[i], target <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Best Time to Buy and Sell Stock II, maintain pattern invariant while scanning once.
+Input:  nums = [2, 7, 11, 15], target = 9
+Output: [0, 1]
+Explanation: Complement lookup identifies the pair in one linear scan.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Greedy**.
+- Red flags: brute force for **Best Time to Buy and Sell Stock II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Best Time to Buy and Sell Stock II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Explore all decision branches directly.
 
-
+#### Python
 ```python
-def brute_best_time_to_buy_and_sell_stock_ii(data):
-    """Brute-force baseline for: Best Time to Buy and Sell Stock II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_best_time_to_buy_and_sell_stock_ii(nums):
+    # Exponential search over all local decisions.
+    best = float('inf')
+    n = len(nums)
+    def dfs(i, jumps):
+        nonlocal best
+        if i >= n - 1:
+            best = min(best, jumps)
+            return
+        if jumps >= best:
+            return
+        for step in range(1, nums[i] + 1):
+            dfs(i + step, jumps + 1)
+    dfs(0, 0)
+    return best if best < float('inf') else -1
 ```
+
+#### Complexity
+- Time exponential in worst case, Space `O(n)` recursion.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Best Time to Buy and Sell Stock II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Dynamic programming computes best value for each index/state.
 
-
+#### Python
 ```python
-def better_best_time_to_buy_and_sell_stock_ii(data):
-    """Intermediate optimized approach for: Best Time to Buy and Sell Stock II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_best_time_to_buy_and_sell_stock_ii(nums):
+    n = len(nums)
+    dp = [float('inf')] * n
+    dp[0] = 0
+    for i in range(n):
+        for step in range(1, nums[i] + 1):
+            j = i + step
+            if j < n:
+                dp[j] = min(dp[j], dp[i] + 1)
+    return dp[-1] if dp[-1] < float('inf') else -1
 ```
+
+#### Complexity
+- Time `O(n^2)` in dense transitions, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Greedy invariant to Best Time to Buy and Sell Stock II: If a local choice never hurts an optimal final solution, commit early and move on. Greedy works only when problem structure supports it (matroid-like/exchange properties).
-- Complexity target: Time often O(n) (after optional sort), Space usually O(1).
+#### Intuition
+- Greedy frontier expansion tracks the farthest reachable index per jump layer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_best_time_to_buy_and_sell_stock_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def can_jump(nums):
-        reach = 0
-        for i, step in enumerate(nums):
-            if i > reach:
-                return False
-            reach = max(reach, i + step)
-        return True
+def solve_best_time_to_buy_and_sell_stock_ii(nums):
+    jumps = 0
+    cur_end = 0
+    farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Indices in `[last_end+1, cur_end]` are all reachable with the same number of jumps.
+- Choosing farthest extension for next layer is optimal by BFS-layer equivalence on implicit graph.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

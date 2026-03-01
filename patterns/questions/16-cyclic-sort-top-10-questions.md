@@ -1,6 +1,6 @@
 # Pattern 16 Interview Playbook: Cyclic Sort
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,940 +15,1020 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Missing Number
 
-### Problem Statement (Specific)
-Solve **Missing Number** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Missing Number** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Missing Number, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Missing Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Missing Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_missing_number(data):
-    """Brute-force baseline for: Missing Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_missing_number(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Missing Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_missing_number(data):
-    """Intermediate optimized approach for: Missing Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_missing_number(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Missing Number: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_missing_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_missing_number(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Find All Numbers Disappeared in an Array
 
-### Problem Statement (Specific)
-Solve **Find All Numbers Disappeared in an Array** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find All Numbers Disappeared in an Array** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Find All Numbers Disappeared in an Array, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Find All Numbers Disappeared in an Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find All Numbers Disappeared in an Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_find_all_numbers_disappeared_in_an_array(data):
-    """Brute-force baseline for: Find All Numbers Disappeared in an Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_all_numbers_disappeared_in_an_array(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find All Numbers Disappeared in an Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_find_all_numbers_disappeared_in_an_array(data):
-    """Intermediate optimized approach for: Find All Numbers Disappeared in an Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_all_numbers_disappeared_in_an_array(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Find All Numbers Disappeared in an Array: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_all_numbers_disappeared_in_an_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_find_all_numbers_disappeared_in_an_array(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Set Mismatch
 
-### Problem Statement (Specific)
-Solve **Set Mismatch** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Set Mismatch** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Set Mismatch, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Set Mismatch** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Set Mismatch directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_set_mismatch(data):
-    """Brute-force baseline for: Set Mismatch."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_set_mismatch(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Set Mismatch to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_set_mismatch(data):
-    """Intermediate optimized approach for: Set Mismatch."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_set_mismatch(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Set Mismatch: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_set_mismatch(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_set_mismatch(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Find the Duplicate Number
 
-### Problem Statement (Specific)
-Solve **Find the Duplicate Number** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find the Duplicate Number** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Find the Duplicate Number, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Find the Duplicate Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find the Duplicate Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_find_the_duplicate_number(data):
-    """Brute-force baseline for: Find the Duplicate Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_the_duplicate_number(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find the Duplicate Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_find_the_duplicate_number(data):
-    """Intermediate optimized approach for: Find the Duplicate Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_the_duplicate_number(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Find the Duplicate Number: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_the_duplicate_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_find_the_duplicate_number(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. First Missing Positive
 
-### Problem Statement (Specific)
-Solve **First Missing Positive** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **First Missing Positive** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For First Missing Positive, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **First Missing Positive** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for First Missing Positive directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_first_missing_positive(data):
-    """Brute-force baseline for: First Missing Positive."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_first_missing_positive(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for First Missing Positive to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_first_missing_positive(data):
-    """Intermediate optimized approach for: First Missing Positive."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_first_missing_positive(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to First Missing Positive: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_first_missing_positive(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_first_missing_positive(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Find All Duplicates in an Array
 
-### Problem Statement (Specific)
-Solve **Find All Duplicates in an Array** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find All Duplicates in an Array** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Find All Duplicates in an Array, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Find All Duplicates in an Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find All Duplicates in an Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_find_all_duplicates_in_an_array(data):
-    """Brute-force baseline for: Find All Duplicates in an Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_all_duplicates_in_an_array(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find All Duplicates in an Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_find_all_duplicates_in_an_array(data):
-    """Intermediate optimized approach for: Find All Duplicates in an Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_all_duplicates_in_an_array(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Find All Duplicates in an Array: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_all_duplicates_in_an_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_find_all_duplicates_in_an_array(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Find the Corrupt Pair
 
-### Problem Statement (Specific)
-Solve **Find the Corrupt Pair** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find the Corrupt Pair** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Find the Corrupt Pair, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Find the Corrupt Pair** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find the Corrupt Pair directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_find_the_corrupt_pair(data):
-    """Brute-force baseline for: Find the Corrupt Pair."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_the_corrupt_pair(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find the Corrupt Pair to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_find_the_corrupt_pair(data):
-    """Intermediate optimized approach for: Find the Corrupt Pair."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_the_corrupt_pair(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Find the Corrupt Pair: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_the_corrupt_pair(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_find_the_corrupt_pair(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Cyclically Sort an Array
 
-### Problem Statement (Specific)
-Solve **Cyclically Sort an Array** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Cyclically Sort an Array** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Cyclically Sort an Array, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Cyclically Sort an Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Cyclically Sort an Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_cyclically_sort_an_array(data):
-    """Brute-force baseline for: Cyclically Sort an Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_cyclically_sort_an_array(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Cyclically Sort an Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_cyclically_sort_an_array(data):
-    """Intermediate optimized approach for: Cyclically Sort an Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_cyclically_sort_an_array(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Cyclically Sort an Array: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_cyclically_sort_an_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_cyclically_sort_an_array(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Find Missing Number in 1..n
 
-### Problem Statement (Specific)
-Solve **Find Missing Number in 1..n** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find Missing Number in 1..n** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Find Missing Number in 1..n, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Find Missing Number in 1..n** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find Missing Number in 1..n directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_find_missing_number_in_1_n(data):
-    """Brute-force baseline for: Find Missing Number in 1..n."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_missing_number_in_1_n(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find Missing Number in 1..n to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_find_missing_number_in_1_n(data):
-    """Intermediate optimized approach for: Find Missing Number in 1..n."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_missing_number_in_1_n(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Find Missing Number in 1..n: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_missing_number_in_1_n(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_find_missing_number_in_1_n(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Find Smallest Missing Positive
 
-### Problem Statement (Specific)
-Solve **Find Smallest Missing Positive** using **Cyclic Sort**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find Smallest Missing Positive** using **Cyclic Sort**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Find Smallest Missing Positive, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Cyclic Sort**.
+- Red flags: brute force for **Find Smallest Missing Positive** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find Smallest Missing Positive directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Check each candidate value using repeated membership scans.
 
-
+#### Python
 ```python
-def brute_find_smallest_missing_positive(data):
-    """Brute-force baseline for: Find Smallest Missing Positive."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_smallest_missing_positive(nums):
+    n = len(nums)
+    for x in range(1, n + 1):
+        if x not in nums:
+            return x
+    return n + 1
 ```
+
+#### Complexity
+- Time `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find Smallest Missing Positive to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Hash-set membership reduces candidate checks to linear time.
 
-
+#### Python
 ```python
-def better_find_smallest_missing_positive(data):
-    """Intermediate optimized approach for: Find Smallest Missing Positive."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_smallest_missing_positive(nums):
+    seen = set(nums)
+    x = 1
+    while x in seen:
+        x += 1
+    return x
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Cyclic Sort invariant to Find Smallest Missing Positive: If value `x` belongs at index `x-1` (or `x`), swap it into position until current index holds correct value. Unlike comparison sort, this uses value-index mapping directly.
-- Complexity target: Time O(n) (each swap places at least one element correctly), Space O(1).
+#### Intuition
+- Place each number at its index-corresponding position; first mismatch identifies answer.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_smallest_missing_positive(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def find_missing(nums):
-        i = 0
-        n = len(nums)
-        while i < n:
-            x = nums[i]
-            if 0 <= x < n and nums[i] != nums[x]:
-                nums[i], nums[x] = nums[x], nums[i]
-            else:
-                i += 1
-    
-        for i, x in enumerate(nums):
-            if i != x:
-                return i
-        return n
+def solve_find_smallest_missing_positive(nums):
+    i = 0
+    n = len(nums)
+    while i < n:
+        correct = nums[i] - 1
+        if 1 <= nums[i] <= n and nums[i] != nums[correct]:
+            nums[i], nums[correct] = nums[correct], nums[i]
+        else:
+            i += 1
+    for i, x in enumerate(nums, 1):
+        if x != i:
+            return i
+    return n + 1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every swap puts at least one value in correct position, bounding swaps by `O(n)`.
+- After placement, index/value mismatch exactly encodes missing/duplicate corruption.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

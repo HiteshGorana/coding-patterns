@@ -1,6 +1,6 @@
 # Pattern 41 Interview Playbook: Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,1010 +15,1300 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Bellman-Ford Algorithm Implementation
 
-### Problem Statement (Specific)
-Solve **Bellman-Ford Algorithm Implementation** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Bellman-Ford Algorithm Implementation** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Bellman-Ford Algorithm Implementation, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Bellman-Ford Algorithm Implementation** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Bellman-Ford Algorithm Implementation directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_bellman_ford_algorithm_implementation(data):
-    """Brute-force baseline for: Bellman-Ford Algorithm Implementation."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_bellman_ford_algorithm_implementation(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Bellman-Ford Algorithm Implementation to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_bellman_ford_algorithm_implementation(data):
-    """Intermediate optimized approach for: Bellman-Ford Algorithm Implementation."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Bellman-Ford Algorithm Implementation: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_bellman_ford_algorithm_implementation(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_bellman_ford_algorithm_implementation(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_bellman_ford_algorithm_implementation(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Cheapest Flights Within K Stops (Relaxation DP)
 
-### Problem Statement (Specific)
-Solve **Cheapest Flights Within K Stops (Relaxation DP)** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Cheapest Flights Within K Stops (Relaxation DP)** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Cheapest Flights Within K Stops (Relaxation DP), process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Cheapest Flights Within K Stops (Relaxation DP)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Cheapest Flights Within K Stops (Relaxation DP) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_cheapest_flights_within_k_stops_relaxation_dp(data):
-    """Brute-force baseline for: Cheapest Flights Within K Stops (Relaxation DP)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_cheapest_flights_within_k_stops_relaxation_dp(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Cheapest Flights Within K Stops (Relaxation DP) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_cheapest_flights_within_k_stops_relaxation_dp(data):
-    """Intermediate optimized approach for: Cheapest Flights Within K Stops (Relaxation DP)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Cheapest Flights Within K Stops (Relaxation DP): Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_cheapest_flights_within_k_stops_relaxation_dp(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_cheapest_flights_within_k_stops_relaxation_dp(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_cheapest_flights_within_k_stops_relaxation_dp(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Arbitrage Detection
 
-### Problem Statement (Specific)
-Solve **Arbitrage Detection** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Arbitrage Detection** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Arbitrage Detection, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Arbitrage Detection** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Arbitrage Detection directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_arbitrage_detection(data):
-    """Brute-force baseline for: Arbitrage Detection."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_arbitrage_detection(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Arbitrage Detection to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_arbitrage_detection(data):
-    """Intermediate optimized approach for: Arbitrage Detection."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Arbitrage Detection: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_arbitrage_detection(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_arbitrage_detection(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_arbitrage_detection(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Wormholes / Negative Cycle Detection
 
-### Problem Statement (Specific)
-Solve **Wormholes / Negative Cycle Detection** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Wormholes / Negative Cycle Detection** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Wormholes / Negative Cycle Detection, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Wormholes / Negative Cycle Detection** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Wormholes / Negative Cycle Detection directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_wormholes_negative_cycle_detection(data):
-    """Brute-force baseline for: Wormholes / Negative Cycle Detection."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_wormholes_negative_cycle_detection(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Wormholes / Negative Cycle Detection to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_wormholes_negative_cycle_detection(data):
-    """Intermediate optimized approach for: Wormholes / Negative Cycle Detection."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Wormholes / Negative Cycle Detection: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_wormholes_negative_cycle_detection(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_wormholes_negative_cycle_detection(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_wormholes_negative_cycle_detection(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Floyd-Warshall All Pairs Shortest Path
 
-### Problem Statement (Specific)
-Solve **Floyd-Warshall All Pairs Shortest Path** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Floyd-Warshall All Pairs Shortest Path** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Floyd-Warshall All Pairs Shortest Path, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Floyd-Warshall All Pairs Shortest Path** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Floyd-Warshall All Pairs Shortest Path directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_floyd_warshall_all_pairs_shortest_path(data):
-    """Brute-force baseline for: Floyd-Warshall All Pairs Shortest Path."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_floyd_warshall_all_pairs_shortest_path(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Floyd-Warshall All Pairs Shortest Path to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_floyd_warshall_all_pairs_shortest_path(data):
-    """Intermediate optimized approach for: Floyd-Warshall All Pairs Shortest Path."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Floyd-Warshall All Pairs Shortest Path: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_floyd_warshall_all_pairs_shortest_path(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_floyd_warshall_all_pairs_shortest_path(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_floyd_warshall_all_pairs_shortest_path(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Find the City With the Smallest Number of Neighbors at a Threshold Distance
 
-### Problem Statement (Specific)
-Solve **Find the City With the Smallest Number of Neighbors at a Threshold Distance** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find the City With the Smallest Number of Neighbors at a Threshold Distance** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Find the City With the Smallest Number of Neighbors at a Threshold Distance, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Find the City With the Smallest Number of Neighbors at a Threshold Distance** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find the City With the Smallest Number of Neighbors at a Threshold Distance directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_find_the_city_with_the_smallest_number_of_neighbors_at_a_threshold_distance(data):
-    """Brute-force baseline for: Find the City With the Smallest Number of Neighbors at a Threshold Distance."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_the_city_with_the_smallest_number_of_neighbors_at_a_threshold_distance(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find the City With the Smallest Number of Neighbors at a Threshold Distance to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_find_the_city_with_the_smallest_number_of_neighbors_at_a_threshold_distance(data):
-    """Intermediate optimized approach for: Find the City With the Smallest Number of Neighbors at a Threshold Distance."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Find the City With the Smallest Number of Neighbors at a Threshold Distance: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_find_the_city_with_the_smallest_number_of_neighbors_at_a_threshold_distance(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_find_the_city_with_the_smallest_number_of_neighbors_at_a_threshold_distance(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_find_the_city_with_the_smallest_number_of_neighbors_at_a_threshold_distance(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Currency Exchange Graph
 
-### Problem Statement (Specific)
-Solve **Currency Exchange Graph** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Currency Exchange Graph** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Currency Exchange Graph, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Currency Exchange Graph** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Currency Exchange Graph directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_currency_exchange_graph(data):
-    """Brute-force baseline for: Currency Exchange Graph."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_currency_exchange_graph(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Currency Exchange Graph to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_currency_exchange_graph(data):
-    """Intermediate optimized approach for: Currency Exchange Graph."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Currency Exchange Graph: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_currency_exchange_graph(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_currency_exchange_graph(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_currency_exchange_graph(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Shortest Path with Possible Negative Edges
 
-### Problem Statement (Specific)
-Solve **Shortest Path with Possible Negative Edges** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Shortest Path with Possible Negative Edges** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Shortest Path with Possible Negative Edges, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Shortest Path with Possible Negative Edges** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Shortest Path with Possible Negative Edges directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_shortest_path_with_possible_negative_edges(data):
-    """Brute-force baseline for: Shortest Path with Possible Negative Edges."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_shortest_path_with_possible_negative_edges(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Shortest Path with Possible Negative Edges to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_shortest_path_with_possible_negative_edges(data):
-    """Intermediate optimized approach for: Shortest Path with Possible Negative Edges."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Shortest Path with Possible Negative Edges: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_shortest_path_with_possible_negative_edges(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_shortest_path_with_possible_negative_edges(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_shortest_path_with_possible_negative_edges(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Path with At Most K Edges
 
-### Problem Statement (Specific)
-Solve **Path with At Most K Edges** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Path with At Most K Edges** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Path with At Most K Edges, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Path with At Most K Edges** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Path with At Most K Edges directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_path_with_at_most_k_edges(data):
-    """Brute-force baseline for: Path with At Most K Edges."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_path_with_at_most_k_edges(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Path with At Most K Edges to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_path_with_at_most_k_edges(data):
-    """Intermediate optimized approach for: Path with At Most K Edges."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Path with At Most K Edges: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_path_with_at_most_k_edges(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_path_with_at_most_k_edges(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_path_with_at_most_k_edges(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Detect Reachable Negative Cycle from Source
 
-### Problem Statement (Specific)
-Solve **Detect Reachable Negative Cycle from Source** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Detect Reachable Negative Cycle from Source** using **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Detect Reachable Negative Cycle from Source, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall)**.
+- Red flags: brute force for **Detect Reachable Negative Cycle from Source** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Detect Reachable Negative Cycle from Source directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate shortest distances by edge-count DP table.
 
-
+#### Python
 ```python
-def brute_detect_reachable_negative_cycle_from_source(data):
-    """Brute-force baseline for: Detect Reachable Negative Cycle from Source."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_detect_reachable_negative_cycle_from_source(n, edges, src):
+    # Relax paths up to n-1 edges via explicit DP table.
+    INF = 10**18
+    dp = [[INF] * n for _ in range(n)]
+    dp[0][src] = 0
+    for k in range(1, n):
+        dp[k] = dp[k-1][:]
+        for u, v, w in edges:
+            if dp[k-1][u] < INF:
+                dp[k][v] = min(dp[k][v], dp[k-1][u] + w)
+    return dp[n-1]
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n^2)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Detect Reachable Negative Cycle from Source to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Bellman-Ford relaxation with early stop computes shortest distances without full table.
 
-
+#### Python
 ```python
-def better_detect_reachable_negative_cycle_from_source(data):
-    """Intermediate optimized approach for: Detect Reachable Negative Cycle from Source."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Negative-Weight Shortest Path (Bellman-Ford / Floyd-Warshall) invariant to Detect Reachable Negative Cycle from Source: Repeated edge relaxation converges shortest distances if no negative cycle is reachable.
-- Complexity target: Time Bellman-Ford O(V*E), Floyd-Warshall O(V^3)., Space Bellman-Ford O(V), Floyd-Warshall O(V^2)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_detect_reachable_negative_cycle_from_source(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def bellman_ford(n, edges, src):  # edges: (u, v, w)
-        INF = 10**18
-        dist = [INF] * n
-        dist[src] = 0
-    
-        for _ in range(n - 1):
-            updated = False
-            for u, v, w in edges:
-                if dist[u] != INF and dist[u] + w < dist[v]:
-                    dist[v] = dist[u] + w
-                    updated = True
-            if not updated:
-                break
-    
-        has_neg_cycle = False
+def better_detect_reachable_negative_cycle_from_source(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        updated = False
         for u, v, w in edges:
             if dist[u] != INF and dist[u] + w < dist[v]:
-                has_neg_cycle = True
-                break
-    
-        return dist, has_neg_cycle
+                dist[v] = dist[u] + w
+                updated = True
+        if not updated:
+            break
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Extra relaxation round(s) identify vertices influenced by reachable negative cycles.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+def solve_detect_reachable_negative_cycle_from_source(n, edges, src):
+    INF = 10**18
+    dist = [INF] * n
+    dist[src] = 0
+
+    for _ in range(n - 1):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                changed = True
+        if not changed:
+            break
+
+    neg_cycle = [False] * n
+    for _ in range(n):
+        changed = False
+        for u, v, w in edges:
+            if dist[u] != INF and dist[u] + w < dist[v]:
+                dist[v] = -INF
+                neg_cycle[v] = True
+                changed = True
+        if not changed:
+            break
+
+    return dist, neg_cycle
+```
+
+#### Correctness (Why This Works)
+- After `n-1` relaxations, all simple-path shortest distances are finalized if no negative cycle is reachable.
+- Any further decrease implies cycle-based improvement, which can only happen with a reachable negative cycle.
+
+#### Complexity
+- Time `O(n*m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

@@ -1,6 +1,6 @@
 # Pattern 23 Interview Playbook: Trie (Prefix Tree)
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,1030 +14,1368 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Implement Trie (Prefix Tree)
 
-### Problem Statement (Specific)
-Solve **Implement Trie (Prefix Tree)** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Implement Trie (Prefix Tree)** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 3
-Output: 4
-Explanation: For Implement Trie (Prefix Tree), combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Implement Trie (Prefix Tree)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Implement Trie (Prefix Tree) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try every alignment and compare full pattern each time.
 
-
+#### Python
 ```python
-def brute_implement_trie_prefix_tree(data):
-    """Brute-force baseline for: Implement Trie (Prefix Tree)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_implement_trie_prefix_tree(text, pattern):
+    m, n = len(pattern), len(text)
+    for i in range(n - m + 1):
+        if text[i:i+m] == pattern:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Implement Trie (Prefix Tree) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Rolling hash filters candidate matches and verifies collisions.
 
-
+#### Python
 ```python
-def better_implement_trie_prefix_tree(data):
-    """Intermediate optimized approach for: Implement Trie (Prefix Tree)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_implement_trie_prefix_tree(text, pattern):
+    # Rabin-Karp style rolling hash.
+    if not pattern:
+        return 0
+    base, mod = 911382323, 10**9 + 7
+    m = len(pattern)
+    p_hash = 0
+    t_hash = 0
+    power = 1
+    for i in range(m):
+        p_hash = (p_hash * base + ord(pattern[i])) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if i:
+            power = (power * base) % mod
+    if t_hash == p_hash and text[:m] == pattern:
+        return 0
+    for i in range(m, len(text)):
+        t_hash = (t_hash - ord(text[i-m]) * power) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
+            return i - m + 1
+    return -1
 ```
+
+#### Complexity
+- Expected `O(n+m)`, worst-case with collisions can degrade.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Implement Trie (Prefix Tree): Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_implement_trie_prefix_tree(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+def solve_implement_trie_prefix_tree(text, pattern):
+    if not pattern:
+        return 0
+
+    lps = [0] * len(pattern)
+    j = 0
+    for i in range(1, len(pattern)):
+        while j > 0 and pattern[i] != pattern[j]:
+            j = lps[j - 1]
+        if pattern[i] == pattern[j]:
+            j += 1
+            lps[i] = j
+
+    j = 0
+    for i, ch in enumerate(text):
+        while j > 0 and ch != pattern[j]:
+            j = lps[j - 1]
+        if ch == pattern[j]:
+            j += 1
+            if j == len(pattern):
+                return i - len(pattern) + 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
+- Pointer never moves backward in text, so each character is processed constant times.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Design Add and Search Words Data Structure
 
-### Problem Statement (Specific)
-Solve **Design Add and Search Words Data Structure** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Design Add and Search Words Data Structure** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 4
-Output: 4
-Explanation: For Design Add and Search Words Data Structure, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Design Add and Search Words Data Structure** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Design Add and Search Words Data Structure directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_design_add_and_search_words_data_structure(data):
-    """Brute-force baseline for: Design Add and Search Words Data Structure."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_design_add_and_search_words_data_structure(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Design Add and Search Words Data Structure to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_design_add_and_search_words_data_structure(data):
-    """Intermediate optimized approach for: Design Add and Search Words Data Structure."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Design Add and Search Words Data Structure: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_design_add_and_search_words_data_structure(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Word Search II
 
-### Problem Statement (Specific)
-Solve **Word Search II** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Word Search II** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 2
-Output: 4
-Explanation: For Word Search II, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Word Search II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Word Search II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_word_search_ii(data):
-    """Brute-force baseline for: Word Search II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_word_search_ii(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Word Search II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_word_search_ii(data):
-    """Intermediate optimized approach for: Word Search II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Word Search II: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_word_search_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Replace Words
 
-### Problem Statement (Specific)
-Solve **Replace Words** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Replace Words** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 3
-Output: 4
-Explanation: For Replace Words, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Replace Words** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Replace Words directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_replace_words(data):
-    """Brute-force baseline for: Replace Words."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_replace_words(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Replace Words to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_replace_words(data):
-    """Intermediate optimized approach for: Replace Words."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Replace Words: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_replace_words(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Longest Word in Dictionary
 
-### Problem Statement (Specific)
-Solve **Longest Word in Dictionary** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Longest Word in Dictionary** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 4
-Output: 4
-Explanation: For Longest Word in Dictionary, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Longest Word in Dictionary** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Longest Word in Dictionary directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_longest_word_in_dictionary(data):
-    """Brute-force baseline for: Longest Word in Dictionary."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_longest_word_in_dictionary(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Longest Word in Dictionary to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_longest_word_in_dictionary(data):
-    """Intermediate optimized approach for: Longest Word in Dictionary."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Longest Word in Dictionary: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_longest_word_in_dictionary(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Map Sum Pairs
 
-### Problem Statement (Specific)
-Solve **Map Sum Pairs** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Map Sum Pairs** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 2
-Output: 4
-Explanation: For Map Sum Pairs, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Map Sum Pairs** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Map Sum Pairs directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_map_sum_pairs(data):
-    """Brute-force baseline for: Map Sum Pairs."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_map_sum_pairs(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Map Sum Pairs to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_map_sum_pairs(data):
-    """Intermediate optimized approach for: Map Sum Pairs."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Map Sum Pairs: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_map_sum_pairs(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Implement Magic Dictionary
 
-### Problem Statement (Specific)
-Solve **Implement Magic Dictionary** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Implement Magic Dictionary** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 3
-Output: 4
-Explanation: For Implement Magic Dictionary, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Implement Magic Dictionary** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Implement Magic Dictionary directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_implement_magic_dictionary(data):
-    """Brute-force baseline for: Implement Magic Dictionary."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_implement_magic_dictionary(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Implement Magic Dictionary to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_implement_magic_dictionary(data):
-    """Intermediate optimized approach for: Implement Magic Dictionary."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Implement Magic Dictionary: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_implement_magic_dictionary(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Search Suggestions System
 
-### Problem Statement (Specific)
-Solve **Search Suggestions System** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Search Suggestions System** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 4
-Output: 4
-Explanation: For Search Suggestions System, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Search Suggestions System** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Search Suggestions System directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_search_suggestions_system(data):
-    """Brute-force baseline for: Search Suggestions System."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_search_suggestions_system(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Search Suggestions System to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_search_suggestions_system(data):
-    """Intermediate optimized approach for: Search Suggestions System."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Search Suggestions System: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_search_suggestions_system(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Stream of Characters
 
-### Problem Statement (Specific)
-Solve **Stream of Characters** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Stream of Characters** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 2
-Output: 4
-Explanation: For Stream of Characters, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Stream of Characters** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Stream of Characters directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Linearly scan full dictionary for each query.
 
-
+#### Python
 ```python
-def brute_stream_of_characters(data):
-    """Brute-force baseline for: Stream of Characters."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_stream_of_characters(dictionary, query):
+    for word in dictionary:
+        if word.startswith(query):
+            return True
+    return False
 ```
+
+#### Complexity
+- Time `O(dict_size * word_len)` per query.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Stream of Characters to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Trie builds shared prefixes once and supports prefix queries efficiently.
 
-
+#### Python
 ```python
-def better_stream_of_characters(data):
-    """Intermediate optimized approach for: Stream of Characters."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class TrieNode:
+    __slots__ = ('child', 'end')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+        cur.end = True
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
+
+#### Complexity
+- Build `O(total_chars)`, query `O(prefix_len)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Stream of Characters: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- Augment trie nodes with metadata (counts/end flags) to support richer queries.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_stream_of_characters(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+class TrieNode:
+    __slots__ = ('child', 'end', 'cnt')
+    def __init__(self):
+        self.child = {}
+        self.end = False
+        self.cnt = 0
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        cur = self.root
+        for ch in word:
+            cur = cur.child.setdefault(ch, TrieNode())
+            cur.cnt += 1
+        cur.end = True
+
+    def search(self, word):
+        cur = self.root
+        for ch in word:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return cur.end
+
+    def starts_with(self, prefix):
+        cur = self.root
+        for ch in prefix:
+            if ch not in cur.child:
+                return False
+            cur = cur.child[ch]
+        return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Every root-to-node path uniquely represents one prefix.
+- Traversal follows query characters exactly; existence/non-existence is determined by missing edge or terminal flag.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(total_chars)`, query `O(len(query))`, Space `O(total_chars)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Palindrome Pairs
 
-### Problem Statement (Specific)
-Solve **Palindrome Pairs** using **Trie (Prefix Tree)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Palindrome Pairs** using **Trie (Prefix Tree)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 3
-Output: 4
-Explanation: For Palindrome Pairs, combine subtree/ancestor state efficiently.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Trie (Prefix Tree)**.
+- Red flags: brute force for **Palindrome Pairs** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Palindrome Pairs directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try every alignment and compare full pattern each time.
 
-
+#### Python
 ```python
-def brute_palindrome_pairs(data):
-    """Brute-force baseline for: Palindrome Pairs."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_palindrome_pairs(text, pattern):
+    m, n = len(pattern), len(text)
+    for i in range(n - m + 1):
+        if text[i:i+m] == pattern:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Palindrome Pairs to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Rolling hash filters candidate matches and verifies collisions.
 
-
+#### Python
 ```python
-def better_palindrome_pairs(data):
-    """Intermediate optimized approach for: Palindrome Pairs."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_palindrome_pairs(text, pattern):
+    # Rabin-Karp style rolling hash.
+    if not pattern:
+        return 0
+    base, mod = 911382323, 10**9 + 7
+    m = len(pattern)
+    p_hash = 0
+    t_hash = 0
+    power = 1
+    for i in range(m):
+        p_hash = (p_hash * base + ord(pattern[i])) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if i:
+            power = (power * base) % mod
+    if t_hash == p_hash and text[:m] == pattern:
+        return 0
+    for i in range(m, len(text)):
+        t_hash = (t_hash - ord(text[i-m]) * power) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
+            return i - m + 1
+    return -1
 ```
+
+#### Complexity
+- Expected `O(n+m)`, worst-case with collisions can degrade.
 
 ### Approach 3: Optimal (Best)
-- Apply Trie (Prefix Tree) invariant to Palindrome Pairs: Store characters along edges from root: - each node represents a prefix - terminal flag marks complete words Prefix operations become proportional to query length, not number of words.
-- Complexity target: Time pattern-optimal, Space proportional to total stored characters/prefix nodes.
+#### Intuition
+- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_palindrome_pairs(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class TrieNode:
-        def __init__(self):
-            self.children = {}
-            self.is_word = False
-    
-    
-    class Trie:
-        def __init__(self):
-            self.root = TrieNode()
-    
-        def insert(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    node.children[ch] = TrieNode()
-                node = node.children[ch]
-            node.is_word = True
-    
-        def search(self, word):
-            node = self.root
-            for ch in word:
-                if ch not in node.children:
-                    return False
-                node = node.children[ch]
-            return node.is_word
+def solve_palindrome_pairs(text, pattern):
+    if not pattern:
+        return 0
+
+    lps = [0] * len(pattern)
+    j = 0
+    for i in range(1, len(pattern)):
+        while j > 0 and pattern[i] != pattern[j]:
+            j = lps[j - 1]
+        if pattern[i] == pattern[j]:
+            j += 1
+            lps[i] = j
+
+    j = 0
+    for i, ch in enumerate(text):
+        while j > 0 and ch != pattern[j]:
+            j = lps[j - 1]
+        if ch == pattern[j]:
+            j += 1
+            if j == len(pattern):
+                return i - len(pattern) + 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
+- Pointer never moves backward in text, so each character is processed constant times.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

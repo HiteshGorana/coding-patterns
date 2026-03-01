@@ -1,6 +1,6 @@
 # Pattern 18 Interview Playbook: Matrix Traversal (Grid BFS/DFS)
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,930 +14,1301 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Number of Islands
 
-### Problem Statement (Specific)
-Solve **Number of Islands** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Number of Islands** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: list[list[str]]
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count of connected components of land.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [["1","1","0"],["1","0","0"],["0","0","1"]]
-Output: 2
-Explanation: DFS/BFS each unvisited land cell once.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Number of Islands** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Number of Islands directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_number_of_islands(data):
-    """Brute-force baseline for: Number of Islands."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_number_of_islands(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Number of Islands to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_number_of_islands(data):
-    """Intermediate optimized approach for: Number of Islands."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_number_of_islands(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Number of Islands: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_number_of_islands(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_number_of_islands(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Rotting Oranges
 
-### Problem Statement (Specific)
-Solve **Rotting Oranges** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Rotting Oranges** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: list[list[int]]
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Minimum minutes to rot all fresh oranges, or -1.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 200
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[2,1,1],[1,1,0],[0,1,1]]
-Output: 4
-Explanation: Multi-source BFS from all rotten oranges at time 0.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Rotting Oranges** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Rotting Oranges directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_rotting_oranges(data):
-    """Brute-force baseline for: Rotting Oranges."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_rotting_oranges(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Rotting Oranges to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_rotting_oranges(data):
-    """Intermediate optimized approach for: Rotting Oranges."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_rotting_oranges(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Rotting Oranges: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_rotting_oranges(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_rotting_oranges(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Flood Fill
 
-### Problem Statement (Specific)
-Solve **Flood Fill** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Flood Fill** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For Flood Fill, treat cells as graph nodes with visited control.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Flood Fill** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Flood Fill directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_flood_fill(data):
-    """Brute-force baseline for: Flood Fill."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_flood_fill(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Flood Fill to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_flood_fill(data):
-    """Intermediate optimized approach for: Flood Fill."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_flood_fill(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Flood Fill: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_flood_fill(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_flood_fill(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Surrounded Regions
 
-### Problem Statement (Specific)
-Solve **Surrounded Regions** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Surrounded Regions** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For Surrounded Regions, treat cells as graph nodes with visited control.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Surrounded Regions** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Surrounded Regions directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_surrounded_regions(data):
-    """Brute-force baseline for: Surrounded Regions."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_surrounded_regions(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Surrounded Regions to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_surrounded_regions(data):
-    """Intermediate optimized approach for: Surrounded Regions."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_surrounded_regions(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Surrounded Regions: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_surrounded_regions(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_surrounded_regions(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Walls and Gates
 
-### Problem Statement (Specific)
-Solve **Walls and Gates** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Walls and Gates** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For Walls and Gates, treat cells as graph nodes with visited control.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Walls and Gates** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Walls and Gates directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_walls_and_gates(data):
-    """Brute-force baseline for: Walls and Gates."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_walls_and_gates(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Walls and Gates to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_walls_and_gates(data):
-    """Intermediate optimized approach for: Walls and Gates."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_walls_and_gates(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Walls and Gates: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_walls_and_gates(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_walls_and_gates(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Pacific Atlantic Water Flow
 
-### Problem Statement (Specific)
-Solve **Pacific Atlantic Water Flow** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Pacific Atlantic Water Flow** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For Pacific Atlantic Water Flow, treat cells as graph nodes with visited control.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Pacific Atlantic Water Flow** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Pacific Atlantic Water Flow directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_pacific_atlantic_water_flow(data):
-    """Brute-force baseline for: Pacific Atlantic Water Flow."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_pacific_atlantic_water_flow(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Pacific Atlantic Water Flow to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_pacific_atlantic_water_flow(data):
-    """Intermediate optimized approach for: Pacific Atlantic Water Flow."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_pacific_atlantic_water_flow(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Pacific Atlantic Water Flow: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_pacific_atlantic_water_flow(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_pacific_atlantic_water_flow(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Word Search
 
-### Problem Statement (Specific)
-Solve **Word Search** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Word Search** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For Word Search, treat cells as graph nodes with visited control.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Word Search** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Word Search directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_word_search(data):
-    """Brute-force baseline for: Word Search."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_word_search(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Word Search to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_word_search(data):
-    """Intermediate optimized approach for: Word Search."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_word_search(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Word Search: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_word_search(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_word_search(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Shortest Path in Binary Matrix
 
-### Problem Statement (Specific)
-Solve **Shortest Path in Binary Matrix** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Shortest Path in Binary Matrix** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For Shortest Path in Binary Matrix, treat cells as graph nodes with visited control.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Shortest Path in Binary Matrix** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Shortest Path in Binary Matrix directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_shortest_path_in_binary_matrix(data):
-    """Brute-force baseline for: Shortest Path in Binary Matrix."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_shortest_path_in_binary_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Shortest Path in Binary Matrix to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_shortest_path_in_binary_matrix(data):
-    """Intermediate optimized approach for: Shortest Path in Binary Matrix."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_shortest_path_in_binary_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Shortest Path in Binary Matrix: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_shortest_path_in_binary_matrix(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_shortest_path_in_binary_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. 01 Matrix
 
-### Problem Statement (Specific)
-Solve **01 Matrix** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **01 Matrix** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For 01 Matrix, treat cells as graph nodes with visited control.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **01 Matrix** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for 01 Matrix directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_q_01_matrix(data):
-    """Brute-force baseline for: 01 Matrix."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_q_01_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for 01 Matrix to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_q_01_matrix(data):
-    """Intermediate optimized approach for: 01 Matrix."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_q_01_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to 01 Matrix: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_q_01_matrix(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_q_01_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Number of Closed Islands
 
-### Problem Statement (Specific)
-Solve **Number of Closed Islands** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Number of Closed Islands** using **Matrix Traversal (Grid BFS/DFS)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: matrix
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count/min-time/boolean according to prompt.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [[1,1,0],[1,0,0],[0,0,1]]
-Output: 2
-Explanation: For Number of Closed Islands, treat cells as graph nodes with visited control.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Matrix Traversal (Grid BFS/DFS)**.
+- Red flags: brute force for **Number of Closed Islands** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Number of Closed Islands directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_number_of_closed_islands(data):
-    """Brute-force baseline for: Number of Closed Islands."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_number_of_closed_islands(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Number of Closed Islands to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_number_of_closed_islands(data):
-    """Intermediate optimized approach for: Number of Closed Islands."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_number_of_closed_islands(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Matrix Traversal (Grid BFS/DFS) invariant to Number of Closed Islands: Treat grid as implicit graph: - each cell is a node - valid moves are edges Use: - DFS for traversal/component marking - BFS for shortest path in unweighted grids
-- Complexity target: Time O(R * C) each cell processed constant times, Space O(R * C) worst-case recursion/queue/visited.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_number_of_closed_islands(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def bfs_grid(grid, sr, sc):
-        rows, cols = len(grid), len(grid[0])
-        q = deque([(sr, sc)])
-        visited = {(sr, sc)}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    
-        while q:
-            r, c = q.popleft()
-            for dr, dc in dirs:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    q.append((nr, nc))
+from collections import deque
+
+def better_number_of_closed_islands(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

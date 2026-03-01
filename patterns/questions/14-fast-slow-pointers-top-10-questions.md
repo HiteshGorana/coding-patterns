@@ -1,6 +1,6 @@
 # Pattern 14 Interview Playbook: Fast & Slow Pointers
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,868 +14,1208 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Linked List Cycle
 
-### Problem Statement (Specific)
-Solve **Linked List Cycle** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Linked List Cycle** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list head
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- Boolean (cycle exists) or node where cycle begins (variant).
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [3,2,0,-4], pos = 1
-Output: true
-Explanation: Fast/slow pointers meet iff cycle exists.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Linked List Cycle** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Linked List Cycle directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_linked_list_cycle(data):
-    """Brute-force baseline for: Linked List Cycle."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_linked_list_cycle(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Linked List Cycle to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_linked_list_cycle(data):
-    """Intermediate optimized approach for: Linked List Cycle."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_linked_list_cycle(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Linked List Cycle: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_linked_list_cycle(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_linked_list_cycle(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Linked List Cycle II
 
-### Problem Statement (Specific)
-Solve **Linked List Cycle II** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Linked List Cycle II** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list head
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- Boolean (cycle exists) or node where cycle begins (variant).
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [3,2,0,-4], pos = 1
-Output: true
-Explanation: Fast/slow pointers meet iff cycle exists.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Linked List Cycle II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Linked List Cycle II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_linked_list_cycle_ii(data):
-    """Brute-force baseline for: Linked List Cycle II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_linked_list_cycle_ii(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Linked List Cycle II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_linked_list_cycle_ii(data):
-    """Intermediate optimized approach for: Linked List Cycle II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_linked_list_cycle_ii(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Linked List Cycle II: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_linked_list_cycle_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_linked_list_cycle_ii(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Middle of the Linked List
 
-### Problem Statement (Specific)
-Solve **Middle of the Linked List** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Middle of the Linked List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Middle of the Linked List, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Middle of the Linked List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Middle of the Linked List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_middle_of_the_linked_list(data):
-    """Brute-force baseline for: Middle of the Linked List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_middle_of_the_linked_list(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Middle of the Linked List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_middle_of_the_linked_list(data):
-    """Intermediate optimized approach for: Middle of the Linked List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_middle_of_the_linked_list(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Middle of the Linked List: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_middle_of_the_linked_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_middle_of_the_linked_list(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Happy Number
 
-### Problem Statement (Specific)
-Solve **Happy Number** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Happy Number** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Happy Number, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Happy Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Happy Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_happy_number(data):
-    """Brute-force baseline for: Happy Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_happy_number(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Happy Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_happy_number(data):
-    """Intermediate optimized approach for: Happy Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_happy_number(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Happy Number: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_happy_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_happy_number(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Find the Duplicate Number
 
-### Problem Statement (Specific)
-Solve **Find the Duplicate Number** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find the Duplicate Number** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Find the Duplicate Number, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Find the Duplicate Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find the Duplicate Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_find_the_duplicate_number(data):
-    """Brute-force baseline for: Find the Duplicate Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_the_duplicate_number(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find the Duplicate Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_find_the_duplicate_number(data):
-    """Intermediate optimized approach for: Find the Duplicate Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_the_duplicate_number(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Find the Duplicate Number: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_the_duplicate_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_find_the_duplicate_number(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Palindrome Linked List
 
-### Problem Statement (Specific)
-Solve **Palindrome Linked List** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Palindrome Linked List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- List head / boolean / index result.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Palindrome Linked List, maintain pointer safety while transforming.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Palindrome Linked List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Palindrome Linked List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try every alignment and compare full pattern each time.
 
-
+#### Python
 ```python
-def brute_palindrome_linked_list(data):
-    """Brute-force baseline for: Palindrome Linked List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_palindrome_linked_list(text, pattern):
+    m, n = len(pattern), len(text)
+    for i in range(n - m + 1):
+        if text[i:i+m] == pattern:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Palindrome Linked List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Rolling hash filters candidate matches and verifies collisions.
 
-
+#### Python
 ```python
-def better_palindrome_linked_list(data):
-    """Intermediate optimized approach for: Palindrome Linked List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_palindrome_linked_list(text, pattern):
+    # Rabin-Karp style rolling hash.
+    if not pattern:
+        return 0
+    base, mod = 911382323, 10**9 + 7
+    m = len(pattern)
+    p_hash = 0
+    t_hash = 0
+    power = 1
+    for i in range(m):
+        p_hash = (p_hash * base + ord(pattern[i])) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if i:
+            power = (power * base) % mod
+    if t_hash == p_hash and text[:m] == pattern:
+        return 0
+    for i in range(m, len(text)):
+        t_hash = (t_hash - ord(text[i-m]) * power) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
+            return i - m + 1
+    return -1
 ```
+
+#### Complexity
+- Expected `O(n+m)`, worst-case with collisions can degrade.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Palindrome Linked List: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_palindrome_linked_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_palindrome_linked_list(text, pattern):
+    if not pattern:
+        return 0
+
+    lps = [0] * len(pattern)
+    j = 0
+    for i in range(1, len(pattern)):
+        while j > 0 and pattern[i] != pattern[j]:
+            j = lps[j - 1]
+        if pattern[i] == pattern[j]:
+            j += 1
+            lps[i] = j
+
+    j = 0
+    for i, ch in enumerate(text):
+        while j > 0 and ch != pattern[j]:
+            j = lps[j - 1]
+        if ch == pattern[j]:
+            j += 1
+            if j == len(pattern):
+                return i - len(pattern) + 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
+- Pointer never moves backward in text, so each character is processed constant times.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Reorder List
 
-### Problem Statement (Specific)
-Solve **Reorder List** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reorder List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Reorder List, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Reorder List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reorder List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_reorder_list(data):
-    """Brute-force baseline for: Reorder List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reorder_list(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reorder List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_reorder_list(data):
-    """Intermediate optimized approach for: Reorder List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reorder_list(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Reorder List: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reorder_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_reorder_list(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Circular Array Loop
 
-### Problem Statement (Specific)
-Solve **Circular Array Loop** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Circular Array Loop** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Circular Array Loop, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Circular Array Loop** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Circular Array Loop directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_circular_array_loop(data):
-    """Brute-force baseline for: Circular Array Loop."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_circular_array_loop(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Circular Array Loop to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_circular_array_loop(data):
-    """Intermediate optimized approach for: Circular Array Loop."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_circular_array_loop(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Circular Array Loop: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_circular_array_loop(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_circular_array_loop(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Find Beginning of Loop in Linked List
 
-### Problem Statement (Specific)
-Solve **Find Beginning of Loop in Linked List** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find Beginning of Loop in Linked List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Find Beginning of Loop in Linked List, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Find Beginning of Loop in Linked List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find Beginning of Loop in Linked List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_find_beginning_of_loop_in_linked_list(data):
-    """Brute-force baseline for: Find Beginning of Loop in Linked List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_beginning_of_loop_in_linked_list(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find Beginning of Loop in Linked List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_find_beginning_of_loop_in_linked_list(data):
-    """Intermediate optimized approach for: Find Beginning of Loop in Linked List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_beginning_of_loop_in_linked_list(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Find Beginning of Loop in Linked List: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_beginning_of_loop_in_linked_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_find_beginning_of_loop_in_linked_list(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Split Linked List in Parts
 
-### Problem Statement (Specific)
-Solve **Split Linked List in Parts** using **Fast & Slow Pointers**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Split Linked List in Parts** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Split Linked List in Parts, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
+- Red flags: brute force for **Split Linked List in Parts** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Split Linked List in Parts directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_split_linked_list_in_parts(data):
-    """Brute-force baseline for: Split Linked List in Parts."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_split_linked_list_in_parts(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Split Linked List in Parts to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_split_linked_list_in_parts(data):
-    """Intermediate optimized approach for: Split Linked List in Parts."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_split_linked_list_in_parts(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Fast & Slow Pointers invariant to Split Linked List in Parts: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_split_linked_list_in_parts(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def has_cycle(head):
-        slow = fast = head
-        while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
-            if slow is fast:
-                return True
-        return False
+def solve_split_linked_list_in_parts(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

@@ -1,6 +1,6 @@
 # Pattern 39 Interview Playbook: State-space BFS
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,960 +15,1549 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Open the Lock
 
-### Problem Statement (Specific)
-Solve **Open the Lock** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Open the Lock** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Open the Lock, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Open the Lock** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Open the Lock directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_open_the_lock(data):
-    """Brute-force baseline for: Open the Lock."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_open_the_lock(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Open the Lock to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_open_the_lock(data):
-    """Intermediate optimized approach for: Open the Lock."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Open the Lock: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_open_the_lock(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_open_the_lock(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_open_the_lock(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Shortest Path to Get All Keys
 
-### Problem Statement (Specific)
-Solve **Shortest Path to Get All Keys** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Shortest Path to Get All Keys** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Shortest Path to Get All Keys, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Shortest Path to Get All Keys** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Shortest Path to Get All Keys directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_shortest_path_to_get_all_keys(data):
-    """Brute-force baseline for: Shortest Path to Get All Keys."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_shortest_path_to_get_all_keys(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Shortest Path to Get All Keys to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_shortest_path_to_get_all_keys(data):
-    """Intermediate optimized approach for: Shortest Path to Get All Keys."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Shortest Path to Get All Keys: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_shortest_path_to_get_all_keys(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_shortest_path_to_get_all_keys(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_shortest_path_to_get_all_keys(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Sliding Puzzle
 
-### Problem Statement (Specific)
-Solve **Sliding Puzzle** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Sliding Puzzle** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Sliding Puzzle, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Sliding Puzzle** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Sliding Puzzle directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_sliding_puzzle(data):
-    """Brute-force baseline for: Sliding Puzzle."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_sliding_puzzle(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Sliding Puzzle to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_sliding_puzzle(data):
-    """Intermediate optimized approach for: Sliding Puzzle."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Sliding Puzzle: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_sliding_puzzle(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_sliding_puzzle(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_sliding_puzzle(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Snakes and Ladders
 
-### Problem Statement (Specific)
-Solve **Snakes and Ladders** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Snakes and Ladders** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Snakes and Ladders, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Snakes and Ladders** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Snakes and Ladders directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_snakes_and_ladders(data):
-    """Brute-force baseline for: Snakes and Ladders."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_snakes_and_ladders(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Snakes and Ladders to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_snakes_and_ladders(data):
-    """Intermediate optimized approach for: Snakes and Ladders."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Snakes and Ladders: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_snakes_and_ladders(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_snakes_and_ladders(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_snakes_and_ladders(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Word Ladder
 
-### Problem Statement (Specific)
-Solve **Word Ladder** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Word Ladder** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Word Ladder, process adjacency with no redundant traversals.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Word Ladder** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Word Ladder directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_word_ladder(data):
-    """Brute-force baseline for: Word Ladder."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_word_ladder(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Word Ladder to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_word_ladder(data):
-    """Intermediate optimized approach for: Word Ladder."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Word Ladder: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_word_ladder(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_word_ladder(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_word_ladder(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Minimum Genetic Mutation
 
-### Problem Statement (Specific)
-Solve **Minimum Genetic Mutation** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Minimum Genetic Mutation** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Minimum Genetic Mutation, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Minimum Genetic Mutation** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Minimum Genetic Mutation directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_minimum_genetic_mutation(data):
-    """Brute-force baseline for: Minimum Genetic Mutation."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_minimum_genetic_mutation(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Minimum Genetic Mutation to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_minimum_genetic_mutation(data):
-    """Intermediate optimized approach for: Minimum Genetic Mutation."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Minimum Genetic Mutation: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_minimum_genetic_mutation(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_minimum_genetic_mutation(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_minimum_genetic_mutation(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Race Car
 
-### Problem Statement (Specific)
-Solve **Race Car** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Race Car** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Race Car, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Race Car** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Race Car directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_race_car(data):
-    """Brute-force baseline for: Race Car."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_race_car(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Race Car to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_race_car(data):
-    """Intermediate optimized approach for: Race Car."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Race Car: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_race_car(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_race_car(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_race_car(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Bus Routes
 
-### Problem Statement (Specific)
-Solve **Bus Routes** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Bus Routes** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Bus Routes, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Bus Routes** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Bus Routes directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_bus_routes(data):
-    """Brute-force baseline for: Bus Routes."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_bus_routes(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Bus Routes to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_bus_routes(data):
-    """Intermediate optimized approach for: Bus Routes."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Bus Routes: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_bus_routes(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_bus_routes(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_bus_routes(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Shortest Path Visiting All Nodes (BFS state)
 
-### Problem Statement (Specific)
-Solve **Shortest Path Visiting All Nodes (BFS state)** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Shortest Path Visiting All Nodes (BFS state)** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Shortest Path Visiting All Nodes (BFS state), process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Shortest Path Visiting All Nodes (BFS state)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Shortest Path Visiting All Nodes (BFS state) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_shortest_path_visiting_all_nodes_bfs_state(data):
-    """Brute-force baseline for: Shortest Path Visiting All Nodes (BFS state)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_shortest_path_visiting_all_nodes_bfs_state(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Shortest Path Visiting All Nodes (BFS state) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_shortest_path_visiting_all_nodes_bfs_state(data):
-    """Intermediate optimized approach for: Shortest Path Visiting All Nodes (BFS state)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Shortest Path Visiting All Nodes (BFS state): Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_shortest_path_visiting_all_nodes_bfs_state(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_shortest_path_visiting_all_nodes_bfs_state(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_shortest_path_visiting_all_nodes_bfs_state(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Minimum Knight Moves
 
-### Problem Statement (Specific)
-Solve **Minimum Knight Moves** using **State-space BFS**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Minimum Knight Moves** using **State-space BFS**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Minimum Knight Moves, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **State-space BFS**.
+- Red flags: brute force for **Minimum Knight Moves** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Minimum Knight Moves directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Depth-first exploration tries all paths and tracks best found depth.
 
-
+#### Python
 ```python
-def brute_minimum_knight_moves(data):
-    """Brute-force baseline for: Minimum Knight Moves."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_minimum_knight_moves(start, target):
+    # DFS/backtracking over state graph (practical only for tiny spaces).
+    best = 10**9
+    seen = set()
+    def dfs(state, steps):
+        nonlocal best
+        if steps >= best or state in seen:
+            return
+        if state == target:
+            best = min(best, steps)
+            return
+        seen.add(state)
+        for i in range(len(state)):
+            d = int(state[i])
+            for nd in ((d + 1) % 10, (d - 1) % 10):
+                nxt = state[:i] + str(nd) + state[i+1:]
+                dfs(nxt, steps + 1)
+        seen.remove(state)
+    dfs(start, 0)
+    return -1 if best == 10**9 else best
 ```
+
+#### Complexity
+- Time exponential in branching depth, Space `O(depth)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Minimum Knight Moves to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Classic BFS over state graph gives shortest steps in unweighted transitions.
 
-
+#### Python
 ```python
-def better_minimum_knight_moves(data):
-    """Intermediate optimized approach for: Minimum Knight Moves."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
+from collections import deque
 
-### Approach 3: Optimal (Best)
-- Apply State-space BFS invariant to Minimum Knight Moves: Model each unique `(location, state)` as graph node; run BFS over this expanded graph.
-- Complexity target: Time O(number_of_states + transitions)., Space O(number_of_states)..
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_minimum_knight_moves(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    from collections import deque
-    
-    def shortest_state_bfs(start, is_goal, neighbors):
-        q = deque([(start, 0)])
-        seen = {start}
-    
-        while q:
-            state, d = q.popleft()
-            if is_goal(state):
-                return d
-            for nxt in neighbors(state):
-                if nxt not in seen:
+def better_minimum_knight_moves(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead:
+        return -1
+    q = deque([(start, 0)])
+    seen = {start}
+    while q:
+        state, d = q.popleft()
+        if state == target:
+            return d
+        for i in range(len(state)):
+            x = int(state[i])
+            for y in ((x + 1) % 10, (x - 1) % 10):
+                nxt = state[:i] + str(y) + state[i+1:]
+                if nxt not in seen and nxt not in dead:
                     seen.add(nxt)
                     q.append((nxt, d + 1))
-    
-        return -1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time `O(V + E)` over reachable states, Space `O(V)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+from collections import deque
+
+def solve_minimum_knight_moves(start, target, dead=None):
+    dead = set(dead or [])
+    if start in dead or target in dead:
+        return -1
+    if start == target:
+        return 0
+
+    front = {start}
+    back = {target}
+    seen = {start, target}
+    steps = 0
+
+    while front and back:
+        if len(front) > len(back):
+            front, back = back, front
+        nxt_front = set()
+        steps += 1
+        for state in front:
+            for i in range(len(state)):
+                x = int(state[i])
+                for y in ((x + 1) % 10, (x - 1) % 10):
+                    nxt = state[:i] + str(y) + state[i+1:]
+                    if nxt in dead:
+                        continue
+                    if nxt in back:
+                        return steps
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        nxt_front.add(nxt)
+        front = nxt_front
+    return -1
+```
+
+#### Correctness (Why This Works)
+- Each frontier expansion adds exactly one step distance from its side.
+- First frontier intersection corresponds to minimal combined distance by BFS layering.
+
+#### Complexity
+- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

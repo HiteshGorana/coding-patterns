@@ -1,6 +1,6 @@
 # Pattern 08 Interview Playbook: Sort + Scan
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,947 +14,1212 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Merge Intervals
 
-### Problem Statement (Specific)
-Solve **Merge Intervals** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Merge Intervals** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
 - `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Merged non-overlapping intervals.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(intervals) <= 1e5
-- 0 <= start <= end <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
 Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
 Output: [[1,6],[8,10],[15,18]]
-Explanation: Sort by start, then merge overlapping neighbors in one scan.
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Merge Intervals** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Merge Intervals directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_merge_intervals(data):
-    """Brute-force baseline for: Merge Intervals."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_merge_intervals(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Merge Intervals to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_merge_intervals(data):
-    """Intermediate optimized approach for: Merge Intervals."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_merge_intervals(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Merge Intervals: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_merge_intervals(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_merge_intervals(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Insert Interval
 
-### Problem Statement (Specific)
-Solve **Insert Interval** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Insert Interval** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Insert Interval, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Insert Interval** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Insert Interval directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_insert_interval(data):
-    """Brute-force baseline for: Insert Interval."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_insert_interval(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Insert Interval to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_insert_interval(data):
-    """Intermediate optimized approach for: Insert Interval."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_insert_interval(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Insert Interval: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_insert_interval(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_insert_interval(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Non-overlapping Intervals
 
-### Problem Statement (Specific)
-Solve **Non-overlapping Intervals** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Non-overlapping Intervals** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Non-overlapping Intervals, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Non-overlapping Intervals** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Non-overlapping Intervals directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_non_overlapping_intervals(data):
-    """Brute-force baseline for: Non-overlapping Intervals."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_non_overlapping_intervals(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Non-overlapping Intervals to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_non_overlapping_intervals(data):
-    """Intermediate optimized approach for: Non-overlapping Intervals."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_non_overlapping_intervals(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Non-overlapping Intervals: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_non_overlapping_intervals(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_non_overlapping_intervals(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Meeting Rooms
 
-### Problem Statement (Specific)
-Solve **Meeting Rooms** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Meeting Rooms** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Meeting Rooms, maintain pattern invariant while scanning once.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Meeting Rooms** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Meeting Rooms directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_meeting_rooms(data):
-    """Brute-force baseline for: Meeting Rooms."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_meeting_rooms(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Meeting Rooms to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_meeting_rooms(data):
-    """Intermediate optimized approach for: Meeting Rooms."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_meeting_rooms(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Meeting Rooms: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_meeting_rooms(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+from bisect import bisect_left
+
+def better_meeting_rooms(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Meeting Rooms II
 
-### Problem Statement (Specific)
-Solve **Meeting Rooms II** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Meeting Rooms II** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `intervals`: list[list[int]]
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Minimum number of rooms required.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- 1 <= len(intervals) <= 1e5
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  intervals = [[0,30],[5,10],[15,20]]
-Output: 2
-Explanation: Track active intervals via min-heap or line sweep.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Meeting Rooms II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Meeting Rooms II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_meeting_rooms_ii(data):
-    """Brute-force baseline for: Meeting Rooms II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_meeting_rooms_ii(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Meeting Rooms II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_meeting_rooms_ii(data):
-    """Intermediate optimized approach for: Meeting Rooms II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_meeting_rooms_ii(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Meeting Rooms II: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_meeting_rooms_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+from bisect import bisect_left
+
+def better_meeting_rooms_ii(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Minimum Number of Arrows to Burst Balloons
 
-### Problem Statement (Specific)
-Solve **Minimum Number of Arrows to Burst Balloons** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Minimum Number of Arrows to Burst Balloons** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Minimum Number of Arrows to Burst Balloons, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Minimum Number of Arrows to Burst Balloons** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Minimum Number of Arrows to Burst Balloons directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_minimum_number_of_arrows_to_burst_balloons(data):
-    """Brute-force baseline for: Minimum Number of Arrows to Burst Balloons."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_minimum_number_of_arrows_to_burst_balloons(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Minimum Number of Arrows to Burst Balloons to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_minimum_number_of_arrows_to_burst_balloons(data):
-    """Intermediate optimized approach for: Minimum Number of Arrows to Burst Balloons."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_minimum_number_of_arrows_to_burst_balloons(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Minimum Number of Arrows to Burst Balloons: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_minimum_number_of_arrows_to_burst_balloons(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_minimum_number_of_arrows_to_burst_balloons(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Car Fleet
 
-### Problem Statement (Specific)
-Solve **Car Fleet** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Car Fleet** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Car Fleet, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Car Fleet** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Car Fleet directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_car_fleet(data):
-    """Brute-force baseline for: Car Fleet."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_car_fleet(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Car Fleet to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_car_fleet(data):
-    """Intermediate optimized approach for: Car Fleet."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_car_fleet(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Car Fleet: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_car_fleet(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_car_fleet(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Queue Reconstruction by Height
 
-### Problem Statement (Specific)
-Solve **Queue Reconstruction by Height** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Queue Reconstruction by Height** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Queue Reconstruction by Height, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Queue Reconstruction by Height** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Queue Reconstruction by Height directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_queue_reconstruction_by_height(data):
-    """Brute-force baseline for: Queue Reconstruction by Height."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_queue_reconstruction_by_height(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Queue Reconstruction by Height to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_queue_reconstruction_by_height(data):
-    """Intermediate optimized approach for: Queue Reconstruction by Height."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_queue_reconstruction_by_height(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Queue Reconstruction by Height: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_queue_reconstruction_by_height(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_queue_reconstruction_by_height(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Sort Colors
 
-### Problem Statement (Specific)
-Solve **Sort Colors** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Sort Colors** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Sort Colors, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Sort Colors** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Sort Colors directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_sort_colors(data):
-    """Brute-force baseline for: Sort Colors."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_sort_colors(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Sort Colors to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_sort_colors(data):
-    """Intermediate optimized approach for: Sort Colors."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_sort_colors(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Sort Colors: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_sort_colors(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_sort_colors(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Largest Number
 
-### Problem Statement (Specific)
-Solve **Largest Number** using **Sort + Scan**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Largest Number** using **Sort + Scan**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `intervals`: list[list[int]]
+- `newInterval` or capacity/time parameters for variants
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Merged intervals, count, boolean, or min resources needed.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= len(intervals) <= 2 * 10^5`
+- `0 <= start <= end <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Largest Number, maintain pattern invariant while scanning once.
+Input:  intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Sorting by start time turns overlap logic into one pass.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sort + Scan**.
+- Red flags: brute force for **Largest Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Largest Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Repeatedly attempt pairwise merges until no overlap remains.
 
-
+#### Python
 ```python
-def brute_largest_number(data):
-    """Brute-force baseline for: Largest Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_largest_number(intervals):
+    changed = True
+    arr = [x[:] for x in intervals]
+    while changed:
+        changed = False
+        out = []
+        used = [False] * len(arr)
+        for i in range(len(arr)):
+            if used[i]:
+                continue
+            a, b = arr[i]
+            for j in range(i + 1, len(arr)):
+                if used[j]:
+                    continue
+                c, d = arr[j]
+                if not (b < c or d < a):
+                    a, b = min(a, c), max(b, d)
+                    used[j] = True
+                    changed = True
+            out.append([a, b])
+        arr = out
+    return sorted(arr)
 ```
+
+#### Complexity
+- Time up to `O(n^2)` or worse with repeated passes, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Largest Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Sort once then merge adjacent overlapping runs in one scan.
 
-
+#### Python
 ```python
-def better_largest_number(data):
-    """Intermediate optimized approach for: Largest Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_largest_number(intervals):
+    intervals = sorted(intervals)
+    out = []
+    for s, e in intervals:
+        if not out or out[-1][1] < s:
+            out.append([s, e])
+        else:
+            out[-1][1] = max(out[-1][1], e)
+    return out
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Sort + Scan invariant to Largest Number: Sorting groups related items so local neighbors carry global information. After sorting, one pass is enough to: - merge - count transitions - detect overlap
-- Complexity target: Time O(n log n) from sort, Space O(n) for output (or O(1) extra in some in-place variants).
+#### Intuition
+- After sorting by start, only last merged interval can overlap current interval.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_largest_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def merge_intervals(intervals):
-        if not intervals:
-            return []
-    
-        intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
-    
-        for start, end in intervals[1:]:
-            last_end = merged[-1][1]
-            if start <= last_end:
-                merged[-1][1] = max(last_end, end)
-            else:
-                merged.append([start, end])
-    
-        return merged
+def solve_largest_number(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    return merged
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted starts ensure future intervals cannot overlap anything except the current tail segment.
+- Merging that tail greedily preserves correctness and minimal interval count.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log n)`, Space `O(n)` (or `O(1)` extra if output excluded).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

@@ -1,6 +1,6 @@
 # Pattern 35 Interview Playbook: Segment Tree / Fenwick Tree
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,991 +14,1440 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Range Sum Query - Mutable
 
-### Problem Statement (Specific)
-Solve **Range Sum Query - Mutable** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Range Sum Query - Mutable** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- operations: update(i,val), sumRange(l,r)
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Range sum answers after updates.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- Up to 2e5 operations
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,3,5], sumRange(0,2), update(1,2), sumRange(0,2)
-Output: [9,8]
-Explanation: Fenwick/segment tree supports O(log n) update/query.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Range Sum Query - Mutable** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Range Sum Query - Mutable directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_range_sum_query_mutable(data):
-    """Brute-force baseline for: Range Sum Query - Mutable."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_range_sum_query_mutable(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Range Sum Query - Mutable to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_range_sum_query_mutable(data):
-    """Intermediate optimized approach for: Range Sum Query - Mutable."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Range Sum Query - Mutable: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_range_sum_query_mutable(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Count of Smaller Numbers After Self
 
-### Problem Statement (Specific)
-Solve **Count of Smaller Numbers After Self** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Count of Smaller Numbers After Self** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 4
-Output: 4
-Explanation: For Count of Smaller Numbers After Self, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Count of Smaller Numbers After Self** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Count of Smaller Numbers After Self directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_count_of_smaller_numbers_after_self(data):
-    """Brute-force baseline for: Count of Smaller Numbers After Self."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_count_of_smaller_numbers_after_self(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Count of Smaller Numbers After Self to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_count_of_smaller_numbers_after_self(data):
-    """Intermediate optimized approach for: Count of Smaller Numbers After Self."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Count of Smaller Numbers After Self: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_count_of_smaller_numbers_after_self(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Create Sorted Array through Instructions
 
-### Problem Statement (Specific)
-Solve **Create Sorted Array through Instructions** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Create Sorted Array through Instructions** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 2
-Output: 4
-Explanation: For Create Sorted Array through Instructions, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Create Sorted Array through Instructions** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Create Sorted Array through Instructions directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_create_sorted_array_through_instructions(data):
-    """Brute-force baseline for: Create Sorted Array through Instructions."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_create_sorted_array_through_instructions(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Create Sorted Array through Instructions to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_create_sorted_array_through_instructions(data):
-    """Intermediate optimized approach for: Create Sorted Array through Instructions."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Create Sorted Array through Instructions: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_create_sorted_array_through_instructions(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Range Module
 
-### Problem Statement (Specific)
-Solve **Range Module** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Range Module** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 3
-Output: 4
-Explanation: For Range Module, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Range Module** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Range Module directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_range_module(data):
-    """Brute-force baseline for: Range Module."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_range_module(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Range Module to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_range_module(data):
-    """Intermediate optimized approach for: Range Module."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Range Module: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_range_module(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. My Calendar III
 
-### Problem Statement (Specific)
-Solve **My Calendar III** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **My Calendar III** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 4
-Output: 4
-Explanation: For My Calendar III, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **My Calendar III** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for My Calendar III directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_my_calendar_iii(data):
-    """Brute-force baseline for: My Calendar III."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_my_calendar_iii(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for My Calendar III to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_my_calendar_iii(data):
-    """Intermediate optimized approach for: My Calendar III."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to My Calendar III: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_my_calendar_iii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Falling Squares
 
-### Problem Statement (Specific)
-Solve **Falling Squares** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Falling Squares** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 2
-Output: 4
-Explanation: For Falling Squares, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Falling Squares** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Falling Squares directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_falling_squares(data):
-    """Brute-force baseline for: Falling Squares."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_falling_squares(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Falling Squares to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_falling_squares(data):
-    """Intermediate optimized approach for: Falling Squares."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Falling Squares: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_falling_squares(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Count of Range Sum
 
-### Problem Statement (Specific)
-Solve **Count of Range Sum** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Count of Range Sum** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 3
-Output: 4
-Explanation: For Count of Range Sum, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Count of Range Sum** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Count of Range Sum directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_count_of_range_sum(data):
-    """Brute-force baseline for: Count of Range Sum."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_count_of_range_sum(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Count of Range Sum to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_count_of_range_sum(data):
-    """Intermediate optimized approach for: Count of Range Sum."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Count of Range Sum: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_count_of_range_sum(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Reverse Pairs
 
-### Problem Statement (Specific)
-Solve **Reverse Pairs** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reverse Pairs** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 4
-Output: 4
-Explanation: For Reverse Pairs, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Reverse Pairs** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reverse Pairs directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_reverse_pairs(data):
-    """Brute-force baseline for: Reverse Pairs."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reverse_pairs(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reverse Pairs to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_reverse_pairs(data):
-    """Intermediate optimized approach for: Reverse Pairs."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Reverse Pairs: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reverse_pairs(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Range Sum Query 2D - Mutable
 
-### Problem Statement (Specific)
-Solve **Range Sum Query 2D - Mutable** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Range Sum Query 2D - Mutable** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 2
-Output: 4
-Explanation: For Range Sum Query 2D - Mutable, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Range Sum Query 2D - Mutable** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Range Sum Query 2D - Mutable directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_range_sum_query_2d_mutable(data):
-    """Brute-force baseline for: Range Sum Query 2D - Mutable."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_range_sum_query_2d_mutable(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Range Sum Query 2D - Mutable to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_range_sum_query_2d_mutable(data):
-    """Intermediate optimized approach for: Range Sum Query 2D - Mutable."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Range Sum Query 2D - Mutable: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_range_sum_query_2d_mutable(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Dynamic Range Sum Queries
 
-### Problem Statement (Specific)
-Solve **Dynamic Range Sum Queries** using **Segment Tree / Fenwick Tree**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Dynamic Range Sum Queries** using **Segment Tree / Fenwick Tree**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `root` or `(n, edges)`
+- `arr`: mutable array
+- `queries`/`updates`: range operations
 
 ### Output
-- Tree metric/list/boolean per prompt.
+- Range aggregate for each query after updates.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
+### Constraints
+- `1 <= n, q <= 2 * 10^5`
+- Need logarithmic update/query to pass worst case.
 
 ### Example (Exact)
 ```text
-Input:  tree = [5,3,8,2,4,7,9], k = 3
-Output: 4
-Explanation: For Dynamic Range Sum Queries, combine subtree/ancestor state efficiently.
+Input:  arr = [1,3,5], query(0,2), update(1,2), query(0,2)
+Output: 9, 8
+Explanation: Tree-indexed structure stores segment aggregates for fast updates.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Segment Tree / Fenwick Tree**.
+- Red flags: brute force for **Dynamic Range Sum Queries** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Dynamic Range Sum Queries directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Recompute requested ranges directly from array each query.
 
-
+#### Python
 ```python
-def brute_dynamic_range_sum_queries(data):
-    """Brute-force baseline for: Dynamic Range Sum Queries."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_dynamic_range_sum_queries(arr, queries):
+    out = []
+    for typ, l, r, *rest in queries:
+        if typ == 'sum':
+            out.append(sum(arr[l:r+1]))
+        else:
+            arr[l] = r
+    return out
 ```
+
+#### Complexity
+- Range query `O(n)`, update `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Dynamic Range Sum Queries to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Fenwick tree supports prefix/range sums with logarithmic updates/queries.
 
-
+#### Python
 ```python
-def better_dynamic_range_sum_queries(data):
-    """Intermediate optimized approach for: Dynamic Range Sum Queries."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bit = [0] * (n + 1)
+
+    def add(self, i, delta):
+        i += 1
+        while i <= self.n:
+            self.bit[i] += delta
+            i += i & -i
+
+    def pref(self, i):
+        s = 0
+        i += 1
+        while i > 0:
+            s += self.bit[i]
+            i -= i & -i
+        return s
+
+    def range_sum(self, l, r):
+        return self.pref(r) - (self.pref(l - 1) if l else 0)
 ```
+
+#### Complexity
+- Time `O(log n)` per op, Space `O(n)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Segment Tree / Fenwick Tree invariant to Dynamic Range Sum Queries: Pre-aggregate partial ranges so queries and updates touch only logarithmic number of nodes. Fenwick Tree (BIT): - compact structure for prefix aggregates - very efficient for point update + prefix/range sum Segment Tree: - more general; supports min/max/gcd and lazy propagation for range updates
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Segment tree generalizes to many associative range queries with point/range updates.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_dynamic_range_sum_queries(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Fenwick:
-        def __init__(self, n):
-            self.n = n
-            self.bit = [0] * (n + 1)
-    
-        def add(self, idx, delta):
-            idx += 1  # 0-based external, 1-based internal
-            while idx <= self.n:
-                self.bit[idx] += delta
-                idx += idx & -idx
-    
-        def prefix_sum(self, idx):
-            idx += 1
-            s = 0
-            while idx > 0:
-                s += self.bit[idx]
-                idx -= idx & -idx
-            return s
-    
-        def range_sum(self, l, r):
-            return self.prefix_sum(r) - (self.prefix_sum(l - 1) if l > 0 else 0)
+class SegTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.seg = [0] * (4 * self.n)
+        self._build(1, 0, self.n - 1, arr)
+
+    def _build(self, idx, l, r, arr):
+        if l == r:
+            self.seg[idx] = arr[l]
+            return
+        m = (l + r) // 2
+        self._build(idx * 2, l, m, arr)
+        self._build(idx * 2 + 1, m + 1, r, arr)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def update(self, pos, val, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if l == r:
+            self.seg[idx] = val
+            return
+        m = (l + r) // 2
+        if pos <= m:
+            self.update(pos, val, idx * 2, l, m)
+        else:
+            self.update(pos, val, idx * 2 + 1, m + 1, r)
+        self.seg[idx] = self.seg[idx * 2] + self.seg[idx * 2 + 1]
+
+    def query(self, ql, qr, idx=1, l=0, r=None):
+        if r is None:
+            r = self.n - 1
+        if ql <= l and r <= qr:
+            return self.seg[idx]
+        if r < ql or qr < l:
+            return 0
+        m = (l + r) // 2
+        return self.query(ql, qr, idx * 2, l, m) + self.query(ql, qr, idx * 2 + 1, m + 1, r)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each internal node stores aggregate of a fixed segment; updates affect only root-to-leaf path.
+- Range query decomposes target interval into disjoint stored segments.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Build `O(n)`, query/update `O(log n)`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

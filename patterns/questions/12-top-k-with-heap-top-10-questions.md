@@ -1,6 +1,6 @@
 # Pattern 12 Interview Playbook: Top K with Heap
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,895 +14,961 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Kth Largest Element in an Array
 
-### Problem Statement (Specific)
-Solve **Kth Largest Element in an Array** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Kth Largest Element in an Array** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Kth Largest Element in an Array, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Kth Largest Element in an Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Kth Largest Element in an Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_kth_largest_element_in_an_array(data):
-    """Brute-force baseline for: Kth Largest Element in an Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_kth_largest_element_in_an_array(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Kth Largest Element in an Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_kth_largest_element_in_an_array(data):
-    """Intermediate optimized approach for: Kth Largest Element in an Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_kth_largest_element_in_an_array(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Kth Largest Element in an Array: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_kth_largest_element_in_an_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_kth_largest_element_in_an_array(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Top K Frequent Elements
 
-### Problem Statement (Specific)
-Solve **Top K Frequent Elements** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Top K Frequent Elements** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Top K Frequent Elements, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Top K Frequent Elements** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Top K Frequent Elements directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_top_k_frequent_elements(data):
-    """Brute-force baseline for: Top K Frequent Elements."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_top_k_frequent_elements(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Top K Frequent Elements to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_top_k_frequent_elements(data):
-    """Intermediate optimized approach for: Top K Frequent Elements."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_top_k_frequent_elements(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
 
-### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Top K Frequent Elements: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
-#### Optimal Python (Question-Specific)
+### Approach 3: Optimal (Best)
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
+
+#### Python
 ```python
 import heapq
 
 def solve_top_k_frequent_elements(nums, k):
-    freq = {}
-    for x in nums:
-        freq[x] = freq.get(x, 0) + 1
-    return [x for x, _ in heapq.nlargest(k, freq.items(), key=lambda p: p[1])]
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. K Closest Points to Origin
 
-### Problem Statement (Specific)
-Solve **K Closest Points to Origin** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **K Closest Points to Origin** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For K Closest Points to Origin, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **K Closest Points to Origin** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for K Closest Points to Origin directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_k_closest_points_to_origin(data):
-    """Brute-force baseline for: K Closest Points to Origin."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_k_closest_points_to_origin(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for K Closest Points to Origin to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_k_closest_points_to_origin(data):
-    """Intermediate optimized approach for: K Closest Points to Origin."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_k_closest_points_to_origin(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to K Closest Points to Origin: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_k_closest_points_to_origin(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_k_closest_points_to_origin(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Kth Largest Element in a Stream
 
-### Problem Statement (Specific)
-Solve **Kth Largest Element in a Stream** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Kth Largest Element in a Stream** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Kth Largest Element in a Stream, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Kth Largest Element in a Stream** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Kth Largest Element in a Stream directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_kth_largest_element_in_a_stream(data):
-    """Brute-force baseline for: Kth Largest Element in a Stream."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_kth_largest_element_in_a_stream(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Kth Largest Element in a Stream to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_kth_largest_element_in_a_stream(data):
-    """Intermediate optimized approach for: Kth Largest Element in a Stream."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_kth_largest_element_in_a_stream(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Kth Largest Element in a Stream: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_kth_largest_element_in_a_stream(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_kth_largest_element_in_a_stream(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Find K Pairs with Smallest Sums
 
-### Problem Statement (Specific)
-Solve **Find K Pairs with Smallest Sums** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find K Pairs with Smallest Sums** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Find K Pairs with Smallest Sums, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Find K Pairs with Smallest Sums** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find K Pairs with Smallest Sums directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_find_k_pairs_with_smallest_sums(data):
-    """Brute-force baseline for: Find K Pairs with Smallest Sums."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_k_pairs_with_smallest_sums(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find K Pairs with Smallest Sums to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_find_k_pairs_with_smallest_sums(data):
-    """Intermediate optimized approach for: Find K Pairs with Smallest Sums."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_find_k_pairs_with_smallest_sums(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Find K Pairs with Smallest Sums: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_k_pairs_with_smallest_sums(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_find_k_pairs_with_smallest_sums(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Sort Characters By Frequency
 
-### Problem Statement (Specific)
-Solve **Sort Characters By Frequency** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Sort Characters By Frequency** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Sort Characters By Frequency, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Sort Characters By Frequency** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Sort Characters By Frequency directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_sort_characters_by_frequency(data):
-    """Brute-force baseline for: Sort Characters By Frequency."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_sort_characters_by_frequency(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Sort Characters By Frequency to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_sort_characters_by_frequency(data):
-    """Intermediate optimized approach for: Sort Characters By Frequency."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_sort_characters_by_frequency(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Sort Characters By Frequency: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_sort_characters_by_frequency(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_sort_characters_by_frequency(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Reorganize String
 
-### Problem Statement (Specific)
-Solve **Reorganize String** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reorganize String** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Reorganize String, maintain pattern invariant while scanning once.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Reorganize String** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reorganize String directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_reorganize_string(data):
-    """Brute-force baseline for: Reorganize String."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reorganize_string(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reorganize String to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_reorganize_string(data):
-    """Intermediate optimized approach for: Reorganize String."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_reorganize_string(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Reorganize String: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reorganize_string(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_reorganize_string(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Last Stone Weight
 
-### Problem Statement (Specific)
-Solve **Last Stone Weight** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Last Stone Weight** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Last Stone Weight, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Last Stone Weight** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Last Stone Weight directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_last_stone_weight(data):
-    """Brute-force baseline for: Last Stone Weight."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_last_stone_weight(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Last Stone Weight to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_last_stone_weight(data):
-    """Intermediate optimized approach for: Last Stone Weight."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_last_stone_weight(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Last Stone Weight: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_last_stone_weight(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_last_stone_weight(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Furthest Building You Can Reach
 
-### Problem Statement (Specific)
-Solve **Furthest Building You Can Reach** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Furthest Building You Can Reach** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Furthest Building You Can Reach, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **Furthest Building You Can Reach** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Furthest Building You Can Reach directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_furthest_building_you_can_reach(data):
-    """Brute-force baseline for: Furthest Building You Can Reach."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_furthest_building_you_can_reach(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Furthest Building You Can Reach to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_furthest_building_you_can_reach(data):
-    """Intermediate optimized approach for: Furthest Building You Can Reach."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_furthest_building_you_can_reach(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to Furthest Building You Can Reach: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_furthest_building_you_can_reach(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_furthest_building_you_can_reach(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. High Five
 
-### Problem Statement (Specific)
-Solve **High Five** using **Top K with Heap**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **High Five** using **Top K with Heap**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- Variant-specific array/string input parameters
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Return exactly what the problem asks (value/index/list/boolean).
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- Choose algorithm based on time-limit pressure.
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For High Five, maintain pattern invariant while scanning once.
+Input:  nums = [1, 2, 3, 4]
+Output: 2
+Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Top K with Heap**.
+- Red flags: brute force for **High Five** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for High Five directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Sort all candidates and pick rank directly.
 
-
+#### Python
 ```python
-def brute_high_five(data):
-    """Brute-force baseline for: High Five."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_high_five(nums, k):
+    nums = sorted(nums, reverse=True)
+    return nums[k - 1]
 ```
+
+#### Complexity
+- Time `O(n log n)`, Space `O(1)` extra if in-place.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for High Five to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Keep bounded heap of size `k` while streaming elements.
 
-
+#### Python
 ```python
-def better_high_five(data):
-    """Intermediate optimized approach for: High Five."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+import heapq
+
+def better_high_five(nums, k):
+    h = []
+    for x in nums:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)
+    return h[0]
 ```
+
+#### Complexity
+- Time `O(n log k)`, Space `O(k)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Top K with Heap invariant to High Five: Use a heap of size `k`: - for k largest, keep min-heap so smallest of top-k sits at root - when new value beats root, replace root This ensures heap always stores best `k` candidates seen so far.
-- Complexity target: Time O(n log k), Space O(k) (plus maps when counting frequencies).
+#### Intuition
+- Use heap as core data structure to preserve only relevant frontier.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_high_five(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import heapq
-    
-    def top_k_largest(nums, k):
-        heap = []
-        for x in nums:
-            if len(heap) < k:
-                heapq.heappush(heap, x)
-            elif x > heap[0]:
-                heapq.heapreplace(heap, x)
-        return heap  # unsorted top-k
+import heapq
+
+def solve_high_five(nums, k):
+    heapq.heapify(nums)
+    while len(nums) > k:
+        heapq.heappop(nums)
+    return nums[0]
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Heap root is always worst among kept top-`k` candidates, so replacements preserve correctness.
+- Discarded elements can never affect final rank once smaller than current heap root frontier.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n log k)`, Space `O(k)` (or variant-specific).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

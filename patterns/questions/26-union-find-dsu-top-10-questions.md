@@ -1,6 +1,6 @@
 # Pattern 26 Interview Playbook: Union-Find (Disjoint Set Union)
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,988 +14,1373 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Redundant Connection
 
-### Problem Statement (Specific)
-Solve **Redundant Connection** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Redundant Connection** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Redundant Connection, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Redundant Connection** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Redundant Connection directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_redundant_connection(data):
-    """Brute-force baseline for: Redundant Connection."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_redundant_connection(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Redundant Connection to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_redundant_connection(data):
-    """Intermediate optimized approach for: Redundant Connection."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_redundant_connection(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Redundant Connection: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_redundant_connection(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_redundant_connection(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Number of Provinces
 
-### Problem Statement (Specific)
-Solve **Number of Provinces** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Number of Provinces** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Number of Provinces, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Number of Provinces** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Number of Provinces directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_number_of_provinces(data):
-    """Brute-force baseline for: Number of Provinces."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_number_of_provinces(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Number of Provinces to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_number_of_provinces(data):
-    """Intermediate optimized approach for: Number of Provinces."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_number_of_provinces(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Number of Provinces: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_number_of_provinces(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_number_of_provinces(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Accounts Merge
 
-### Problem Statement (Specific)
-Solve **Accounts Merge** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Accounts Merge** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Accounts Merge, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Accounts Merge** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Accounts Merge directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_accounts_merge(data):
-    """Brute-force baseline for: Accounts Merge."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_accounts_merge(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Accounts Merge to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_accounts_merge(data):
-    """Intermediate optimized approach for: Accounts Merge."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_accounts_merge(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Accounts Merge: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_accounts_merge(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_accounts_merge(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Graph Valid Tree
 
-### Problem Statement (Specific)
-Solve **Graph Valid Tree** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Graph Valid Tree** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Graph Valid Tree, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Graph Valid Tree** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Graph Valid Tree directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_graph_valid_tree(data):
-    """Brute-force baseline for: Graph Valid Tree."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_graph_valid_tree(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Graph Valid Tree to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_graph_valid_tree(data):
-    """Intermediate optimized approach for: Graph Valid Tree."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_graph_valid_tree(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Graph Valid Tree: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_graph_valid_tree(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_graph_valid_tree(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Number of Islands II
 
-### Problem Statement (Specific)
-Solve **Number of Islands II** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Number of Islands II** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `grid`: list[list[str]]
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Count of connected components of land.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= rows, cols <= 300
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  grid = [["1","1","0"],["1","0","0"],["0","0","1"]]
-Output: 2
-Explanation: DFS/BFS each unvisited land cell once.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Number of Islands II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Number of Islands II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_number_of_islands_ii(data):
-    """Brute-force baseline for: Number of Islands II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_number_of_islands_ii(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Number of Islands II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_number_of_islands_ii(data):
-    """Intermediate optimized approach for: Number of Islands II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_number_of_islands_ii(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Number of Islands II: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_number_of_islands_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+from collections import deque
+
+def better_number_of_islands_ii(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Most Stones Removed with Same Row or Column
 
-### Problem Statement (Specific)
-Solve **Most Stones Removed with Same Row or Column** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Most Stones Removed with Same Row or Column** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Most Stones Removed with Same Row or Column, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Most Stones Removed with Same Row or Column** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Most Stones Removed with Same Row or Column directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_most_stones_removed_with_same_row_or_column(data):
-    """Brute-force baseline for: Most Stones Removed with Same Row or Column."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_most_stones_removed_with_same_row_or_column(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Most Stones Removed with Same Row or Column to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_most_stones_removed_with_same_row_or_column(data):
-    """Intermediate optimized approach for: Most Stones Removed with Same Row or Column."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_most_stones_removed_with_same_row_or_column(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Most Stones Removed with Same Row or Column: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_most_stones_removed_with_same_row_or_column(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_most_stones_removed_with_same_row_or_column(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Satisfiability of Equality Equations
 
-### Problem Statement (Specific)
-Solve **Satisfiability of Equality Equations** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Satisfiability of Equality Equations** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Satisfiability of Equality Equations, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Satisfiability of Equality Equations** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Satisfiability of Equality Equations directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_satisfiability_of_equality_equations(data):
-    """Brute-force baseline for: Satisfiability of Equality Equations."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_satisfiability_of_equality_equations(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Satisfiability of Equality Equations to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_satisfiability_of_equality_equations(data):
-    """Intermediate optimized approach for: Satisfiability of Equality Equations."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_satisfiability_of_equality_equations(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Satisfiability of Equality Equations: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_satisfiability_of_equality_equations(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_satisfiability_of_equality_equations(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Min Cost to Connect All Points
 
-### Problem Statement (Specific)
-Solve **Min Cost to Connect All Points** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Min Cost to Connect All Points** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Min Cost to Connect All Points, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Min Cost to Connect All Points** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Min Cost to Connect All Points directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try all possible spanning subsets and keep minimum connected one.
 
-
+#### Python
 ```python
-def brute_min_cost_to_connect_all_points(data):
-    """Brute-force baseline for: Min Cost to Connect All Points."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
-```
+def brute_min_cost_to_connect_all_points(n, edges):
+    # Enumerate all spanning edge subsets of size n-1 (only for tiny n).
+    from itertools import combinations
 
-### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Min Cost to Connect All Points to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
-
-
-```python
-def better_min_cost_to_connect_all_points(data):
-    """Intermediate optimized approach for: Min Cost to Connect All Points."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Min Cost to Connect All Points: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
-
-#### Optimal Python (Question-Specific)
-```python
-def solve_min_cost_to_connect_all_points(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
+    best = float('inf')
+    for comb in combinations(edges, n - 1):
+        parent = list(range(n))
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+        def union(a, b):
+            ra, rb = find(a), find(b)
             if ra == rb:
                 return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
+            parent[rb] = ra
             return True
+        w = 0
+        c = 0
+        ok = True
+        for u, v, wt in comb:
+            if not union(u, v):
+                ok = False
+                break
+            w += wt
+            c += 1
+        if ok and c == n - 1 and len({find(i) for i in range(n)}) == 1:
+            best = min(best, w)
+    return best if best < float('inf') else -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Time combinatorial `O(C(m, n-1) * alpha(n))`, Space `O(n)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 2: Better (Intermediate)
+#### Intuition
+- Use Prim to grow one connected component with cheapest boundary edge.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+import heapq
+
+def better_min_cost_to_connect_all_points(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v, w in edges:
+        g[u].append((w, v))
+        g[v].append((w, u))
+
+    seen = [False] * n
+    h = [(0, 0)]
+    total = 0
+    used = 0
+    while h and used < n:
+        w, u = heapq.heappop(h)
+        if seen[u]:
+            continue
+        seen[u] = True
+        total += w
+        used += 1
+        for nw, v in g[u]:
+            if not seen[v]:
+                heapq.heappush(h, (nw, v))
+    return total if used == n else -1
+```
+
+#### Complexity
+- Time `O(m log n)`, Space `O(m)`.
+
+### Approach 3: Optimal (Best)
+#### Intuition
+- Kruskal sorts edges and greedily adds non-cycle edges via DSU.
+
+#### Python
+```python
+def solve_min_cost_to_connect_all_points(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    total = 0
+    used = 0
+    for u, v, w in sorted(edges, key=lambda x: x[2]):
+        if union(u, v):
+            total += w
+            used += 1
+            if used == n - 1:
+                break
+    return total if used == n - 1 else -1
+```
+
+#### Correctness (Why This Works)
+- Cut property: lightest edge crossing any cut belongs to some MST.
+- Kruskal repeatedly selects globally light feasible edges, preserving MST optimality.
+
+#### Complexity
+- Time `O(m log m)`, Space `O(n)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. The Earliest Moment When Everyone Become Friends
 
-### Problem Statement (Specific)
-Solve **The Earliest Moment When Everyone Become Friends** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **The Earliest Moment When Everyone Become Friends** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For The Earliest Moment When Everyone Become Friends, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **The Earliest Moment When Everyone Become Friends** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for The Earliest Moment When Everyone Become Friends directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_the_earliest_moment_when_everyone_become_friends(data):
-    """Brute-force baseline for: The Earliest Moment When Everyone Become Friends."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_the_earliest_moment_when_everyone_become_friends(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for The Earliest Moment When Everyone Become Friends to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_the_earliest_moment_when_everyone_become_friends(data):
-    """Intermediate optimized approach for: The Earliest Moment When Everyone Become Friends."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_the_earliest_moment_when_everyone_become_friends(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to The Earliest Moment When Everyone Become Friends: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_the_earliest_moment_when_everyone_become_friends(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_the_earliest_moment_when_everyone_become_friends(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Detect Cycle in Undirected Graph
 
-### Problem Statement (Specific)
-Solve **Detect Cycle in Undirected Graph** using **Union-Find (Disjoint Set Union)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Detect Cycle in Undirected Graph** using **Union-Find (Disjoint Set Union)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes
+- `edges`/`pairs`: list[list[int]] connectivity operations
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Component count, cycle detection result, or merged groups based on prompt.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5`
+- `0 <= m <= 4 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Detect Cycle in Undirected Graph, process adjacency with no redundant traversals.
+Input:  n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2  # connected components
+Explanation: Union operations merge sets; repeated find on same root signals existing connectivity.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Union-Find (Disjoint Set Union)**.
+- Red flags: brute force for **Detect Cycle in Undirected Graph** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Detect Cycle in Undirected Graph directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Build adjacency and count components with graph traversal.
 
-
+#### Python
 ```python
-def brute_detect_cycle_in_undirected_graph(data):
-    """Brute-force baseline for: Detect Cycle in Undirected Graph."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_detect_cycle_in_undirected_graph(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    comp = 0
+    for i in range(n):
+        if seen[i]:
+            continue
+        comp += 1
+        st = [i]
+        seen[i] = True
+        while st:
+            u = st.pop()
+            for v in g[u]:
+                if not seen[v]:
+                    seen[v] = True
+                    st.append(v)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Detect Cycle in Undirected Graph to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use plain DSU without balancing/path compression.
 
-
+#### Python
 ```python
-def better_detect_cycle_in_undirected_graph(data):
-    """Intermediate optimized approach for: Detect Cycle in Undirected Graph."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_detect_cycle_in_undirected_graph(n, edges):
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            x = parent[x]
+        return x
+    for u, v in edges:
+        ru, rv = find(u), find(v)
+        if ru != rv:
+            parent[rv] = ru
+    return len({find(i) for i in range(n)})
 ```
+
+#### Complexity
+- Near-linear but can degrade in adversarial union order.
 
 ### Approach 3: Optimal (Best)
-- Apply Union-Find (Disjoint Set Union) invariant to Detect Cycle in Undirected Graph: Represent each component as a tree with representative root. - `find(x)` returns component root - `union(a, b)` merges components if roots differ Optimizations: - path compression in `find` - union by rank/size
-- Complexity target: Time pattern-optimal, Space O(n).
+#### Intuition
+- Union by rank + path compression gives inverse-Ackermann amortized operations.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_detect_cycle_in_undirected_graph(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class DSU:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.size = [1] * n
-    
-        def find(self, x):
-            if self.parent[x] != x:
-                self.parent[x] = self.find(self.parent[x])
-            return self.parent[x]
-    
-        def union(self, a, b):
-            ra, rb = self.find(a), self.find(b)
-            if ra == rb:
-                return False
-            if self.size[ra] < self.size[rb]:
-                ra, rb = rb, ra
-            self.parent[rb] = ra
-            self.size[ra] += self.size[rb]
-            return True
+def solve_detect_cycle_in_undirected_graph(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+        return True
+
+    comps = n
+    for u, v in edges:
+        if union(u, v):
+            comps -= 1
+    return comps
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Each set representative defines one connected component partition.
+- Union merges partitions exactly when an inter-component edge appears.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O((n+m) * alpha(n))`, Space `O(n)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

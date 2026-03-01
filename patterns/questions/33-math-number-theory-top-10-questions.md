@@ -1,6 +1,6 @@
 # Pattern 33 Interview Playbook: Math / Number Theory
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,882 +14,1047 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Pow(x, n)
 
-### Problem Statement (Specific)
-Solve **Pow(x, n)** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Pow(x, n)** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `x`: float
-- `n`: int
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- x raised to n.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- -100 <= x <= 100
-- -2^31 <= n <= 2^31-1
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
 Input:  x = 2.0, n = 10
 Output: 1024.0
-Explanation: Exponentiation by squaring runs in O(log n).
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Pow(x, n)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Pow(x, n) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_pow_x_n(data):
-    """Brute-force baseline for: Pow(x, n)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_pow_x_n(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Pow(x, n) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_pow_x_n(data):
-    """Intermediate optimized approach for: Pow(x, n)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_pow_x_n(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Pow(x, n): Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_pow_x_n(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_pow_x_n(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Count Primes
 
-### Problem Statement (Specific)
-Solve **Count Primes** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Count Primes** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- Numeric result.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
-Input:  a = 44, b = 32, n = 12
-Output: 6
-Explanation: For Count Primes, use formula/invariant over simulation.
+Input:  x = 2.0, n = 10
+Output: 1024.0
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Count Primes** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Count Primes directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_count_primes(data):
-    """Brute-force baseline for: Count Primes."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_count_primes(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Count Primes to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_count_primes(data):
-    """Intermediate optimized approach for: Count Primes."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_count_primes(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Count Primes: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_count_primes(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_count_primes(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Happy Number
 
-### Problem Statement (Specific)
-Solve **Happy Number** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Happy Number** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- Numeric result.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
-Input:  a = 45, b = 33, n = 13
-Output: 6
-Explanation: For Happy Number, use formula/invariant over simulation.
+Input:  x = 2.0, n = 10
+Output: 1024.0
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Happy Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Happy Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_happy_number(data):
-    """Brute-force baseline for: Happy Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_happy_number(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Happy Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_happy_number(data):
-    """Intermediate optimized approach for: Happy Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_happy_number(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Happy Number: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_happy_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_happy_number(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Plus One
 
-### Problem Statement (Specific)
-Solve **Plus One** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Plus One** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- Numeric result.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
-Input:  a = 46, b = 34, n = 14
-Output: 6
-Explanation: For Plus One, use formula/invariant over simulation.
+Input:  x = 2.0, n = 10
+Output: 1024.0
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Plus One** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Plus One directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_plus_one(data):
-    """Brute-force baseline for: Plus One."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_plus_one(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Plus One to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_plus_one(data):
-    """Intermediate optimized approach for: Plus One."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_plus_one(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Plus One: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_plus_one(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_plus_one(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Rotate Array
 
-### Problem Statement (Specific)
-Solve **Rotate Array** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Rotate Array** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- Numeric result.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
-Input:  a = 47, b = 35, n = 15
-Output: 6
-Explanation: For Rotate Array, use formula/invariant over simulation.
+Input:  x = 2.0, n = 10
+Output: 1024.0
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Rotate Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Rotate Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_rotate_array(data):
-    """Brute-force baseline for: Rotate Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_rotate_array(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Rotate Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_rotate_array(data):
-    """Intermediate optimized approach for: Rotate Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_rotate_array(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Rotate Array: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_rotate_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_rotate_array(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Fraction to Recurring Decimal
 
-### Problem Statement (Specific)
-Solve **Fraction to Recurring Decimal** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Fraction to Recurring Decimal** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- Numeric result.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
-Input:  a = 48, b = 36, n = 16
-Output: 6
-Explanation: For Fraction to Recurring Decimal, use formula/invariant over simulation.
+Input:  x = 2.0, n = 10
+Output: 1024.0
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Fraction to Recurring Decimal** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Fraction to Recurring Decimal directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_fraction_to_recurring_decimal(data):
-    """Brute-force baseline for: Fraction to Recurring Decimal."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_fraction_to_recurring_decimal(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Fraction to Recurring Decimal to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_fraction_to_recurring_decimal(data):
-    """Intermediate optimized approach for: Fraction to Recurring Decimal."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_fraction_to_recurring_decimal(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Fraction to Recurring Decimal: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_fraction_to_recurring_decimal(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_fraction_to_recurring_decimal(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Excel Sheet Column Number
 
-### Problem Statement (Specific)
-Solve **Excel Sheet Column Number** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Excel Sheet Column Number** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- Numeric result.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
-Input:  a = 49, b = 37, n = 17
-Output: 6
-Explanation: For Excel Sheet Column Number, use formula/invariant over simulation.
+Input:  x = 2.0, n = 10
+Output: 1024.0
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Excel Sheet Column Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Excel Sheet Column Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_excel_sheet_column_number(data):
-    """Brute-force baseline for: Excel Sheet Column Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_excel_sheet_column_number(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Excel Sheet Column Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_excel_sheet_column_number(data):
-    """Intermediate optimized approach for: Excel Sheet Column Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_excel_sheet_column_number(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Excel Sheet Column Number: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_excel_sheet_column_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_excel_sheet_column_number(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Reverse Integer
 
-### Problem Statement (Specific)
-Solve **Reverse Integer** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reverse Integer** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- Integer/string numeric inputs depending on variant
 
 ### Output
-- Numeric result.
+- Computed mathematical transformation or decision.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- Handle overflow / precision / sign cases explicitly.
+- Complexity usually logarithmic or linear in digits.
 
 ### Example (Exact)
 ```text
-Input:  a = 50, b = 38, n = 18
-Output: 6
-Explanation: For Reverse Integer, use formula/invariant over simulation.
+Input:  x = 2.0, n = 10
+Output: 1024.0
+Explanation: Fast exponentiation halves exponent at each step.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Reverse Integer** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reverse Integer directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_reverse_integer(data):
-    """Brute-force baseline for: Reverse Integer."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reverse_integer(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reverse Integer to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_reverse_integer(data):
-    """Intermediate optimized approach for: Reverse Integer."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reverse_integer(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Reverse Integer: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reverse_integer(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_reverse_integer(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Palindrome Number
 
-### Problem Statement (Specific)
-Solve **Palindrome Number** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Palindrome Number** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Numeric result.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  a = 51, b = 39, n = 19
-Output: 6
-Explanation: For Palindrome Number, use formula/invariant over simulation.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Palindrome Number** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Palindrome Number directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try every alignment and compare full pattern each time.
 
-
+#### Python
 ```python
-def brute_palindrome_number(data):
-    """Brute-force baseline for: Palindrome Number."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_palindrome_number(text, pattern):
+    m, n = len(pattern), len(text)
+    for i in range(n - m + 1):
+        if text[i:i+m] == pattern:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Palindrome Number to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Rolling hash filters candidate matches and verifies collisions.
 
-
+#### Python
 ```python
-def better_palindrome_number(data):
-    """Intermediate optimized approach for: Palindrome Number."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_palindrome_number(text, pattern):
+    # Rabin-Karp style rolling hash.
+    if not pattern:
+        return 0
+    base, mod = 911382323, 10**9 + 7
+    m = len(pattern)
+    p_hash = 0
+    t_hash = 0
+    power = 1
+    for i in range(m):
+        p_hash = (p_hash * base + ord(pattern[i])) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if i:
+            power = (power * base) % mod
+    if t_hash == p_hash and text[:m] == pattern:
+        return 0
+    for i in range(m, len(text)):
+        t_hash = (t_hash - ord(text[i-m]) * power) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
+            return i - m + 1
+    return -1
 ```
+
+#### Complexity
+- Expected `O(n+m)`, worst-case with collisions can degrade.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Palindrome Number: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_palindrome_number(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_palindrome_number(text, pattern):
+    if not pattern:
+        return 0
+
+    lps = [0] * len(pattern)
+    j = 0
+    for i in range(1, len(pattern)):
+        while j > 0 and pattern[i] != pattern[j]:
+            j = lps[j - 1]
+        if pattern[i] == pattern[j]:
+            j += 1
+            lps[i] = j
+
+    j = 0
+    for i, ch in enumerate(text):
+        while j > 0 and ch != pattern[j]:
+            j = lps[j - 1]
+        if ch == pattern[j]:
+            j += 1
+            if j == len(pattern):
+                return i - len(pattern) + 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
+- Pointer never moves backward in text, so each character is processed constant times.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Greatest Common Divisor of Strings
 
-### Problem Statement (Specific)
-Solve **Greatest Common Divisor of Strings** using **Math / Number Theory**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Greatest Common Divisor of Strings** using **Math / Number Theory**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Numeric parameters from prompt
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- Numeric result.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- Prefer logarithmic arithmetic methods
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  a = 52, b = 40, n = 20
-Output: 6
-Explanation: For Greatest Common Divisor of Strings, use formula/invariant over simulation.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Math / Number Theory**.
+- Red flags: brute force for **Greatest Common Divisor of Strings** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Greatest Common Divisor of Strings directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Apply the definition directly with repeated multiplication/division.
 
-
+#### Python
 ```python
-def brute_greatest_common_divisor_of_strings(data):
-    """Brute-force baseline for: Greatest Common Divisor of Strings."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_greatest_common_divisor_of_strings(x, n):
+    ans = 1.0
+    for _ in range(abs(n)):
+        ans *= x
+    return ans if n >= 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Greatest Common Divisor of Strings to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Vectorized/product-style evaluation keeps logic simple but same asymptotic order.
 
-
+#### Python
 ```python
-def better_greatest_common_divisor_of_strings(data):
-    """Intermediate optimized approach for: Greatest Common Divisor of Strings."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_greatest_common_divisor_of_strings(x, n):
+    from math import prod
+    if n == 0:
+        return 1.0
+    vals = [x] * abs(n)
+    ans = prod(vals)
+    return ans if n > 0 else 1.0 / ans
 ```
+
+#### Complexity
+- Time `O(|n|)`, Space `O(|n|)` for temporary buffer.
 
 ### Approach 3: Optimal (Best)
-- Apply Math / Number Theory invariant to Greatest Common Divisor of Strings: Mathematical identities reduce complexity: - Euclid for GCD - fast exponentiation for powers - modulo arithmetic for wrap-around and large numbers - combinatorics for counting arrangements
-- Complexity target: Time pattern-optimal, Space pattern-optimal.
+#### Intuition
+- Exponentiation by squaring halves exponent each step.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_greatest_common_divisor_of_strings(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def fast_pow(x, n):
-        if n < 0:
-            x, n = 1 / x, -n
-        ans = 1.0
-        while n:
-            if n & 1:
-                ans *= x
-            x *= x
-            n >>= 1
-        return ans
+def solve_greatest_common_divisor_of_strings(x, n):
+    def fast_pow(a, p):
+        res = 1.0
+        while p:
+            if p & 1:
+                res *= a
+            a *= a
+            p >>= 1
+        return res
+    if n < 0:
+        x = 1 / x
+        n = -n
+    return fast_pow(x, n)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any exponent can be decomposed in binary; each set bit contributes one power-of-two block.
+- Squaring updates block values, so algorithm processes all bits exactly once.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log |n|)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

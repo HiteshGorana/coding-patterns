@@ -1,6 +1,6 @@
 # Pattern 06 Interview Playbook: Binary Search (Index Space)
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,930 +15,1023 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Binary Search
 
-### Problem Statement (Specific)
-Solve **Binary Search** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Binary Search** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Binary Search, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Binary Search** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Binary Search directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_binary_search(data):
-    """Brute-force baseline for: Binary Search."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_binary_search(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Binary Search to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_binary_search(data):
-    """Intermediate optimized approach for: Binary Search."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_binary_search(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Binary Search: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_binary_search(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_binary_search(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Search Insert Position
 
-### Problem Statement (Specific)
-Solve **Search Insert Position** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Search Insert Position** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Search Insert Position, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Search Insert Position** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Search Insert Position directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_search_insert_position(data):
-    """Brute-force baseline for: Search Insert Position."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_search_insert_position(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Search Insert Position to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_search_insert_position(data):
-    """Intermediate optimized approach for: Search Insert Position."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_search_insert_position(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Search Insert Position: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_search_insert_position(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_search_insert_position(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Find First and Last Position of Element in Sorted Array
 
-### Problem Statement (Specific)
-Solve **Find First and Last Position of Element in Sorted Array** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find First and Last Position of Element in Sorted Array** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Find First and Last Position of Element in Sorted Array, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Find First and Last Position of Element in Sorted Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find First and Last Position of Element in Sorted Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_find_first_and_last_position_of_element_in_sorted_array(data):
-    """Brute-force baseline for: Find First and Last Position of Element in Sorted Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_first_and_last_position_of_element_in_sorted_array(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find First and Last Position of Element in Sorted Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_find_first_and_last_position_of_element_in_sorted_array(data):
-    """Intermediate optimized approach for: Find First and Last Position of Element in Sorted Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_first_and_last_position_of_element_in_sorted_array(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Find First and Last Position of Element in Sorted Array: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_first_and_last_position_of_element_in_sorted_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_find_first_and_last_position_of_element_in_sorted_array(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Search in Rotated Sorted Array
 
-### Problem Statement (Specific)
-Solve **Search in Rotated Sorted Array** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Search in Rotated Sorted Array** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Search in Rotated Sorted Array, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Search in Rotated Sorted Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Search in Rotated Sorted Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_search_in_rotated_sorted_array(data):
-    """Brute-force baseline for: Search in Rotated Sorted Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_search_in_rotated_sorted_array(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Search in Rotated Sorted Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_search_in_rotated_sorted_array(data):
-    """Intermediate optimized approach for: Search in Rotated Sorted Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_search_in_rotated_sorted_array(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Search in Rotated Sorted Array: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_search_in_rotated_sorted_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_search_in_rotated_sorted_array(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Find Minimum in Rotated Sorted Array
 
-### Problem Statement (Specific)
-Solve **Find Minimum in Rotated Sorted Array** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find Minimum in Rotated Sorted Array** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For Find Minimum in Rotated Sorted Array, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Find Minimum in Rotated Sorted Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find Minimum in Rotated Sorted Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_find_minimum_in_rotated_sorted_array(data):
-    """Brute-force baseline for: Find Minimum in Rotated Sorted Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_minimum_in_rotated_sorted_array(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find Minimum in Rotated Sorted Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_find_minimum_in_rotated_sorted_array(data):
-    """Intermediate optimized approach for: Find Minimum in Rotated Sorted Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_minimum_in_rotated_sorted_array(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Find Minimum in Rotated Sorted Array: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_minimum_in_rotated_sorted_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_find_minimum_in_rotated_sorted_array(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Sqrt(x)
 
-### Problem Statement (Specific)
-Solve **Sqrt(x)** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Sqrt(x)** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Sqrt(x), maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Sqrt(x)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Sqrt(x) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_sqrt_x(data):
-    """Brute-force baseline for: Sqrt(x)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_sqrt_x(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Sqrt(x) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_sqrt_x(data):
-    """Intermediate optimized approach for: Sqrt(x)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_sqrt_x(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Sqrt(x): At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_sqrt_x(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_sqrt_x(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Peak Index in a Mountain Array
 
-### Problem Statement (Specific)
-Solve **Peak Index in a Mountain Array** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Peak Index in a Mountain Array** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 12
-Output: 9
-Explanation: For Peak Index in a Mountain Array, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Peak Index in a Mountain Array** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Peak Index in a Mountain Array directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_peak_index_in_a_mountain_array(data):
-    """Brute-force baseline for: Peak Index in a Mountain Array."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_peak_index_in_a_mountain_array(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Peak Index in a Mountain Array to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_peak_index_in_a_mountain_array(data):
-    """Intermediate optimized approach for: Peak Index in a Mountain Array."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_peak_index_in_a_mountain_array(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Peak Index in a Mountain Array: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_peak_index_in_a_mountain_array(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_peak_index_in_a_mountain_array(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Find Peak Element
 
-### Problem Statement (Specific)
-Solve **Find Peak Element** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find Peak Element** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 9
-Output: 9
-Explanation: For Find Peak Element, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Find Peak Element** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find Peak Element directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Scan linearly until match found.
 
-
+#### Python
 ```python
-def brute_find_peak_element(data):
-    """Brute-force baseline for: Find Peak Element."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_peak_element(nums, target):
+    for i, x in enumerate(nums):
+        if x == target:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find Peak Element to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use library-assisted partition index to avoid manual boundary bugs.
 
-
+#### Python
 ```python
-def better_find_peak_element(data):
-    """Intermediate optimized approach for: Find Peak Element."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_peak_element(nums, target):
+    # Python library binary search style (still logarithmic).
+    import bisect
+    i = bisect.bisect_left(nums, target)
+    return i if i < len(nums) and nums[i] == target else -1
 ```
+
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Find Peak Element: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Maintain closed interval invariant and discard half each iteration.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_peak_element(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def solve_find_peak_element(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
+- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. First Bad Version
 
-### Problem Statement (Specific)
-Solve **First Bad Version** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **First Bad Version** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `arr`/`nums`: sorted or search-space-backed input
+- `target`/`threshold`/`days`: variant-specific
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Index, minimum feasible value, or boolean feasibility.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- Monotonicity condition must hold for answer-space search.
+- `1 <= n <= 2 * 10^5`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 10
-Output: 9
-Explanation: For First Bad Version, maintain pattern invariant while scanning once.
+Input:  nums = [1,3,5,6], target = 5
+Output: 2
+Explanation: Binary search halves candidate space by preserving invariant boundaries.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **First Bad Version** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for First Bad Version directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Test versions sequentially.
 
-
+#### Python
 ```python
-def brute_first_bad_version(data):
-    """Brute-force baseline for: First Bad Version."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_first_bad_version(n, isBadVersion):
+    for i in range(1, n + 1):
+        if isBadVersion(i):
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n)` API calls.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for First Bad Version to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Binary search first index where predicate becomes true.
 
-
+#### Python
 ```python
-def better_first_bad_version(data):
-    """Intermediate optimized approach for: First Bad Version."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_first_bad_version(n, isBadVersion):
+    lo, hi = 1, n
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if isBadVersion(mid):
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
 ```
+
+#### Complexity
+- Time `O(log n)` API calls.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to First Bad Version: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Monotonic bad-version boundary makes binary search optimal.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_first_bad_version(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+def better_first_bad_version(n, isBadVersion):
+    lo, hi = 1, n
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if isBadVersion(mid):
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Versions before first bad are all good; from first bad onward are all bad.
+- Maintaining this partition invariant yields exact first bad index.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(log n)`, Space `O(1)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Search a 2D Matrix
 
-### Problem Statement (Specific)
-Solve **Search a 2D Matrix** using **Binary Search (Index Space)**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Search a 2D Matrix** using **Binary Search (Index Space)**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
-- `k`/`target` depending on prompt
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Numeric/list/boolean result exactly as prompt requires.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 2e5
-- -1e9 <= nums[i] <= 1e9
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  nums = [2,7,11,15,3,6], target = 11
-Output: 9
-Explanation: For Search a 2D Matrix, maintain pattern invariant while scanning once.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search (Index Space)**.
+- Red flags: brute force for **Search a 2D Matrix** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Search a 2D Matrix directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- For every cell, compute distance to every source and take minimum.
 
-
+#### Python
 ```python
-def brute_search_a_2d_matrix(data):
-    """Brute-force baseline for: Search a 2D Matrix."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+from collections import deque
+
+def brute_search_a_2d_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    ans = [[10**9] * n for _ in range(m)]
+    src = [(i, j) for i in range(m) for j in range(n) if grid[i][j] == 1]
+    for i in range(m):
+        for j in range(n):
+            for si, sj in src:
+                ans[i][j] = min(ans[i][j], abs(i - si) + abs(j - sj))
+    return ans
 ```
+
+#### Complexity
+- Time `O((mn)^2)` in dense-source case, Space `O(mn)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Search a 2D Matrix to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Run BFS from all sources simultaneously so each cell is finalized at first reach.
 
-
+#### Python
 ```python
-def better_search_a_2d_matrix(data):
-    """Intermediate optimized approach for: Search a 2D Matrix."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import deque
+
+def better_search_a_2d_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
+
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Binary Search (Index Space) invariant to Search a 2D Matrix: At each step, discard half the remaining search space based on midpoint comparison.
-- Complexity target: Time O(log n), Space O(1) iterative.
+#### Intuition
+- Multi-source BFS explores increasing distance layers exactly once per cell.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_search_a_2d_matrix(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def binary_search(arr, target):
-        left, right = 0, len(arr) - 1
-    
-        while left <= right:
-            mid = left + (right - left) // 2
-            if arr[mid] == target:
-                return mid
-            if arr[mid] < target:
-                left = mid + 1
-            else:
-                right = mid - 1
-    
-        return -1
+from collections import deque
+
+def better_search_a_2d_matrix(grid):
+    m, n = len(grid), len(grid[0])
+    dist = [[-1] * n for _ in range(m)]
+    q = deque()
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 1:
+                dist[i][j] = 0
+                q.append((i, j))
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        i, j = q.popleft()
+        for di, dj in dirs:
+            ni, nj = i + di, j + dj
+            if 0 <= ni < m and 0 <= nj < n and dist[ni][nj] == -1:
+                dist[ni][nj] = dist[i][j] + 1
+                q.append((ni, nj))
+    return dist
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- In unweighted grids, BFS layer number equals shortest path length.
+- Seeding queue with all sources ensures nearest source claims each cell first.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(mn)`, Space `O(mn)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

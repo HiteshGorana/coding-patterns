@@ -1,6 +1,6 @@
 # Pattern 34 Interview Playbook: Design Data Structures
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,65 +14,74 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. LRU Cache
 
-### Problem Statement (Specific)
-Solve **LRU Cache** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **LRU Cache** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list over `LRUCache` API
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of all `get` operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Up to 2e5 operations
-- Each operation should be O(1) average
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
-Input:  ops = ["LRUCache","put","put","get","put","get"], args = [[2],[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,null,1,null,-1]
-Explanation: Hash map + doubly-linked list maintains recency ordering in O(1).
+Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **LRU Cache** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for LRU Cache directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_lru_cache(data):
-    """Brute-force baseline for: LRU Cache."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteLruCache:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for LRU Cache to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
-```python
-def better_lru_cache(data):
-    """Intermediate optimized approach for: LRU Cache."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
-```
-
-### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to LRU Cache: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
-
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
 from collections import OrderedDict
 
-class LRUCache:
+class BetterLruCache:
     def __init__(self, capacity):
         self.cap = capacity
         self.od = OrderedDict()
@@ -91,883 +100,1544 @@ class LRUCache:
             self.od.popitem(last=False)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+### Approach 3: Optimal (Best)
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+#### Python
+```python
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveLruCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
+```
+
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
+
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
+
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. LFU Cache
 
-### Problem Statement (Specific)
-Solve **LFU Cache** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **LFU Cache** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For LFU Cache, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **LFU Cache** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for LFU Cache directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_lfu_cache(data):
-    """Brute-force baseline for: LFU Cache."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteLfuCache:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for LFU Cache to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_lfu_cache(data):
-    """Intermediate optimized approach for: LFU Cache."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterLfuCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to LFU Cache: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_lfu_cache(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveLfuCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Min Stack
 
-### Problem Statement (Specific)
-Solve **Min Stack** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Min Stack** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For Min Stack, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **Min Stack** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Min Stack directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_min_stack(data):
-    """Brute-force baseline for: Min Stack."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteMinStack:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Min Stack to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_min_stack(data):
-    """Intermediate optimized approach for: Min Stack."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterMinStack:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to Min Stack: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_min_stack(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveMinStack:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Implement Queue using Stacks
 
-### Problem Statement (Specific)
-Solve **Implement Queue using Stacks** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Implement Queue using Stacks** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For Implement Queue using Stacks, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **Implement Queue using Stacks** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Implement Queue using Stacks directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_implement_queue_using_stacks(data):
-    """Brute-force baseline for: Implement Queue using Stacks."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteImplementQueueUsingStacks:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Implement Queue using Stacks to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_implement_queue_using_stacks(data):
-    """Intermediate optimized approach for: Implement Queue using Stacks."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterImplementQueueUsingStacks:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to Implement Queue using Stacks: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_implement_queue_using_stacks(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveImplementQueueUsingStacks:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Implement Stack using Queues
 
-### Problem Statement (Specific)
-Solve **Implement Stack using Queues** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Implement Stack using Queues** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For Implement Stack using Queues, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **Implement Stack using Queues** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Implement Stack using Queues directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_implement_stack_using_queues(data):
-    """Brute-force baseline for: Implement Stack using Queues."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteImplementStackUsingQueues:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Implement Stack using Queues to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_implement_stack_using_queues(data):
-    """Intermediate optimized approach for: Implement Stack using Queues."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterImplementStackUsingQueues:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to Implement Stack using Queues: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_implement_stack_using_queues(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveImplementStackUsingQueues:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Time Based Key-Value Store
 
-### Problem Statement (Specific)
-Solve **Time Based Key-Value Store** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Time Based Key-Value Store** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For Time Based Key-Value Store, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **Time Based Key-Value Store** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Time Based Key-Value Store directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_time_based_key_value_store(data):
-    """Brute-force baseline for: Time Based Key-Value Store."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteTimeBasedKeyValueStore:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Time Based Key-Value Store to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_time_based_key_value_store(data):
-    """Intermediate optimized approach for: Time Based Key-Value Store."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterTimeBasedKeyValueStore:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to Time Based Key-Value Store: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_time_based_key_value_store(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveTimeBasedKeyValueStore:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Insert Delete GetRandom O(1)
 
-### Problem Statement (Specific)
-Solve **Insert Delete GetRandom O(1)** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Insert Delete GetRandom O(1)** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For Insert Delete GetRandom O(1), keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **Insert Delete GetRandom O(1)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Insert Delete GetRandom O(1) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_insert_delete_getrandom_o_1(data):
-    """Brute-force baseline for: Insert Delete GetRandom O(1)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteInsertDeleteGetrandomO1:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Insert Delete GetRandom O(1) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_insert_delete_getrandom_o_1(data):
-    """Intermediate optimized approach for: Insert Delete GetRandom O(1)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterInsertDeleteGetrandomO1:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to Insert Delete GetRandom O(1): Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_insert_delete_getrandom_o_1(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveInsertDeleteGetrandomO1:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Design HashMap
 
-### Problem Statement (Specific)
-Solve **Design HashMap** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Design HashMap** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For Design HashMap, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **Design HashMap** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Design HashMap directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_design_hashmap(data):
-    """Brute-force baseline for: Design HashMap."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteDesignHashmap:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Design HashMap to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_design_hashmap(data):
-    """Intermediate optimized approach for: Design HashMap."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterDesignHashmap:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to Design HashMap: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_design_hashmap(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveDesignHashmap:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Design Twitter
 
-### Problem Statement (Specific)
-Solve **Design Twitter** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Design Twitter** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For Design Twitter, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **Design Twitter** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Design Twitter directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_design_twitter(data):
-    """Brute-force baseline for: Design Twitter."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteDesignTwitter:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Design Twitter to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_design_twitter(data):
-    """Intermediate optimized approach for: Design Twitter."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterDesignTwitter:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to Design Twitter: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_design_twitter(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveDesignTwitter:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. All O`one Data Structure
 
-### Problem Statement (Specific)
-Solve **All O`one Data Structure** using **Design Data Structures**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **All O`one Data Structure** using **Design Data Structures**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Operation list and arguments
+- Operation stream, e.g. `put/get`, `push/pop`, or API calls
+- Operation parameters per call
 
 ### Output
-- Outputs of query operations.
+- Per-operation return values exactly as API specifies.
 
-### Constraints (Typical)
-- Meet required per-op complexity
+### Constraints
+- Up to `2 * 10^5` operations.
+- Average complexity targets are part of grading.
 
 ### Example (Exact)
 ```text
 Input:  ops = ["put","put","get","put","get"], args = [[1,1],[2,2],[1],[3,3],[2]]
-Output: [null,null,1,null,-1]
-Explanation: For All O`one Data Structure, keep DS invariants synchronized.
+Output: [null, null, 1, null, -1]
+Explanation: The design must preserve invariants after each operation, not just final state.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Operation order matters; interleaved updates and queries must preserve class invariants.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Design Data Structures**.
+- Red flags: brute force for **All O`one Data Structure** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for All O`one Data Structure directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Use linear containers and scan per operation.
 
-
+#### Python
 ```python
-def brute_all_o_one_data_structure(data):
-    """Brute-force baseline for: All O`one Data Structure."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+class BruteAllOOneDataStructure:
+    def __init__(self):
+        self.data = []
+
+    def put(self, key, value):
+        for i, (k, _) in enumerate(self.data):
+            if k == key:
+                self.data[i] = (key, value)
+                return
+        self.data.append((key, value))
+
+    def get(self, key):
+        for k, v in self.data:
+            if k == key:
+                return v
+        return -1
 ```
+
+#### Complexity
+- Time `O(n)` per key lookup/update, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for All O`one Data Structure to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use built-in ordered map/deque abstractions to hit average `O(1)` operations.
 
-
+#### Python
 ```python
-def better_all_o_one_data_structure(data):
-    """Intermediate optimized approach for: All O`one Data Structure."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from collections import OrderedDict
+
+class BetterAllOOneDataStructure:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.od = OrderedDict()
+
+    def get(self, key):
+        if key not in self.od:
+            return -1
+        self.od.move_to_end(key)
+        return self.od[key]
+
+    def put(self, key, value):
+        if key in self.od:
+            self.od.move_to_end(key)
+        self.od[key] = value
+        if len(self.od) > self.cap:
+            self.od.popitem(last=False)
 ```
+
+#### Complexity
+- Average `O(1)` operations, Space `O(capacity)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Design Data Structures invariant to All O`one Data Structure: Combine primitive data structures to satisfy all constraints: - Hash map for direct lookup - Doubly linked list for O(1) ordered removal/insertion - Heap for prioritized retrieval - Timestamp/value maps for temporal queries
-- Complexity target: Time pattern-optimal, Space proportional to number of stored entries..
+#### Intuition
+- Pair hashmap with doubly linked list to maintain strict operation complexity guarantees.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_all_o_one_data_structure(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    class Node:
-        def __init__(self, k=0, v=0):
-            self.k = k
-            self.v = v
-            self.prev = None
-            self.next = None
-    
-    
-    class LRUCache:
-        def __init__(self, capacity):
-            self.cap = capacity
-            self.map = {}
-            self.head = Node()  # dummy head
-            self.tail = Node()  # dummy tail
-            self.head.next = self.tail
-            self.tail.prev = self.head
-    
-        # add helper methods: remove(node), insert_front(node), get, put
+class Node:
+    def __init__(self, k=0, v=0):
+        self.k = k
+        self.v = v
+        self.prev = None
+        self.next = None
+
+class SolveAllOOneDataStructure:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        p, n = node.prev, node.next
+        p.next = n
+        n.prev = p
+
+    def _push_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._push_front(node)
+        return node.v
+
+    def put(self, key, value):
+        if key in self.map:
+            node = self.map[key]
+            node.v = value
+            self._remove(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.map[lru.k]
+        node = Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Hashmap provides direct node access by key; linked list maintains exact recency/frequency order.
+- Each operation updates only constant number of pointers and map entries.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(1)` average per operation, Space `O(capacity)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

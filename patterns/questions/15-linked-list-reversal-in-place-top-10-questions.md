@@ -1,6 +1,6 @@
 # Pattern 15 Interview Playbook: Linked List Reversal / In-place Operations
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -14,877 +14,1208 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Reverse Linked List
 
-### Problem Statement (Specific)
-Solve **Reverse Linked List** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reverse Linked List** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list head
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- Head of reversed linked list (full or subrange variant).
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5]
-Output: [5,4,3,2,1]
-Explanation: Three-pointer rewiring preserves remaining list access.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Reverse Linked List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reverse Linked List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_reverse_linked_list(data):
-    """Brute-force baseline for: Reverse Linked List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reverse_linked_list(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reverse Linked List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_reverse_linked_list(data):
-    """Intermediate optimized approach for: Reverse Linked List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reverse_linked_list(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Reverse Linked List: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reverse_linked_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_reverse_linked_list(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Reverse Linked List II
 
-### Problem Statement (Specific)
-Solve **Reverse Linked List II** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reverse Linked List II** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list head
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- Head of reversed linked list (full or subrange variant).
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5]
-Output: [5,4,3,2,1]
-Explanation: Three-pointer rewiring preserves remaining list access.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Reverse Linked List II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reverse Linked List II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_reverse_linked_list_ii(data):
-    """Brute-force baseline for: Reverse Linked List II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reverse_linked_list_ii(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reverse Linked List II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_reverse_linked_list_ii(data):
-    """Intermediate optimized approach for: Reverse Linked List II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reverse_linked_list_ii(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Reverse Linked List II: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reverse_linked_list_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_reverse_linked_list_ii(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Reverse Nodes in k-Group
 
-### Problem Statement (Specific)
-Solve **Reverse Nodes in k-Group** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reverse Nodes in k-Group** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Reverse Nodes in k-Group, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Reverse Nodes in k-Group** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reverse Nodes in k-Group directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_reverse_nodes_in_k_group(data):
-    """Brute-force baseline for: Reverse Nodes in k-Group."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reverse_nodes_in_k_group(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reverse Nodes in k-Group to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_reverse_nodes_in_k_group(data):
-    """Intermediate optimized approach for: Reverse Nodes in k-Group."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reverse_nodes_in_k_group(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Reverse Nodes in k-Group: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reverse_nodes_in_k_group(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_reverse_nodes_in_k_group(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Swap Nodes in Pairs
 
-### Problem Statement (Specific)
-Solve **Swap Nodes in Pairs** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Swap Nodes in Pairs** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Swap Nodes in Pairs, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Swap Nodes in Pairs** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Swap Nodes in Pairs directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_swap_nodes_in_pairs(data):
-    """Brute-force baseline for: Swap Nodes in Pairs."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_swap_nodes_in_pairs(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Swap Nodes in Pairs to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_swap_nodes_in_pairs(data):
-    """Intermediate optimized approach for: Swap Nodes in Pairs."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_swap_nodes_in_pairs(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Swap Nodes in Pairs: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_swap_nodes_in_pairs(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_swap_nodes_in_pairs(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Reorder List
 
-### Problem Statement (Specific)
-Solve **Reorder List** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reorder List** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Reorder List, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Reorder List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reorder List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_reorder_list(data):
-    """Brute-force baseline for: Reorder List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reorder_list(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reorder List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_reorder_list(data):
-    """Intermediate optimized approach for: Reorder List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reorder_list(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Reorder List: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reorder_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_reorder_list(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Rotate List
 
-### Problem Statement (Specific)
-Solve **Rotate List** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Rotate List** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Rotate List, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Rotate List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Rotate List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_rotate_list(data):
-    """Brute-force baseline for: Rotate List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_rotate_list(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Rotate List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_rotate_list(data):
-    """Intermediate optimized approach for: Rotate List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_rotate_list(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Rotate List: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_rotate_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_rotate_list(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Palindrome Linked List
 
-### Problem Statement (Specific)
-Solve **Palindrome Linked List** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Palindrome Linked List** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `text`/`s`: str
+- `pattern`/`queries`: variant-specific
 
 ### Output
-- List head / boolean / index result.
+- Index, boolean, count, or transformed string as required.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `1 <= length <= 2 * 10^5`
+- Use near-linear processing to avoid `O(n*m)` restarts.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Palindrome Linked List, maintain pointer safety while transforming.
+Input:  text = "sadbutsad", pattern = "sad"
+Output: 0
+Explanation: Efficient preprocessing avoids rechecking already-matched characters.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Palindrome Linked List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Palindrome Linked List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Try every alignment and compare full pattern each time.
 
-
+#### Python
 ```python
-def brute_palindrome_linked_list(data):
-    """Brute-force baseline for: Palindrome Linked List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_palindrome_linked_list(text, pattern):
+    m, n = len(pattern), len(text)
+    for i in range(n - m + 1):
+        if text[i:i+m] == pattern:
+            return i
+    return -1
 ```
+
+#### Complexity
+- Time `O(n*m)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Palindrome Linked List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Rolling hash filters candidate matches and verifies collisions.
 
-
+#### Python
 ```python
-def better_palindrome_linked_list(data):
-    """Intermediate optimized approach for: Palindrome Linked List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_palindrome_linked_list(text, pattern):
+    # Rabin-Karp style rolling hash.
+    if not pattern:
+        return 0
+    base, mod = 911382323, 10**9 + 7
+    m = len(pattern)
+    p_hash = 0
+    t_hash = 0
+    power = 1
+    for i in range(m):
+        p_hash = (p_hash * base + ord(pattern[i])) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if i:
+            power = (power * base) % mod
+    if t_hash == p_hash and text[:m] == pattern:
+        return 0
+    for i in range(m, len(text)):
+        t_hash = (t_hash - ord(text[i-m]) * power) % mod
+        t_hash = (t_hash * base + ord(text[i])) % mod
+        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
+            return i - m + 1
+    return -1
 ```
+
+#### Complexity
+- Expected `O(n+m)`, worst-case with collisions can degrade.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Palindrome Linked List: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_palindrome_linked_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_palindrome_linked_list(text, pattern):
+    if not pattern:
+        return 0
+
+    lps = [0] * len(pattern)
+    j = 0
+    for i in range(1, len(pattern)):
+        while j > 0 and pattern[i] != pattern[j]:
+            j = lps[j - 1]
+        if pattern[i] == pattern[j]:
+            j += 1
+            lps[i] = j
+
+    j = 0
+    for i, ch in enumerate(text):
+        while j > 0 and ch != pattern[j]:
+            j = lps[j - 1]
+        if ch == pattern[j]:
+            j += 1
+            if j == len(pattern):
+                return i - len(pattern) + 1
+    return -1
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
+- Pointer never moves backward in text, so each character is processed constant times.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Reverse Even Length Groups of Nodes in Linked List
 
-### Problem Statement (Specific)
-Solve **Reverse Even Length Groups of Nodes in Linked List** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reverse Even Length Groups of Nodes in Linked List** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Reverse Even Length Groups of Nodes in Linked List, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Reverse Even Length Groups of Nodes in Linked List** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reverse Even Length Groups of Nodes in Linked List directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_reverse_even_length_groups_of_nodes_in_linked_list(data):
-    """Brute-force baseline for: Reverse Even Length Groups of Nodes in Linked List."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reverse_even_length_groups_of_nodes_in_linked_list(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reverse Even Length Groups of Nodes in Linked List to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_reverse_even_length_groups_of_nodes_in_linked_list(data):
-    """Intermediate optimized approach for: Reverse Even Length Groups of Nodes in Linked List."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reverse_even_length_groups_of_nodes_in_linked_list(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Reverse Even Length Groups of Nodes in Linked List: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reverse_even_length_groups_of_nodes_in_linked_list(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_reverse_even_length_groups_of_nodes_in_linked_list(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Add Two Numbers II
 
-### Problem Statement (Specific)
-Solve **Add Two Numbers II** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Add Two Numbers II** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list
-- optional parameters from prompt
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- List head / boolean / index result.
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5], k = 2
-Output: [5,4,3,2,1]
-Explanation: For Add Two Numbers II, maintain pointer safety while transforming.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Add Two Numbers II** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Add Two Numbers II directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_add_two_numbers_ii(data):
-    """Brute-force baseline for: Add Two Numbers II."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_add_two_numbers_ii(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Add Two Numbers II to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_add_two_numbers_ii(data):
-    """Intermediate optimized approach for: Add Two Numbers II."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_add_two_numbers_ii(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Add Two Numbers II: Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_add_two_numbers_ii(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_add_two_numbers_ii(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Reverse Linked List in k-Group (Variant)
 
-### Problem Statement (Specific)
-Solve **Reverse Linked List in k-Group (Variant)** using **Linked List Reversal / In-place Operations**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Reverse Linked List in k-Group (Variant)** using **Linked List Reversal / In-place Operations**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `head`: linked list head
+- `head`: ListNode | None
+- `k`/`left,right`: int for variants needing bounds
 
 ### Output
-- Head of reversed linked list (full or subrange variant).
+- Modified linked list head, node reference, or boolean depending on variant.
 
-### Constraints (Typical)
-- 0 <= n <= 1e5
+### Constraints
+- `0 <= n <= 2 * 10^5`
+- In-place pointer updates are expected for optimal solutions.
 
 ### Example (Exact)
 ```text
-Input:  head = [1,2,3,4,5]
-Output: [5,4,3,2,1]
-Explanation: Three-pointer rewiring preserves remaining list access.
+Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
+Output: 1 -> 2 -> 3 -> 5
+Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Linked List Reversal / In-place Operations**.
+- Red flags: brute force for **Reverse Linked List in k-Group (Variant)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Reverse Linked List in k-Group (Variant) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Materialize list values and solve on array representation.
 
-
+#### Python
 ```python
-def brute_reverse_linked_list_in_k_group_variant(data):
-    """Brute-force baseline for: Reverse Linked List in k-Group (Variant)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_reverse_linked_list_in_k_group_variant(head):
+    vals = []
+    cur = head
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+    return vals == vals[::-1]
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Reverse Linked List in k-Group (Variant) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Use fast/slow split plus stack on first half for one-pass comparison.
 
-
+#### Python
 ```python
-def better_reverse_linked_list_in_k_group_variant(data):
-    """Intermediate optimized approach for: Reverse Linked List in k-Group (Variant)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_reverse_linked_list_in_k_group_variant(head):
+    slow = fast = head
+    stack = []
+    while fast and fast.next:
+        stack.append(slow.val)
+        slow = slow.next
+        fast = fast.next.next
+    if fast:
+        slow = slow.next
+    while slow:
+        if stack.pop() != slow.val:
+            return False
+        slow = slow.next
+    return True
 ```
+
+#### Complexity
+- Time `O(n)`, Space `O(n/2)`.
 
 ### Approach 3: Optimal (Best)
-- Apply Linked List Reversal / In-place Operations invariant to Reverse Linked List in k-Group (Variant): Track three pointers per step: - `prev` - `curr` - `next_node` Reverse one pointer direction at a time while preserving access to remaining list.
-- Complexity target: Time O(n), Space O(1).
+#### Intuition
+- Reverse second half in place to compare symmetric nodes with constant extra memory.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_reverse_linked_list_in_k_group_variant(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def reverse_list(head):
-        prev = None
-        curr = head
-        while curr:
-            nxt = curr.next
-            curr.next = prev
-            prev = curr
-            curr = nxt
-        return prev
+def solve_reverse_linked_list_in_k_group_variant(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+    return True
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
+- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n)`, Space `O(1)` extra.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

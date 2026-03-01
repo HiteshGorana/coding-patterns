@@ -1,6 +1,6 @@
 # Pattern 42 Interview Playbook: SCC / Bridges / Articulation Points
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,1110 +15,1850 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Critical Connections in a Network
 
-### Problem Statement (Specific)
-Solve **Critical Connections in a Network** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Critical Connections in a Network** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Critical Connections in a Network, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Critical Connections in a Network** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Critical Connections in a Network directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_critical_connections_in_a_network(data):
-    """Brute-force baseline for: Critical Connections in a Network."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_critical_connections_in_a_network(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Critical Connections in a Network to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_critical_connections_in_a_network(data):
-    """Intermediate optimized approach for: Critical Connections in a Network."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_critical_connections_in_a_network(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Critical Connections in a Network: Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_critical_connections_in_a_network(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_critical_connections_in_a_network(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Articulation Points in Graph
 
-### Problem Statement (Specific)
-Solve **Articulation Points in Graph** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Articulation Points in Graph** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Articulation Points in Graph, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Articulation Points in Graph** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Articulation Points in Graph directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_articulation_points_in_graph(data):
-    """Brute-force baseline for: Articulation Points in Graph."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_articulation_points_in_graph(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Articulation Points in Graph to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_articulation_points_in_graph(data):
-    """Intermediate optimized approach for: Articulation Points in Graph."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_articulation_points_in_graph(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Articulation Points in Graph: Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_articulation_points_in_graph(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_articulation_points_in_graph(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Strongly Connected Components (Tarjan)
 
-### Problem Statement (Specific)
-Solve **Strongly Connected Components (Tarjan)** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Strongly Connected Components (Tarjan)** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Strongly Connected Components (Tarjan), process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Strongly Connected Components (Tarjan)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Strongly Connected Components (Tarjan) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_strongly_connected_components_tarjan(data):
-    """Brute-force baseline for: Strongly Connected Components (Tarjan)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_strongly_connected_components_tarjan(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Strongly Connected Components (Tarjan) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_strongly_connected_components_tarjan(data):
-    """Intermediate optimized approach for: Strongly Connected Components (Tarjan)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_strongly_connected_components_tarjan(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Strongly Connected Components (Tarjan): Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_strongly_connected_components_tarjan(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_strongly_connected_components_tarjan(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Strongly Connected Components (Kosaraju)
 
-### Problem Statement (Specific)
-Solve **Strongly Connected Components (Kosaraju)** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Strongly Connected Components (Kosaraju)** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Strongly Connected Components (Kosaraju), process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Strongly Connected Components (Kosaraju)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Strongly Connected Components (Kosaraju) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_strongly_connected_components_kosaraju(data):
-    """Brute-force baseline for: Strongly Connected Components (Kosaraju)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_strongly_connected_components_kosaraju(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Strongly Connected Components (Kosaraju) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_strongly_connected_components_kosaraju(data):
-    """Intermediate optimized approach for: Strongly Connected Components (Kosaraju)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_strongly_connected_components_kosaraju(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Strongly Connected Components (Kosaraju): Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_strongly_connected_components_kosaraju(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_strongly_connected_components_kosaraju(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Min Days to Disconnect Island
 
-### Problem Statement (Specific)
-Solve **Min Days to Disconnect Island** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Min Days to Disconnect Island** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For Min Days to Disconnect Island, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Min Days to Disconnect Island** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Min Days to Disconnect Island directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_min_days_to_disconnect_island(data):
-    """Brute-force baseline for: Min Days to Disconnect Island."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_min_days_to_disconnect_island(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Min Days to Disconnect Island to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_min_days_to_disconnect_island(data):
-    """Intermediate optimized approach for: Min Days to Disconnect Island."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_min_days_to_disconnect_island(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Min Days to Disconnect Island: Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_min_days_to_disconnect_island(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_min_days_to_disconnect_island(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Find Eventual Safe States (SCC perspective)
 
-### Problem Statement (Specific)
-Solve **Find Eventual Safe States (SCC perspective)** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Find Eventual Safe States (SCC perspective)** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Find Eventual Safe States (SCC perspective), process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Find Eventual Safe States (SCC perspective)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Find Eventual Safe States (SCC perspective) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_find_eventual_safe_states_scc_perspective(data):
-    """Brute-force baseline for: Find Eventual Safe States (SCC perspective)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_find_eventual_safe_states_scc_perspective(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Find Eventual Safe States (SCC perspective) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_find_eventual_safe_states_scc_perspective(data):
-    """Intermediate optimized approach for: Find Eventual Safe States (SCC perspective)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_find_eventual_safe_states_scc_perspective(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Find Eventual Safe States (SCC perspective): Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_find_eventual_safe_states_scc_perspective(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_find_eventual_safe_states_scc_perspective(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Build Condensation DAG
 
-### Problem Statement (Specific)
-Solve **Build Condensation DAG** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Build Condensation DAG** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Build Condensation DAG, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Build Condensation DAG** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Build Condensation DAG directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_build_condensation_dag(data):
-    """Brute-force baseline for: Build Condensation DAG."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_build_condensation_dag(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Build Condensation DAG to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_build_condensation_dag(data):
-    """Intermediate optimized approach for: Build Condensation DAG."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_build_condensation_dag(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Build Condensation DAG: Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_build_condensation_dag(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_build_condensation_dag(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. 2-SAT Feasibility via SCC
 
-### Problem Statement (Specific)
-Solve **2-SAT Feasibility via SCC** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **2-SAT Feasibility via SCC** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 2
-Output: 7
-Explanation: For 2-SAT Feasibility via SCC, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **2-SAT Feasibility via SCC** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for 2-SAT Feasibility via SCC directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_q_2_sat_feasibility_via_scc(data):
-    """Brute-force baseline for: 2-SAT Feasibility via SCC."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_q_2_sat_feasibility_via_scc(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for 2-SAT Feasibility via SCC to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_q_2_sat_feasibility_via_scc(data):
-    """Intermediate optimized approach for: 2-SAT Feasibility via SCC."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_q_2_sat_feasibility_via_scc(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to 2-SAT Feasibility via SCC: Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_q_2_sat_feasibility_via_scc(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_q_2_sat_feasibility_via_scc(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Bridge-Finding in Large Sparse Graph
 
-### Problem Statement (Specific)
-Solve **Bridge-Finding in Large Sparse Graph** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Bridge-Finding in Large Sparse Graph** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 0
-Output: 7
-Explanation: For Bridge-Finding in Large Sparse Graph, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Bridge-Finding in Large Sparse Graph** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Bridge-Finding in Large Sparse Graph directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_bridge_finding_in_large_sparse_graph(data):
-    """Brute-force baseline for: Bridge-Finding in Large Sparse Graph."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_bridge_finding_in_large_sparse_graph(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Bridge-Finding in Large Sparse Graph to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_bridge_finding_in_large_sparse_graph(data):
-    """Intermediate optimized approach for: Bridge-Finding in Large Sparse Graph."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_bridge_finding_in_large_sparse_graph(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Bridge-Finding in Large Sparse Graph: Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_bridge_finding_in_large_sparse_graph(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_bridge_finding_in_large_sparse_graph(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Network Vulnerability Analysis
 
-### Problem Statement (Specific)
-Solve **Network Vulnerability Analysis** using **SCC / Bridges / Articulation Points**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Network Vulnerability Analysis** using **SCC / Bridges / Articulation Points**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `n`: int
-- `edges` and optional weight/source/target
+- `n`: int nodes/vertices or grid dimensions
+- `edges`/`grid`: problem graph representation
+- `source`/`target` when required
 
 ### Output
-- Graph metric/list/boolean depending on objective.
+- Shortest distance, ordering, component info, minimum cost, or boolean.
 
-### Constraints (Typical)
-- 1 <= n <= 2e5
-- 0 <= m <= 4e5
+### Constraints
+- `1 <= n <= 2 * 10^5` (or `m * n <= 2 * 10^5` for grids)
+- `0 <= m <= 4 * 10^5` edges in sparse graph settings
 
 ### Example (Exact)
 ```text
-Input:  n = 6, edges = [[0,1],[1,2],[2,3],[3,4],[4,5]], source = 1
-Output: 7
-Explanation: For Network Vulnerability Analysis, process adjacency with no redundant traversals.
+Input:  n = 4, edges = [[0,1],[1,2],[2,3]], source = 0
+Output: dist = [0,1,2,3]
+Explanation: Choose traversal/relaxation strategy based on edge weights and state model.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **SCC / Bridges / Articulation Points**.
+- Red flags: brute force for **Network Vulnerability Analysis** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Network Vulnerability Analysis directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Compute mutual reachability pairwise for each vertex (expensive).
 
-
+#### Python
 ```python
-def brute_network_vulnerability_analysis(data):
-    """Brute-force baseline for: Network Vulnerability Analysis."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_network_vulnerability_analysis(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    def reach(start, graph):
+        st = [start]
+        seen = {start}
+        while st:
+            u = st.pop()
+            for v in graph[u]:
+                if v not in seen:
+                    seen.add(v)
+                    st.append(v)
+        return seen
+
+    comp = []
+    used = [False] * n
+    for i in range(n):
+        if used[i]:
+            continue
+        a = reach(i, g)
+        b = reach(i, rg)
+        scc = sorted(a & b)
+        for x in scc:
+            used[x] = True
+        comp.append(scc)
+    return comp
 ```
+
+#### Complexity
+- Time roughly `O(n*(n+m))`, Space `O(n+m)`.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Network Vulnerability Analysis to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Kosaraju obtains finish-time order then reverse-graph DFS to extract SCCs.
 
-
+#### Python
 ```python
-def better_network_vulnerability_analysis(data):
-    """Intermediate optimized approach for: Network Vulnerability Analysis."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+def better_network_vulnerability_analysis(n, edges):
+    g = [[] for _ in range(n)]
+    rg = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        rg[v].append(u)
+
+    seen = [False] * n
+    order = []
+    def dfs1(u):
+        seen[u] = True
+        for v in g[u]:
+            if not seen[v]:
+                dfs1(v)
+        order.append(u)
+
+    for i in range(n):
+        if not seen[i]:
+            dfs1(i)
+
+    comp = []
+    seen = [False] * n
+    def dfs2(u, cur):
+        seen[u] = True
+        cur.append(u)
+        for v in rg[u]:
+            if not seen[v]:
+                dfs2(v, cur)
+
+    for u in reversed(order):
+        if not seen[u]:
+            cur = []
+            dfs2(u, cur)
+            comp.append(cur)
+    return comp
 ```
+
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
 ### Approach 3: Optimal (Best)
-- Apply SCC / Bridges / Articulation Points invariant to Network Vulnerability Analysis: Track entry times and low-link values during DFS; structural inequalities identify critical graph elements.
-- Complexity target: Time Usually O(V + E)., Space O(V + E) plus recursion/stack..
+#### Intuition
+- Tarjan single DFS tracks discovery/low-link and stack membership to emit SCC roots.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_network_vulnerability_analysis(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    def critical_connections(n, edges):
-        g = [[] for _ in range(n)]
-        for u, v in edges:
-            g[u].append(v)
-            g[v].append(u)
-    
-        tin = [-1] * n
-        low = [0] * n
-        timer = 0
-        bridges = []
-    
-        def dfs(u, p):
-            nonlocal timer
-            tin[u] = low[u] = timer
-            timer += 1
-            for v in g[u]:
-                if v == p:
-                    continue
-                if tin[v] != -1:
-                    low[u] = min(low[u], tin[v])
-                else:
-                    dfs(v, u)
-                    low[u] = min(low[u], low[v])
-                    if low[v] > tin[u]:
-                        bridges.append([u, v])
-    
-        for i in range(n):
-            if tin[i] == -1:
-                dfs(i, -1)
-    
-        return bridges
+def solve_network_vulnerability_analysis(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+
+    disc = [-1] * n
+    low = [0] * n
+    onstack = [False] * n
+    st = []
+    timer = 0
+    sccs = []
+
+    def dfs(u):
+        nonlocal timer
+        disc[u] = low[u] = timer
+        timer += 1
+        st.append(u)
+        onstack[u] = True
+
+        for v in g[u]:
+            if disc[v] == -1:
+                dfs(v)
+                low[u] = min(low[u], low[v])
+            elif onstack[v]:
+                low[u] = min(low[u], disc[v])
+
+        if low[u] == disc[u]:
+            comp = []
+            while True:
+                x = st.pop()
+                onstack[x] = False
+                comp.append(x)
+                if x == u:
+                    break
+            sccs.append(comp)
+
+    for i in range(n):
+        if disc[i] == -1:
+            dfs(i)
+    return sccs
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- `low[u]` captures earliest stack-reachable discovery index from `u`'s DFS subtree.
+- When `low[u] == disc[u]`, `u` is SCC root and stack pop until `u` yields exactly one SCC.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(n+m)`, Space `O(n+m)`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

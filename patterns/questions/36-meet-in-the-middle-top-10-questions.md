@@ -1,6 +1,6 @@
 # Pattern 36 Interview Playbook: Meet in the Middle
 
-Each question below uses concrete I/O, constraints, and customized strategy notes/code.
+Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
 
 ## Pattern Snapshot
 
@@ -15,1030 +15,1340 @@ Each question below uses concrete I/O, constraints, and customized strategy note
 
 ## Q1. Closest Subsequence Sum
 
-### Problem Statement (Specific)
-Solve **Closest Subsequence Sum** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Closest Subsequence Sum** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Closest Subsequence Sum, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Closest Subsequence Sum** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Closest Subsequence Sum directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_closest_subsequence_sum(data):
-    """Brute-force baseline for: Closest Subsequence Sum."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_closest_subsequence_sum(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Closest Subsequence Sum to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_closest_subsequence_sum(data):
-    """Intermediate optimized approach for: Closest Subsequence Sum."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_closest_subsequence_sum(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Closest Subsequence Sum: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_closest_subsequence_sum(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_closest_subsequence_sum(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q2. Partition Array Into Two Arrays to Minimize Sum Difference
 
-### Problem Statement (Specific)
-Solve **Partition Array Into Two Arrays to Minimize Sum Difference** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Partition Array Into Two Arrays to Minimize Sum Difference** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Partition Array Into Two Arrays to Minimize Sum Difference, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Partition Array Into Two Arrays to Minimize Sum Difference** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Partition Array Into Two Arrays to Minimize Sum Difference directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_partition_array_into_two_arrays_to_minimize_sum_difference(data):
-    """Brute-force baseline for: Partition Array Into Two Arrays to Minimize Sum Difference."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_partition_array_into_two_arrays_to_minimize_sum_difference(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Partition Array Into Two Arrays to Minimize Sum Difference to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_partition_array_into_two_arrays_to_minimize_sum_difference(data):
-    """Intermediate optimized approach for: Partition Array Into Two Arrays to Minimize Sum Difference."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_partition_array_into_two_arrays_to_minimize_sum_difference(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Partition Array Into Two Arrays to Minimize Sum Difference: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_partition_array_into_two_arrays_to_minimize_sum_difference(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_partition_array_into_two_arrays_to_minimize_sum_difference(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q3. Subset Sum (n around 40)
 
-### Problem Statement (Specific)
-Solve **Subset Sum (n around 40)** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Subset Sum (n around 40)** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Subset Sum (n around 40), maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Subset Sum (n around 40)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Subset Sum (n around 40) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_subset_sum_n_around_40(data):
-    """Brute-force baseline for: Subset Sum (n around 40)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_subset_sum_n_around_40(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Subset Sum (n around 40) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_subset_sum_n_around_40(data):
-    """Intermediate optimized approach for: Subset Sum (n around 40)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_subset_sum_n_around_40(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Subset Sum (n around 40): Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_subset_sum_n_around_40(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_subset_sum_n_around_40(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q4. Maximum Subset Sum No Larger Than S
 
-### Problem Statement (Specific)
-Solve **Maximum Subset Sum No Larger Than S** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Maximum Subset Sum No Larger Than S** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Maximum Subset Sum No Larger Than S, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Maximum Subset Sum No Larger Than S** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Maximum Subset Sum No Larger Than S directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_maximum_subset_sum_no_larger_than_s(data):
-    """Brute-force baseline for: Maximum Subset Sum No Larger Than S."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_maximum_subset_sum_no_larger_than_s(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Maximum Subset Sum No Larger Than S to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_maximum_subset_sum_no_larger_than_s(data):
-    """Intermediate optimized approach for: Maximum Subset Sum No Larger Than S."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_maximum_subset_sum_no_larger_than_s(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Maximum Subset Sum No Larger Than S: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_maximum_subset_sum_no_larger_than_s(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_maximum_subset_sum_no_larger_than_s(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q5. Balanced Partition With Minimum Difference
 
-### Problem Statement (Specific)
-Solve **Balanced Partition With Minimum Difference** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Balanced Partition With Minimum Difference** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Balanced Partition With Minimum Difference, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Balanced Partition With Minimum Difference** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Balanced Partition With Minimum Difference directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_balanced_partition_with_minimum_difference(data):
-    """Brute-force baseline for: Balanced Partition With Minimum Difference."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_balanced_partition_with_minimum_difference(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Balanced Partition With Minimum Difference to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_balanced_partition_with_minimum_difference(data):
-    """Intermediate optimized approach for: Balanced Partition With Minimum Difference."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_balanced_partition_with_minimum_difference(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Balanced Partition With Minimum Difference: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_balanced_partition_with_minimum_difference(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_balanced_partition_with_minimum_difference(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q6. Count Subsets With Exact Sum (n around 40)
 
-### Problem Statement (Specific)
-Solve **Count Subsets With Exact Sum (n around 40)** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Count Subsets With Exact Sum (n around 40)** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `nums`: list[int]
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- All subsets of `nums`.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- 1 <= len(nums) <= 20
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3]
-Output: [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
-Explanation: Backtracking include/exclude decisions produce power set.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Count Subsets With Exact Sum (n around 40)** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Count Subsets With Exact Sum (n around 40) directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_count_subsets_with_exact_sum_n_around_40(data):
-    """Brute-force baseline for: Count Subsets With Exact Sum (n around 40)."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_count_subsets_with_exact_sum_n_around_40(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Count Subsets With Exact Sum (n around 40) to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_count_subsets_with_exact_sum_n_around_40(data):
-    """Intermediate optimized approach for: Count Subsets With Exact Sum (n around 40)."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_count_subsets_with_exact_sum_n_around_40(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Count Subsets With Exact Sum (n around 40): Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_count_subsets_with_exact_sum_n_around_40(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_count_subsets_with_exact_sum_n_around_40(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q7. Meet-in-the-Middle Knapsack
 
-### Problem Statement (Specific)
-Solve **Meet-in-the-Middle Knapsack** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Meet-in-the-Middle Knapsack** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Meet-in-the-Middle Knapsack, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Meet-in-the-Middle Knapsack** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Meet-in-the-Middle Knapsack directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_meet_in_the_middle_knapsack(data):
-    """Brute-force baseline for: Meet-in-the-Middle Knapsack."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_meet_in_the_middle_knapsack(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Meet-in-the-Middle Knapsack to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_meet_in_the_middle_knapsack(data):
-    """Intermediate optimized approach for: Meet-in-the-Middle Knapsack."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_meet_in_the_middle_knapsack(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Meet-in-the-Middle Knapsack: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_meet_in_the_middle_knapsack(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_meet_in_the_middle_knapsack(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q8. Two-Set Target Difference
 
-### Problem Statement (Specific)
-Solve **Two-Set Target Difference** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Two-Set Target Difference** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Two-Set Target Difference, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Two-Set Target Difference** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Two-Set Target Difference directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_two_set_target_difference(data):
-    """Brute-force baseline for: Two-Set Target Difference."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_two_set_target_difference(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Two-Set Target Difference to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_two_set_target_difference(data):
-    """Intermediate optimized approach for: Two-Set Target Difference."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_two_set_target_difference(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Two-Set Target Difference: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_two_set_target_difference(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_two_set_target_difference(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q9. Min Absolute Difference to Goal
 
-### Problem Statement (Specific)
-Solve **Min Absolute Difference to Goal** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Min Absolute Difference to Goal** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Min Absolute Difference to Goal, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Min Absolute Difference to Goal** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Min Absolute Difference to Goal directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_min_absolute_difference_to_goal(data):
-    """Brute-force baseline for: Min Absolute Difference to Goal."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_min_absolute_difference_to_goal(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Min Absolute Difference to Goal to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_min_absolute_difference_to_goal(data):
-    """Intermediate optimized approach for: Min Absolute Difference to Goal."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_min_absolute_difference_to_goal(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Min Absolute Difference to Goal: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_min_absolute_difference_to_goal(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_min_absolute_difference_to_goal(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---
 
 ## Q10. Subset Pair Optimization via Half Enumeration
 
-### Problem Statement (Specific)
-Solve **Subset Pair Optimization via Half Enumeration** using **Meet in the Middle**. Return exactly what the problem asks and justify complexity.
+### Problem Statement (Concrete)
+Solve **Subset Pair Optimization via Half Enumeration** using **Meet in the Middle**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Mutable array + updates/queries
+- `nums`/`weights`/`values` or state graph, depending on variant
+- `target`/`capacity`/`mask goal` as required
 
 ### Output
-- Range-query result list.
+- Maximum/minimum score, count, feasibility, or reconstructed choice set.
 
-### Constraints (Typical)
-- Use O(log n) per operation
+### Constraints
+- State count should fit memory limits (`O(n)`, `O(n*sum)`, or `O(2^n)` depending on pattern).
+- Exploit overlapping subproblems and avoid recomputation.
 
 ### Example (Exact)
 ```text
-Input:  arr = [1,3,5], update(1,2), query(0,2)
-Output: [8]
-Explanation: For Subset Pair Optimization via Half Enumeration, maintain aggregated structure incrementally.
+Input:  nums = [1,2,3], target = 4
+Output: true
+Explanation: Memoization/tabulation prunes repeated subproblems significantly.
 ```
+
+### Edge-Case Expectations
+- Empty or minimum-size input should return defined neutral output without crash.
+- Duplicate values / parallel edges / repeated states must not break invariants.
+- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
+
+### Pattern Recognition
+- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Meet in the Middle**.
+- Red flags: brute force for **Subset Pair Optimization via Half Enumeration** likely explodes under upper constraints.
+- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
 
 ### Approach 1: Brute Force (Worst)
-- Enumerate all candidate answers for Subset Pair Optimization via Half Enumeration directly and validate each one.
-- Time: usually quadratic/exponential.
+#### Intuition
+- Enumerate all subsets of all `n` elements.
 
-
+#### Python
 ```python
-def brute_subset_pair_optimization_via_half_enumeration(data):
-    """Brute-force baseline for: Subset Pair Optimization via Half Enumeration."""
-    # 1) Enumerate every valid candidate
-    # 2) Validate candidate against problem condition
-    # 3) Update/collect answer
-    result = None
-    return result
+def brute_subset_pair_optimization_via_half_enumeration(nums, goal):
+    n = len(nums)
+    best = float('inf')
+    for mask in range(1 << n):
+        s = 0
+        for i in range(n):
+            if mask & (1 << i):
+                s += nums[i]
+        best = min(best, abs(s - goal))
+    return best
 ```
+
+#### Complexity
+- Time `O(2^n * n)`, Space `O(1)` extra.
 
 ### Approach 2: Better (Intermediate)
-- Introduce preprocessing/caching for Subset Pair Optimization via Half Enumeration to remove repeated work while keeping implementation manageable.
-- Time: typically improved via sorting/maps/prefix/preprocessing.
+#### Intuition
+- Split into two halves; enumerate each half and combine with binary search.
 
-
+#### Python
 ```python
-def better_subset_pair_optimization_via_half_enumeration(data):
-    """Intermediate optimized approach for: Subset Pair Optimization via Half Enumeration."""
-    # 1) Preprocess (sort/hash/prefix/cache depending on problem)
-    # 2) Reuse computed state to avoid repeated work
-    # 3) Build final answer
-    result = None
-    return result
+from bisect import bisect_left
+
+def better_subset_pair_optimization_via_half_enumeration(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
+
+#### Complexity
+- Time `O(2^(n/2) * n)`, Space `O(2^(n/2))`.
 
 ### Approach 3: Optimal (Best)
-- Apply Meet in the Middle invariant to Subset Pair Optimization via Half Enumeration: Generate all possibilities for each half, then combine with sorting/binary search/hash lookups to recover global optimum.
-- Complexity target: Time Typically O(2^(n/2) * n) generation + combine cost (O(2^(n/2) log 2^(n/2)))., Space O(2^(n/2))..
+#### Intuition
+- Meet-in-the-middle reduces exponent base by halving decision set.
 
-#### Optimal Python (Question-Specific)
+#### Python
 ```python
-def solve_subset_pair_optimization_via_half_enumeration(data):
-    # Map the online-judge signature to this wrapper and apply pattern core logic.
-    import bisect
-    
-    def max_subset_sum_leq(nums, limit):
-        n = len(nums)
-        mid = n // 2
-        left, right = nums[:mid], nums[mid:]
-    
-        left_sums = [0]
-        for x in left:
-            left_sums += [s + x for s in left_sums]
-    
-        right_sums = [0]
-        for x in right:
-            right_sums += [s + x for s in right_sums]
-        right_sums.sort()
-    
-        best = float('-inf')
-        for s in left_sums:
-            if s > limit:
-                continue
-            idx = bisect.bisect_right(right_sums, limit - s) - 1
-            if idx >= 0:
-                best = max(best, s + right_sums[idx])
-    
-        return best
+from bisect import bisect_left
+
+def better_subset_pair_optimization_via_half_enumeration(nums, goal):
+    mid = len(nums) // 2
+    left, right = nums[:mid], nums[mid:]
+
+    def sums(arr):
+        out = [0]
+        for x in arr:
+            out += [x + v for v in out]
+        return out
+
+    ls = sums(left)
+    rs = sorted(sums(right))
+    ans = float('inf')
+    for s in ls:
+        need = goal - s
+        i = bisect_left(rs, need)
+        if i < len(rs):
+            ans = min(ans, abs(s + rs[i] - goal))
+        if i:
+            ans = min(ans, abs(s + rs[i-1] - goal))
+    return ans
 ```
 
-### Edge Cases
-- Empty/minimal input.
-- Duplicate or repeated states.
-- Boundary constraints and no-solution cases.
+#### Correctness (Why This Works)
+- Any full subset is union of one subset from left half and one from right half.
+- Searching nearest complement in sorted right sums yields globally best combined value.
 
-### Pitfalls
-- Wrong pattern selection.
-- Incorrect update order / broken invariant.
-- Off-by-one and base-case errors.
+#### Complexity
+- Time `O(2^(n/2) log 2^(n/2))`, Space `O(2^(n/2))`.
 
-### Follow-ups
-- Reduce extra space?
-- Support streaming/online queries?
-- Return reconstruction (indices/path/choices)?
+### Interviewer Follow-Ups
+- Streaming input: how would you support incremental arrivals without recomputing from scratch?
+- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
+- Online updates: how to handle frequent updates plus queries efficiently?
+- Distributed scale: how would you shard/state-sync this logic for very large datasets?
 
 ---

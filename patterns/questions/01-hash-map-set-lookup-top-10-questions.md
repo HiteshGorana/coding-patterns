@@ -48,7 +48,7 @@ Explanation: Complement lookup identifies the pair in one linear scan.
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Check every candidate pair directly.
 
 #### Python
 ```python
@@ -66,7 +66,7 @@ def brute_two_sum(nums, target):
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- Sort values and use two pointers with index recovery.
 
 #### Python
 ```python
@@ -89,12 +89,12 @@ def better_two_sum(nums, target):
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Store complement-ready information in a hashmap for one-pass lookup.
 
 #### Python
 ```python
 def solve_two_sum(nums, target):
-    seen = {{}}  # value -> index
+    seen = {}  # value -> index
     for i, x in enumerate(nums):
         need = target - x
         if need in seen:
@@ -104,8 +104,8 @@ def solve_two_sum(nums, target):
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- At index `i`, hashmap stores all prior candidates exactly once.
+- If complement exists earlier, it is found immediately when processing current element.
 
 #### Complexity
 - Time `O(n)` average, Space `O(n)`.
@@ -124,20 +124,20 @@ def solve_two_sum(nums, target):
 Solve **Contains Duplicate** using **Hash Map / Set Lookup**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Variant-specific array/string input parameters
+- `nums`: list[int]
 
 ### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+- `True` if any value appears at least twice, otherwise `False`.
 
 ### Constraints
 - `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
+- `-10^9 <= nums[i] <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3,4]
-Output: problem-specific result
-Explanation: Use the pattern invariant to avoid repeated recomputation.
+Input:  nums = [1, 2, 3, 1]
+Output: True
+Explanation: Duplicate `1` appears more than once.
 ```
 
 ### Edge-Case Expectations
@@ -152,17 +152,17 @@ Explanation: Use the pattern invariant to avoid repeated recomputation.
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Compare each pair for equality.
 
 #### Python
 ```python
-def brute_contains_duplicate(nums, target):
+def brute_contains_duplicate(nums):
     n = len(nums)
     for i in range(n):
         for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
+            if nums[i] == nums[j]:
+                return True
+    return False
 ```
 
 #### Complexity
@@ -170,46 +170,39 @@ def brute_contains_duplicate(nums, target):
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- Sort once, then equal neighbors indicate duplicates.
 
 #### Python
 ```python
-def better_contains_duplicate(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
-        else:
-            r -= 1
-    return []
+def better_contains_duplicate(nums):
+    nums = sorted(nums)
+    for i in range(1, len(nums)):
+        if nums[i] == nums[i - 1]:
+            return True
+    return False
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)`.
+- Time `O(n log n)`, Space `O(1)` extra if in-place sort is allowed.
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Hash-set membership catches repeats in average constant time.
 
 #### Python
 ```python
-def solve_contains_duplicate(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def solve_contains_duplicate(nums):
+    seen = set()
+    for x in nums:
+        if x in seen:
+            return True
+        seen.add(x)
+    return False
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- A value repeats iff it appears in the `seen` set before insertion.
+- Single pass checks exactly that condition for every element.
 
 #### Complexity
 - Time `O(n)` average, Space `O(n)`.
@@ -257,67 +250,69 @@ Explanation: Window frequency count equals pattern frequency at matching starts.
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Sort both strings and compare.
 
 #### Python
 ```python
-def brute_valid_anagram(nums, target):
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
-```
-
-#### Complexity
-- Time `O(n^2)`, Space `O(1)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
-
-#### Python
-```python
-def better_valid_anagram(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
-        else:
-            r -= 1
-    return []
+def brute_valid_anagram(s, t):
+    if len(s) != len(t):
+        return False
+    return sorted(s) == sorted(t)
 ```
 
 #### Complexity
 - Time `O(n log n)`, Space `O(n)`.
 
-### Approach 3: Optimal (Best)
+### Approach 2: Better (Intermediate)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Use hashmap counts to track character balance.
 
 #### Python
 ```python
-def solve_valid_anagram(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def better_valid_anagram(s, t):
+    if len(s) != len(t):
+        return False
+    freq = {}
+    for ch in s:
+        freq[ch] = freq.get(ch, 0) + 1
+    for ch in t:
+        if ch not in freq:
+            return False
+        freq[ch] -= 1
+        if freq[ch] == 0:
+            del freq[ch]
+    return not freq
+```
+
+#### Complexity
+- Time `O(n)`, Space `O(sigma)`.
+
+### Approach 3: Optimal (Best)
+#### Intuition
+- Use fixed-size frequency array for lowercase alphabet.
+
+#### Python
+```python
+def solve_valid_anagram(s, t):
+    if len(s) != len(t):
+        return False
+    cnt = [0] * 26
+    for ch in s:
+        cnt[ord(ch) - 97] += 1
+    for ch in t:
+        idx = ord(ch) - 97
+        cnt[idx] -= 1
+        if cnt[idx] < 0:
+            return False
+    return True
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- Anagrams require identical character multiplicities.
+- Frequency balance after full scan is zero exactly for an anagram pair.
 
 #### Complexity
-- Time `O(n)` average, Space `O(n)`.
+- Time `O(n)`, Space `O(1)` for fixed alphabet.
 
 ### Interviewer Follow-Ups
 - Streaming input: how would you support incremental arrivals without recomputing from scratch?
@@ -333,21 +328,20 @@ def solve_valid_anagram(nums, target):
 Solve **Group Anagrams** using **Hash Map / Set Lookup**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `s`: str
-- `t`/`p`: str
+- `strs`: list[str]
 
 ### Output
-- Boolean or list of start indices, depending on variant.
+- List of groups, where each group contains anagram strings.
 
 ### Constraints
-- `1 <= len(s), len(t) <= 2 * 10^5`
-- `s`/`t` are lowercase English letters unless stated otherwise.
+- `1 <= len(strs) <= 10^4`
+- `0 <= len(strs[i]) <= 100`
 
 ### Example (Exact)
 ```text
-Input:  s = "cbaebabacd", p = "abc"
-Output: [0, 6]
-Explanation: Window frequency count equals pattern frequency at matching starts.
+Input:  strs = ["eat","tea","tan","ate","nat","bat"]
+Output: [["eat","tea","ate"],["tan","nat"],["bat"]]
+Explanation: Strings with same sorted-character signature belong to one group.
 ```
 
 ### Edge-Case Expectations
@@ -362,67 +356,69 @@ Explanation: Window frequency count equals pattern frequency at matching starts.
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Match each string against all others with sorted comparison.
 
 #### Python
 ```python
-def brute_group_anagrams(nums, target):
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
+def brute_group_anagrams(strs):
+    groups = []
+    used = [False] * len(strs)
+    for i in range(len(strs)):
+        if used[i]:
+            continue
+        cur = [strs[i]]
+        used[i] = True
+        for j in range(i + 1, len(strs)):
+            if not used[j] and sorted(strs[i]) == sorted(strs[j]):
+                used[j] = True
+                cur.append(strs[j])
+        groups.append(cur)
+    return groups
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time `O(n^2 * k log k)`, Space `O(nk)`.
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- Hash by sorted-string signature.
 
 #### Python
 ```python
-def better_group_anagrams(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
-        else:
-            r -= 1
-    return []
+def better_group_anagrams(strs):
+    groups = {}
+    for w in strs:
+        key = ''.join(sorted(w))
+        groups.setdefault(key, []).append(w)
+    return list(groups.values())
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)`.
+- Time `O(n * k log k)`, Space `O(nk)`.
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Hash by 26-count signature for linear-time key creation per string.
 
 #### Python
 ```python
-def solve_group_anagrams(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def solve_group_anagrams(strs):
+    groups = {}
+    for w in strs:
+        cnt = [0] * 26
+        for ch in w:
+            cnt[ord(ch) - 97] += 1
+        key = tuple(cnt)
+        groups.setdefault(key, []).append(w)
+    return list(groups.values())
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- Two strings are anagrams iff their 26-dimensional count vectors are equal.
+- Grouping by that invariant partitions all words into exact anagram classes.
 
 #### Complexity
-- Time `O(n)` average, Space `O(n)`.
+- Time `O(n*k)`, Space `O(n*k)`.
 
 ### Interviewer Follow-Ups
 - Streaming input: how would you support incremental arrivals without recomputing from scratch?
@@ -438,21 +434,20 @@ def solve_group_anagrams(nums, target):
 Solve **First Unique Character in a String** using **Hash Map / Set Lookup**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+- `s`: str
 
 ### Output
-- Index, boolean, count, or transformed string as required.
+- Index of first non-repeating character, or `-1` if none exists.
 
 ### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
+- `1 <= len(s) <= 10^5`
+- `s` contains lowercase English letters.
 
 ### Example (Exact)
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
+Input:  s = "leetcode"
 Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+Explanation: `l` is the first character with frequency 1.
 ```
 
 ### Edge-Case Expectations
@@ -467,67 +462,61 @@ Explanation: Efficient preprocessing avoids rechecking already-matched character
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Count every character by rescanning whole string for each index.
 
 #### Python
 ```python
-def brute_first_unique_character_in_a_string(nums, target):
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
+def brute_first_unique_character_in_a_string(s):
+    for i, ch in enumerate(s):
+        if s.count(ch) == 1:
+            return i
+    return -1
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time `O(n^2)`, Space `O(1)` (small alphabet).
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- One pass for counts, second pass for first index with count 1.
 
 #### Python
 ```python
-def better_first_unique_character_in_a_string(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
-        else:
-            r -= 1
-    return []
+def better_first_unique_character_in_a_string(s):
+    freq = {}
+    for ch in s:
+        freq[ch] = freq.get(ch, 0) + 1
+    for i, ch in enumerate(s):
+        if freq[ch] == 1:
+            return i
+    return -1
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)`.
+- Time `O(n)`, Space `O(sigma)`.
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Two-pass frequency strategy is optimal for first-unique lookup.
 
 #### Python
 ```python
-def solve_first_unique_character_in_a_string(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def better_first_unique_character_in_a_string(s):
+    freq = {}
+    for ch in s:
+        freq[ch] = freq.get(ch, 0) + 1
+    for i, ch in enumerate(s):
+        if freq[ch] == 1:
+            return i
+    return -1
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- First pass computes exact multiplicity for each character.
+- Second pass preserves original order and returns earliest multiplicity-1 index.
 
 #### Complexity
-- Time `O(n)` average, Space `O(n)`.
+- Time `O(n)`, Space `O(sigma)`.
 
 ### Interviewer Follow-Ups
 - Streaming input: how would you support incremental arrivals without recomputing from scratch?
@@ -543,21 +532,21 @@ def solve_first_unique_character_in_a_string(nums, target):
 Solve **Isomorphic Strings** using **Hash Map / Set Lookup**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+- `s`: str
+- `t`: str
 
 ### Output
-- Index, boolean, count, or transformed string as required.
+- `True` if characters in `s` can map one-to-one to `t`, else `False`.
 
 ### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
+- `1 <= len(s), len(t) <= 5 * 10^4`
+- `len(s) == len(t)`
 
 ### Example (Exact)
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+Input:  s = "egg", t = "add"
+Output: True
+Explanation: `e -> a` and `g -> d` is a consistent bijection.
 ```
 
 ### Edge-Case Expectations
@@ -572,17 +561,18 @@ Explanation: Efficient preprocessing avoids rechecking already-matched character
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Check pairwise consistency across all position pairs.
 
 #### Python
 ```python
-def brute_isomorphic_strings(nums, target):
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
+def brute_isomorphic_strings(s, t):
+    if len(s) != len(t):
+        return False
+    for i in range(len(s)):
+        for j in range(i + 1, len(s)):
+            if (s[i] == s[j]) != (t[i] == t[j]):
+                return False
+    return True
 ```
 
 #### Complexity
@@ -590,49 +580,51 @@ def brute_isomorphic_strings(nums, target):
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- Maintain forward and reverse maps to enforce bijection.
 
 #### Python
 ```python
-def better_isomorphic_strings(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
-        else:
-            r -= 1
-    return []
+def better_isomorphic_strings(s, t):
+    st = {}
+    ts = {}
+    for a, b in zip(s, t):
+        if a in st and st[a] != b:
+            return False
+        if b in ts and ts[b] != a:
+            return False
+        st[a] = b
+        ts[b] = a
+    return True
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)`.
+- Time `O(n)`, Space `O(sigma)`.
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Bidirectional hash mapping gives linear validation with exact constraints.
 
 #### Python
 ```python
-def solve_isomorphic_strings(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def better_isomorphic_strings(s, t):
+    st = {}
+    ts = {}
+    for a, b in zip(s, t):
+        if a in st and st[a] != b:
+            return False
+        if b in ts and ts[b] != a:
+            return False
+        st[a] = b
+        ts[b] = a
+    return True
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- Forward map prevents one source char mapping to multiple targets.
+- Reverse map prevents multiple source chars mapping to same target; together they enforce bijection.
 
 #### Complexity
-- Time `O(n)` average, Space `O(n)`.
+- Time `O(n)`, Space `O(sigma)`.
 
 ### Interviewer Follow-Ups
 - Streaming input: how would you support incremental arrivals without recomputing from scratch?
@@ -648,20 +640,21 @@ def solve_isomorphic_strings(nums, target):
 Solve **Ransom Note** using **Hash Map / Set Lookup**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Variant-specific array/string input parameters
+- `ransomNote`: str
+- `magazine`: str
 
 ### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+- `True` if ransom note can be constructed from magazine letters, else `False`.
 
 ### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
+- `1 <= len(ransomNote), len(magazine) <= 10^5`
+- Each magazine character can be used at most once.
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3,4]
-Output: problem-specific result
-Explanation: Use the pattern invariant to avoid repeated recomputation.
+Input:  ransomNote = "aa", magazine = "aab"
+Output: True
+Explanation: Magazine contains enough counts for all required letters.
 ```
 
 ### Edge-Case Expectations
@@ -676,67 +669,65 @@ Explanation: Use the pattern invariant to avoid repeated recomputation.
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Remove used characters from a mutable magazine list.
 
 #### Python
 ```python
-def brute_ransom_note(nums, target):
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
+def brute_ransom_note(ransomNote, magazine):
+    mag = list(magazine)
+    for ch in ransomNote:
+        if ch not in mag:
+            return False
+        mag.remove(ch)
+    return True
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time `O(n*m)` in worst case, Space `O(m)`.
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- Use frequency map of magazine letters and consume counts.
 
 #### Python
 ```python
-def better_ransom_note(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
-        else:
-            r -= 1
-    return []
+def better_ransom_note(ransomNote, magazine):
+    freq = {}
+    for ch in magazine:
+        freq[ch] = freq.get(ch, 0) + 1
+    for ch in ransomNote:
+        if freq.get(ch, 0) == 0:
+            return False
+        freq[ch] -= 1
+    return True
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)`.
+- Time `O(n+m)`, Space `O(sigma)`.
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Count comparison directly models one-time consumable characters.
 
 #### Python
 ```python
-def solve_ransom_note(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def better_ransom_note(ransomNote, magazine):
+    freq = {}
+    for ch in magazine:
+        freq[ch] = freq.get(ch, 0) + 1
+    for ch in ransomNote:
+        if freq.get(ch, 0) == 0:
+            return False
+        freq[ch] -= 1
+    return True
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- Each ransom character is feasible iff remaining magazine count is positive.
+- Decrementing counts preserves exact remaining resource invariant.
 
 #### Complexity
-- Time `O(n)` average, Space `O(n)`.
+- Time `O(n+m)`, Space `O(sigma)`.
 
 ### Interviewer Follow-Ups
 - Streaming input: how would you support incremental arrivals without recomputing from scratch?
@@ -752,20 +743,20 @@ def solve_ransom_note(nums, target):
 Solve **Longest Consecutive Sequence** using **Hash Map / Set Lookup**. Return exactly the value/structure requested by the original prompt.
 
 ### Input
-- Variant-specific array/string input parameters
+- `nums`: list[int]
 
 ### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+- Length of the longest run of consecutive integer values.
 
 ### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
+- `0 <= n <= 2 * 10^5`
+- `-10^9 <= nums[i] <= 10^9`
 
 ### Example (Exact)
 ```text
-Input:  nums = [1,2,3,4]
-Output: problem-specific result
-Explanation: Use the pattern invariant to avoid repeated recomputation.
+Input:  nums = [100,4,200,1,3,2]
+Output: 4
+Explanation: Sequence `[1,2,3,4]` has maximum length 4.
 ```
 
 ### Edge-Case Expectations
@@ -780,40 +771,43 @@ Explanation: Use the pattern invariant to avoid repeated recomputation.
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- For each value, walk forward while next value exists.
 
 #### Python
 ```python
-def brute_longest_consecutive_sequence(nums, target):
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
+def brute_longest_consecutive_sequence(nums):
+    best = 0
+    for x in nums:
+        cur = x
+        length = 1
+        while cur + 1 in nums:
+            cur += 1
+            length += 1
+        best = max(best, length)
+    return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time up to `O(n^2)`, Space `O(1)`.
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- Sort unique values and count longest adjacent +1 streak.
 
 #### Python
 ```python
-def better_longest_consecutive_sequence(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
+def better_longest_consecutive_sequence(nums):
+    arr = sorted(set(nums))
+    if not arr:
+        return 0
+    best = cur = 1
+    for i in range(1, len(arr)):
+        if arr[i] == arr[i - 1] + 1:
+            cur += 1
+            best = max(best, cur)
         else:
-            r -= 1
-    return []
+            cur = 1
+    return best
 ```
 
 #### Complexity
@@ -821,23 +815,25 @@ def better_longest_consecutive_sequence(nums, target):
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Only start streak expansion at sequence starts (`x-1` absent).
 
 #### Python
 ```python
-def solve_longest_consecutive_sequence(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def solve_longest_consecutive_sequence(nums):
+    s = set(nums)
+    best = 0
+    for x in s:
+        if x - 1 not in s:
+            y = x
+            while y in s:
+                y += 1
+            best = max(best, y - x)
+    return best
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- Each consecutive run is expanded exactly once from its minimum element.
+- No run is missed because every run has a unique minimum lacking predecessor.
 
 #### Complexity
 - Time `O(n)` average, Space `O(n)`.
@@ -857,20 +853,20 @@ Solve **Subarray Sum Equals K** using **Hash Map / Set Lookup**. Return exactly 
 
 ### Input
 - `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+- `k`: int
 
 ### Output
-- Indices, count, or value requested by the exact statement.
+- Count of contiguous subarrays whose sum equals `k`.
 
 ### Constraints
 - `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
+- `-10^4 <= nums[i], k <= 10^4`
 
 ### Example (Exact)
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+Input:  nums = [1,1,1], k = 2
+Output: 2
+Explanation: Subarrays `[1,1]` at indices `(0,1)` and `(1,2)` both sum to 2.
 ```
 
 ### Edge-Case Expectations
@@ -932,7 +928,7 @@ def better_subarray_sum_equals_k(nums, k):
 #### Python
 ```python
 def solve_subarray_sum_equals_k(nums, k):
-    freq = {{0: 1}}
+    freq = {0: 1}
     ans = 0
     pref = 0
     for x in nums:
@@ -992,67 +988,83 @@ Explanation: Window frequency count equals pattern frequency at matching starts.
 
 ### Approach 1: Brute Force (Worst)
 #### Intuition
-- Check every candidate pair/map relation directly; simple but expensive.
+- Sort every window and compare with sorted pattern.
 
 #### Python
 ```python
-def brute_find_all_anagrams_in_a_string(nums, target):
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []
+def brute_find_all_anagrams_in_a_string(s, p):
+    m = len(p)
+    key = sorted(p)
+    ans = []
+    for i in range(len(s) - m + 1):
+        if sorted(s[i:i+m]) == key:
+            ans.append(i)
+    return ans
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time `O((n-m+1) * m log m)`, Space `O(m)`.
 
 ### Approach 2: Better (Intermediate)
 #### Intuition
-- Sort to prune comparisons with two pointers while retaining original index mapping.
+- Maintain hashmap counts for current window.
 
 #### Python
 ```python
-def better_find_all_anagrams_in_a_string(nums, target):
-    pairs = sorted((x, i) for i, x in enumerate(nums))
-    l, r = 0, len(pairs) - 1
-    while l < r:
-        s = pairs[l][0] + pairs[r][0]
-        if s == target:
-            return sorted([pairs[l][1], pairs[r][1]])
-        if s < target:
-            l += 1
-        else:
-            r -= 1
-    return []
+def better_find_all_anagrams_in_a_string(s, p):
+    m = len(p)
+    if m > len(s):
+        return []
+    need = {}
+    for ch in p:
+        need[ch] = need.get(ch, 0) + 1
+    win = {}
+    ans = []
+    for i, ch in enumerate(s):
+        win[ch] = win.get(ch, 0) + 1
+        if i >= m:
+            out = s[i - m]
+            win[out] -= 1
+            if win[out] == 0:
+                del win[out]
+        if win == need:
+            ans.append(i - m + 1)
+    return ans
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)`.
+- Time `O(n * sigma)` worst with dict equality checks, Space `O(sigma)`.
 
 ### Approach 3: Optimal (Best)
 #### Intuition
-- Store visited facts in hash tables so each element contributes to the answer once.
+- Use fixed-size frequency arrays for O(1) window update and direct frequency comparison.
 
 #### Python
 ```python
-def solve_find_all_anagrams_in_a_string(nums, target):
-    seen = {{}}  # value -> index
-    for i, x in enumerate(nums):
-        need = target - x
-        if need in seen:
-            return [seen[need], i]
-        seen[x] = i
-    return []
+def solve_find_all_anagrams_in_a_string(s, p):
+    m, n = len(p), len(s)
+    if m > n:
+        return []
+    need = [0] * 26
+    win = [0] * 26
+    for ch in p:
+        need[ord(ch) - 97] += 1
+    ans = []
+    for i, ch in enumerate(s):
+        win[ord(ch) - 97] += 1
+        if i >= m:
+            win[ord(s[i - m]) - 97] -= 1
+        if win == need:
+            ans.append(i - m + 1)
+    return ans
 ```
 
 #### Correctness (Why This Works)
-- At iteration `i`, hash state stores exactly all prior elements needed for constant-time complement/count checks.
-- If a valid partner exists before `i`, it is detected when processing `i`; if none exists, no missed pair remains.
+- Window always has length `m`; equality with pattern counts is exactly the anagram condition.
+- Sliding by one character updates counts incrementally without rescanning full window.
 
 #### Complexity
-- Time `O(n)` average, Space `O(n)`.
+- Time `O(n * sigma)` with small constant alphabet (effectively linear), Space `O(sigma)`.
 
 ### Interviewer Follow-Ups
 - Streaming input: how would you support incremental arrivals without recomputing from scratch?
