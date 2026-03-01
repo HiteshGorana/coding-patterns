@@ -104,3 +104,238 @@ For each question:
 
 Mastering these patterns lets you map unfamiliar questions to familiar solution shapes.
 That is the core skill behind solving "new" interview questions quickly.
+
+
+IGNORE
+# Pattern 01: Hash Map / Set Lookup
+
+## At a Glance
+
+| Item | Summary |
+|---|---|
+| Use when | You need fast lookup of previously seen values |
+| Main tradeoff | `O(n)` extra space for faster runtime |
+| Typical runtime | `O(n)` average |
+| Typical structures | `set` for membership, `map` for counts/indices/state |
+| Common prompts | Duplicate, frequency, first unique, pair sum |
+
+## Diagram + Intuition
+
+### Pattern Diagram
+
+```text
+Initialize hash structure:
+  set() or map() based on need
+
+for i, x in enumerate(items):
+  derive query key (x, target - x, prefix, etc.)
+
+  if key/info already in hash:
+    use it -> record or return answer
+
+  update hash with current element/state
+    seen.add(x) or freq[x] += 1 or index[x] = i
+```
+
+### Mini Diagrams (Common Uses)
+
+#### 1) Duplicate Detection (`set`)
+```text
+nums: [3, 1, 4, 1]
+seen: {}
+
+3 not in seen -> add 3
+1 not in seen -> add 1
+4 not in seen -> add 4
+1 in seen     -> duplicate found (return True)
+```
+
+#### 2) Frequency Counting (`map`)
+```text
+chars:  a  b  a  c  a  b
+freq : {a:1}
+       {a:1,b:1}
+       {a:2,b:1}
+       {a:2,b:1,c:1}
+       {a:3,b:1,c:1}
+       {a:3,b:2,c:1}
+```
+
+#### 3) Two Sum Complement Lookup
+```text
+target = 9, nums = [2, 7, 11, 15]
+index_of = {}
+
+x=2, need=7  -> miss, store 2->0
+x=7, need=2  -> hit (index 0), return [0,1]
+```
+
+#### 4) First Unique Character
+```text
+Pass 1: build counts
+"leetcode" -> {l:1,e:3,t:1,c:1,o:1,d:1}
+
+Pass 2: first count == 1
+l is 1 -> answer index 0
+```
+
+#### 5) Prefix Sum + Hash Map (Subarray Sum = K)
+```text
+Running prefix: p
+Need prior prefix: p - k
+
+if (p - k) exists in map:
+  subarray found ending here
+
+map[p] += 1
+```
+
+#### 6) Anagram Check (Two Frequency Maps)
+```text
+s: "anagram" -> {a:3,n:1,g:1,r:1,m:1}
+t: "nagaram" -> {n:1,a:3,g:1,r:1,m:1}
+
+maps equal -> anagram
+```
+
+#### 7) Group Anagrams (Signature -> Bucket)
+```text
+word -> key(sorted(word)) -> group
+
+"eat" -> "aet" -> ["eat"]
+"tea" -> "aet" -> ["eat","tea"]
+"tan" -> "ant" -> ["tan"]
+```
+
+#### 8) Sliding Window + Hash Counts
+```text
+expand right -> add s[r] count
+while invalid:
+  shrink left -> remove s[l] count
+window valid -> update best answer
+```
+
+#### 9) Last Seen Index (Longest Unique Substring)
+```text
+map: char -> last index
+left boundary moves to skip repeats
+
+if c seen at j and j >= left:
+  left = j + 1
+update last_seen[c] = i
+```
+
+#### 10) Query-Then-Update Rule
+```text
+for each x:
+  1) ask hash for needed info
+  2) use result
+  3) write current x/state
+
+This order prevents self-reuse bugs.
+```
+
+### Read-the-Question Trigger Cues
+
+- "duplicate", "frequency", "first unique", "pair sum"
+- Brute force compares many pairs or rescans the same data.
+
+### Intuition Anchor
+
+- "I need memory of what I have seen so far."
+
+### 3-Second Pattern Check
+
+- Can I avoid repeated scans by storing `value -> count/index/state`?
+- If I process left to right, can "seen so far" answer the current step?
+- Is average `O(1)` lookup enough to reduce `O(n^2)` to `O(n)`?
+
+## What This Pattern Solves
+
+Use this pattern when you need fast lookups on previously seen elements.  
+It is a default choice for:
+- duplicate detection
+- counting frequency
+- reverse lookup (`value -> index`)
+- complement matching (`target - x`)
+
+## Recognition Signals
+
+- Problem asks: "contains duplicate", "first unique", "count occurrences", "find pair summing to target".
+- Brute force is `O(n^2)` from nested comparisons.
+- A one-pass scan works if you remember prior elements.
+
+## Core Intuition
+
+Trade extra memory for speed.  
+Instead of repeated searches, store facts in a hash structure:
+- `set` for membership (`seen`)
+- `map` for counts (`freq[x]`)
+- `map` for metadata (`last_index[x]`, `first_position[x]`)
+
+## Step-by-Step Method
+
+1. Define exactly what each key/value means.
+2. Traverse input once from left to right.
+3. Query first, then update (unless the problem needs update first).
+4. Keep the invariant clear: the table represents processed elements only.
+5. Return early once the condition is satisfied (if allowed).
+
+## Detailed Example (Two Sum)
+
+**Input:** `nums = [2, 7, 11, 15], target = 9`
+
+1. Start with empty map `index_of`.
+2. Read `2`: need `7`, not found. Store `index_of[2] = 0`.
+3. Read `7`: need `2`, found at index `0`.
+4. Return `[0, 1]`.
+
+This avoids checking all pairs and runs in one pass.
+
+## Complexity
+
+- Time: `O(n)` average case
+- Space: `O(n)`
+
+## Python Template
+
+```python
+def solve(nums, target):
+    info = {}  # value -> index/count/metadata
+
+    for i, x in enumerate(nums):
+        need = target - x
+        if need in info:
+            return [info[need], i]
+        info[x] = i
+
+    return []
+```
+
+## Common Pitfalls
+
+- Updating before checking can allow illegal reuse of the same element.
+- Using `set` when multiplicity matters (you needed counts).
+- Returning values instead of indices when the prompt asks indices.
+- Overwriting useful state too early (for example, losing first index).
+
+## Variations
+
+- Frequency table with `dict`/`Counter` for anagrams, mode, grouping.
+- Set-based dedupe when only presence matters.
+- Prefix-sum hash map for subarray-sum problems.
+- Character map for string window constraints.
+
+## Interview Tips
+
+- Start from brute force `O(n^2)`, then explain the repeated work.
+- State key/value semantics clearly before coding.
+- Mention average `O(1)` lookup/update and `O(n)` space tradeoff.
+
+## Practice Problems
+
+- Two Sum
+- Contains Duplicate
+- Valid Anagram
+- First Unique Character in a String
+- Subarray Sum Equals K
