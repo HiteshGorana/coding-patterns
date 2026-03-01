@@ -22,3 +22,19 @@ This folder contains structured system design study topics split into multiple m
 18. [18-deployment-and-operations.md](./18-deployment-and-operations.md)
 19. [19-testing-strategy-distributed-systems.md](./19-testing-strategy-distributed-systems.md)
 20. [20-design-interview-meta-skills.md](./20-design-interview-meta-skills.md)
+
+## Important Points to Remember in System Design Interviews
+
+Use this checklist when the interviewer asks you to design a system:
+
+- Clarify scope first: users, core features, and what is out of scope.
+- Define traffic assumptions: RPS/QPS, read vs write ratio, peak vs average load.
+- State non-functional goals: latency, availability, consistency, durability, cost.
+- Start with a high-level architecture before diving into component details.
+- Design APIs and data model early; they drive most downstream decisions.
+- Identify bottlenecks and scale path: caching, partitioning/sharding, async queues, replicas.
+- Explain trade-offs explicitly (for example, consistency vs availability, latency vs cost).
+- Cover failure handling: retries, timeouts, circuit breakers, graceful degradation.
+- Include observability: logs, metrics, tracing, alerts, and SLOs/SLIs.
+- Mention security basics: authn/authz, encryption, rate limiting, secret management.
+- End with evolution: what to build first (MVP) and what to improve next at 10x scale.

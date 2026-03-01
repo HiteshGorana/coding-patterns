@@ -56,6 +56,31 @@ Analogy: Interview design is like telling a map-guided story; interviewer should
 - Practice a repeatable 30-40 minute structure.
 - Keep a personal checklist: requirements, API/data model, scale, failures, rollout.
 
+## Interviewer Ask Checklist (Must Remember)
+- Clarify scope: users, features, constraints, and out-of-scope items.
+- Quantify load: QPS/RPS, read-write ratio, storage growth, peak traffic.
+- Set targets: latency, availability, consistency, durability, and budget.
+- Draw high-level architecture before component-level deep dive.
+- Define API contracts and core data model early.
+- Explain scaling plan: caching, sharding/partitioning, replicas, async processing.
+- Call out tradeoffs explicitly with reasoned choices.
+- Handle failures: retries, timeouts, idempotency, circuit breakers, fallbacks.
+- Cover observability: metrics, logs, traces, alerting, SLO/SLI.
+- Mention security basics: authentication, authorization, encryption, rate limiting.
+- Close with phased rollout: MVP first, then 10x growth improvements.
+
+## Tips and Tricks to Impress the Interviewer
+- Lead with structure: say your plan upfront (requirements -> design -> tradeoffs -> scaling -> failures).
+- Think aloud clearly; narrate why each decision is being made.
+- Use rough back-of-the-envelope math to justify architecture choices.
+- Name realistic defaults first, then mention alternatives if constraints change.
+- Proactively discuss one likely bottleneck and how you would detect/fix it.
+- Speak in tradeoffs, not absolutes ("this improves latency but increases cost").
+- Keep diagrams simple and layered so the interviewer can follow quickly.
+- Summarize every 5-7 minutes to show control of the conversation.
+- Ask for feedback checkpoints ("Should I go deeper on storage or caching next?").
+- End with a crisp recap: final design, key risks, and next scaling step.
+
 ## Interview Quick Revision (2 Minutes)
 - 30 sec: Define this concept in one sentence and state the primary design goal.
 - 30 sec: Name 3 core components and how they connect.
