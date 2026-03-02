@@ -1,1262 +1,1042 @@
 # Pattern 04 Interview Playbook: Sliding Window (Variable Size)
 
-Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
+This playbook is aligned with [Pattern 04: Sliding Window (Variable Size)](../04-sliding-window-variable.md).
+
+Use it when window size is not fixed and validity depends on current window state.
 
 ## Pattern Snapshot
 
-- What this pattern solves: Variable sliding window finds longest/shortest contiguous segment satisfying a condition.
-- Core intuition: Use two pointers: - expand right to include new elements - shrink left while window is invalid (or while it can be improved) Each index enters and exits window at most once, giving linear time.
-- Trigger cue 1: "Longest/shortest substring/subarray with constraint"
-- Trigger cue 2: "At most K distinct", "without repeating", "sum >= target"
-- Quick self-check: Can a valid window be maintained with two moving boundaries?
-- Target complexity: Time O(n), Space O(alphabet) or O(n) depending domain
+| Prompt shape | Window state to store | Validity rule |
+|---|---|---|
+| longest substring/subarray under constraint | `freq` / counters | shrink while invalid |
+| shortest window covering requirement | `need` / `missing` | shrink while still valid |
+| at most `k` distinct | `value -> frequency`, `distinct` | `distinct <= k` |
+| sum/product threshold windows | running `sum` / `product` | threshold-based shrink |
+| replacement/deletion budget | violations counter (`zeros`, replacements) | budget not exceeded |
+| exact `k` style counts | helper `atMost(k)` | exact = `atMost(k) - atMost(k-1)` |
+
+## Query-Update Rules
+
+- Expand right pointer and update incoming element first.
+- While constraint is broken, shrink from left and rollback state.
+- For longest-window goals, update answer after repair.
+- For minimum-window goals, update answer while valid and keep shrinking.
 
 ---
 
 ## Q1. Longest Substring Without Repeating Characters
 
-### Problem Statement (Concrete)
-Solve **Longest Substring Without Repeating Characters** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given string `s`, return length of the longest substring without repeating characters.
 
-### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+Example: `s = "abcabcbb" -> 3`
 
-### Output
-- Index, boolean, count, or transformed string as required.
+### Brute Force Solution
 
-### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+best = 0
+FOR i from 0 to n - 1:
+    seen = empty set
+    FOR j from i to n - 1:
+        IF s[j] in seen:
+            BREAK
+        ADD s[j] to seen
+        best = max(best, j - i + 1)
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Longest Substring Without Repeating Characters** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every alignment and compare full pattern each time.
 
 #### Python
 ```python
-def brute_longest_substring_without_repeating_characters(text, pattern):
-    m, n = len(pattern), len(text)
-    for i in range(n - m + 1):
-        if text[i:i+m] == pattern:
-            return i
-    return -1
+def longest_unique_bruteforce(s):
+    best = 0
+
+    for i in range(len(s)):
+        seen = set()
+        for j in range(i, len(s)):
+            if s[j] in seen:
+                break
+            seen.add(s[j])
+            best = max(best, j - i + 1)
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n*m)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(min(n, sigma))`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Rolling hash filters candidate matches and verifies collisions.
+### Optimal Solution (Last-Seen Window Jump)
+
+#### Pseudocode
+```text
+last_seen = empty map
+left = 0
+best = 0
+
+FOR right from 0 to n - 1:
+    ch = s[right]
+    IF ch in last_seen AND last_seen[ch] >= left:
+        left = last_seen[ch] + 1
+
+    last_seen[ch] = right
+    best = max(best, right - left + 1)
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_longest_substring_without_repeating_characters(text, pattern):
-    # Rabin-Karp style rolling hash.
-    if not pattern:
-        return 0
-    base, mod = 911382323, 10**9 + 7
-    m = len(pattern)
-    p_hash = 0
-    t_hash = 0
-    power = 1
-    for i in range(m):
-        p_hash = (p_hash * base + ord(pattern[i])) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if i:
-            power = (power * base) % mod
-    if t_hash == p_hash and text[:m] == pattern:
-        return 0
-    for i in range(m, len(text)):
-        t_hash = (t_hash - ord(text[i-m]) * power) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
-            return i - m + 1
-    return -1
+def longest_unique_optimal(s):
+    last_seen = {}
+    left = 0
+    best = 0
+
+    for right, ch in enumerate(s):
+        if ch in last_seen and last_seen[ch] >= left:
+            left = last_seen[ch] + 1
+
+        last_seen[ch] = right
+        best = max(best, right - left + 1)
+
+    return best
 ```
 
 #### Complexity
-- Expected `O(n+m)`, worst-case with collisions can degrade.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
-
-#### Python
-```python
-def solve_longest_substring_without_repeating_characters(text, pattern):
-    if not pattern:
-        return 0
-
-    lps = [0] * len(pattern)
-    j = 0
-    for i in range(1, len(pattern)):
-        while j > 0 and pattern[i] != pattern[j]:
-            j = lps[j - 1]
-        if pattern[i] == pattern[j]:
-            j += 1
-            lps[i] = j
-
-    j = 0
-    for i, ch in enumerate(text):
-        while j > 0 and ch != pattern[j]:
-            j = lps[j - 1]
-        if ch == pattern[j]:
-            j += 1
-            if j == len(pattern):
-                return i - len(pattern) + 1
-    return -1
-```
-
-#### Correctness (Why This Works)
-- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
-- Pointer never moves backward in text, so each character is processed constant times.
-
-#### Complexity
-- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(min(n, sigma))`
 
 ---
 
 ## Q2. Minimum Window Substring
 
-### Problem Statement (Concrete)
-Solve **Minimum Window Substring** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given strings `s` and `t`, return the minimum window in `s` containing all chars of `t` (with multiplicity). If none, return `""`.
 
-### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+Example: `s = "ADOBECODEBANC", t = "ABC" -> "BANC"`
 
-### Output
-- Index, boolean, count, or transformed string as required.
+### Brute Force Solution
 
-### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+need = frequency map of t
+best_len = infinity
+best_start = 0
+
+FOR i from 0 to n - 1:
+    have = empty map
+    missing = length(t)
+
+    FOR j from i to n - 1:
+        ch = s[j]
+        IF ch in need:
+            have[ch] += 1
+            IF have[ch] <= need[ch]:
+                missing -= 1
+
+        IF missing == 0:
+            IF j - i + 1 < best_len:
+                best_len = j - i + 1
+                best_start = i
+            BREAK
+
+IF best_len is infinity: RETURN ""
+RETURN s[best_start : best_start + best_len]
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Minimum Window Substring** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every alignment and compare full pattern each time.
 
 #### Python
 ```python
-def brute_minimum_window_substring(text, pattern):
-    m, n = len(pattern), len(text)
-    for i in range(n - m + 1):
-        if text[i:i+m] == pattern:
-            return i
-    return -1
+def min_window_bruteforce(s, t):
+    if not s or not t:
+        return ""
+
+    need = {}
+    for ch in t:
+        need[ch] = need.get(ch, 0) + 1
+
+    best_len = float('inf')
+    best_start = 0
+
+    for i in range(len(s)):
+        have = {}
+        missing = len(t)
+
+        for j in range(i, len(s)):
+            ch = s[j]
+            if ch in need:
+                have[ch] = have.get(ch, 0) + 1
+                if have[ch] <= need[ch]:
+                    missing -= 1
+
+            if missing == 0:
+                if j - i + 1 < best_len:
+                    best_len = j - i + 1
+                    best_start = i
+                break
+
+    if best_len == float('inf'):
+        return ""
+
+    return s[best_start:best_start + best_len]
 ```
 
 #### Complexity
-- Time `O(n*m)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(sigma_t)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Rolling hash filters candidate matches and verifies collisions.
+### Optimal Solution (Expand + Shrink While Valid)
+
+#### Pseudocode
+```text
+need = frequency map of t
+missing = length(t)
+left = 0
+best_len = infinity
+best_start = 0
+
+FOR right from 0 to n - 1:
+    ch = s[right]
+    IF need[ch] > 0:
+        missing -= 1
+    need[ch] -= 1
+
+    WHILE missing == 0:
+        IF right - left + 1 < best_len:
+            best_len = right - left + 1
+            best_start = left
+
+        out = s[left]
+        need[out] += 1
+        IF need[out] > 0:
+            missing += 1
+        left += 1
+
+IF best_len is infinity: RETURN ""
+RETURN s[best_start : best_start + best_len]
+```
 
 #### Python
 ```python
-def better_minimum_window_substring(text, pattern):
-    # Rabin-Karp style rolling hash.
-    if not pattern:
-        return 0
-    base, mod = 911382323, 10**9 + 7
-    m = len(pattern)
-    p_hash = 0
-    t_hash = 0
-    power = 1
-    for i in range(m):
-        p_hash = (p_hash * base + ord(pattern[i])) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if i:
-            power = (power * base) % mod
-    if t_hash == p_hash and text[:m] == pattern:
-        return 0
-    for i in range(m, len(text)):
-        t_hash = (t_hash - ord(text[i-m]) * power) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
-            return i - m + 1
-    return -1
+def min_window_optimal(s, t):
+    if not s or not t:
+        return ""
+
+    need = {}
+    for ch in t:
+        need[ch] = need.get(ch, 0) + 1
+
+    missing = len(t)
+    left = 0
+    best_len = float('inf')
+    best_start = 0
+
+    for right, ch in enumerate(s):
+        if need.get(ch, 0) > 0:
+            missing -= 1
+        need[ch] = need.get(ch, 0) - 1
+
+        while missing == 0:
+            if right - left + 1 < best_len:
+                best_len = right - left + 1
+                best_start = left
+
+            out = s[left]
+            need[out] = need.get(out, 0) + 1
+            if need[out] > 0:
+                missing += 1
+            left += 1
+
+    if best_len == float('inf'):
+        return ""
+
+    return s[best_start:best_start + best_len]
 ```
 
 #### Complexity
-- Expected `O(n+m)`, worst-case with collisions can degrade.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
-
-#### Python
-```python
-def solve_minimum_window_substring(text, pattern):
-    if not pattern:
-        return 0
-
-    lps = [0] * len(pattern)
-    j = 0
-    for i in range(1, len(pattern)):
-        while j > 0 and pattern[i] != pattern[j]:
-            j = lps[j - 1]
-        if pattern[i] == pattern[j]:
-            j += 1
-            lps[i] = j
-
-    j = 0
-    for i, ch in enumerate(text):
-        while j > 0 and ch != pattern[j]:
-            j = lps[j - 1]
-        if ch == pattern[j]:
-            j += 1
-            if j == len(pattern):
-                return i - len(pattern) + 1
-    return -1
-```
-
-#### Correctness (Why This Works)
-- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
-- Pointer never moves backward in text, so each character is processed constant times.
-
-#### Complexity
-- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n + m)`
+- Space: `O(sigma_t)`
 
 ---
 
 ## Q3. Longest Repeating Character Replacement
 
-### Problem Statement (Concrete)
-Solve **Longest Repeating Character Replacement** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given uppercase string `s` and integer `k`, return length of longest substring that can be turned into all same char by replacing at most `k` chars.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `s = "AABABBA", k = 1 -> 4`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+best = 0
+FOR i from 0 to n - 1:
+    freq[26] = all zeros
+    max_freq = 0
+
+    FOR j from i to n - 1:
+        idx = index(s[j])
+        freq[idx] += 1
+        max_freq = max(max_freq, freq[idx])
+
+        IF (j - i + 1) - max_freq <= k:
+            best = max(best, j - i + 1)
+        ELSE:
+            BREAK
+
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Longest Repeating Character Replacement** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_longest_repeating_character_replacement(s, k):
-    n = len(s)
+def char_replace_bruteforce(s, k):
     best = 0
-    for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
+
+    for i in range(len(s)):
+        freq = [0] * 26
+        max_freq = 0
+
+        for j in range(i, len(s)):
+            idx = ord(s[j]) - ord('A')
+            freq[idx] += 1
+            max_freq = max(max_freq, freq[idx])
+
+            if (j - i + 1) - max_freq <= k:
                 best = max(best, j - i + 1)
             else:
                 break
+
     return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Variable Window + Max Freq)
 
-#### Python
-```python
-def better_longest_repeating_character_replacement(s, k):
-    freq = {}
-    left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
-            left += 1
-        best = max(best, right - left + 1)
-    return best
+#### Pseudocode
+```text
+freq[26] = all zeros
+left = 0
+max_freq = 0
+best = 0
+
+FOR right from 0 to n - 1:
+    idx = index(s[right])
+    freq[idx] += 1
+    max_freq = max(max_freq, freq[idx])
+
+    WHILE (right - left + 1) - max_freq > k:
+        freq[index(s[left])] -= 1
+        left += 1
+
+    best = max(best, right - left + 1)
+
+RETURN best
 ```
 
-#### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
 #### Python
 ```python
-def solve_longest_repeating_character_replacement(s, k):
-    freq = [0] * 128
+def char_replace_optimal(s, k):
+    freq = [0] * 26
     left = 0
-    distinct = 0
+    max_freq = 0
     best = 0
+
     for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
+        idx = ord(ch) - ord('A')
         freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
+        max_freq = max(max_freq, freq[idx])
+
+        while (right - left + 1) - max_freq > k:
+            freq[ord(s[left]) - ord('A')] -= 1
             left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
+
+        best = max(best, right - left + 1)
+
     return best
 ```
 
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
 #### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q4. Fruit Into Baskets
 
-### Problem Statement (Concrete)
-Solve **Fruit Into Baskets** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given array `fruits`, return max number of fruits you can pick from a contiguous subarray containing at most 2 distinct values.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `fruits = [1,2,1] -> 3`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+best = 0
+FOR i from 0 to n - 1:
+    freq = empty map
+    FOR j from i to n - 1:
+        freq[fruits[j]] += 1
+        IF distinct keys in freq > 2:
+            BREAK
+        best = max(best, j - i + 1)
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Fruit Into Baskets** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_fruit_into_baskets(s, k):
-    n = len(s)
+def fruit_baskets_bruteforce(fruits):
     best = 0
-    for i in range(n):
+
+    for i in range(len(fruits)):
         freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
+        for j in range(i, len(fruits)):
+            x = fruits[j]
+            freq[x] = freq.get(x, 0) + 1
+            if len(freq) > 2:
                 break
+            best = max(best, j - i + 1)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n^2)`
+- Space: `O(1)` (at most 3 keys transiently)
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (At Most 2 Distinct)
+
+#### Pseudocode
+```text
+left = 0
+freq = empty map
+best = 0
+
+FOR right from 0 to n - 1:
+    freq[fruits[right]] += 1
+
+    WHILE distinct keys in freq > 2:
+        freq[fruits[left]] -= 1
+        IF freq[fruits[left]] == 0:
+            remove key
+        left += 1
+
+    best = max(best, right - left + 1)
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_fruit_into_baskets(s, k):
-    freq = {}
+def fruit_baskets_optimal(fruits):
     left = 0
+    freq = {}
     best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
+
+    for right, x in enumerate(fruits):
+        freq[x] = freq.get(x, 0) + 1
+
+        while len(freq) > 2:
+            out = fruits[left]
             freq[out] -= 1
             if freq[out] == 0:
                 del freq[out]
             left += 1
+
         best = max(best, right - left + 1)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_fruit_into_baskets(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)` (bounded by distinct limit)
 
 ---
 
 ## Q5. Minimum Size Subarray Sum
 
-### Problem Statement (Concrete)
-Solve **Minimum Size Subarray Sum** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given positive integer array `nums` and target `target`, return minimal length of a subarray with sum >= `target`. If none, return `0`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `target = 7, nums = [2,3,1,2,4,3] -> 2`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+best = infinity
+FOR i from 0 to n - 1:
+    total = 0
+    FOR j from i to n - 1:
+        total += nums[j]
+        IF total >= target:
+            best = min(best, j - i + 1)
+            BREAK
+
+IF best is infinity: RETURN 0
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Minimum Size Subarray Sum** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_minimum_size_subarray_sum(s, k):
-    n = len(s)
-    best = 0
-    for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
+def min_subarray_len_bruteforce(target, nums):
+    best = float('inf')
+
+    for i in range(len(nums)):
+        total = 0
+        for j in range(i, len(nums)):
+            total += nums[j]
+            if total >= target:
+                best = min(best, j - i + 1)
                 break
-    return best
+
+    return 0 if best == float('inf') else best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Shrink While Sum Valid)
+
+#### Pseudocode
+```text
+left = 0
+total = 0
+best = infinity
+
+FOR right from 0 to n - 1:
+    total += nums[right]
+
+    WHILE total >= target:
+        best = min(best, right - left + 1)
+        total -= nums[left]
+        left += 1
+
+IF best is infinity: RETURN 0
+RETURN best
+```
 
 #### Python
 ```python
-def better_minimum_size_subarray_sum(s, k):
-    freq = {}
+def min_subarray_len_optimal(target, nums):
     left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
+    total = 0
+    best = float('inf')
+
+    for right, x in enumerate(nums):
+        total += x
+
+        while total >= target:
+            best = min(best, right - left + 1)
+            total -= nums[left]
             left += 1
-        best = max(best, right - left + 1)
-    return best
+
+    return 0 if best == float('inf') else best
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_minimum_size_subarray_sum(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q6. Subarray Product Less Than K
 
-### Problem Statement (Concrete)
-Solve **Subarray Product Less Than K** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given positive integer array `nums` and integer `k`, return count of contiguous subarrays where product < `k`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [10,5,2,6], k = 100 -> 8`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+IF k <= 1: RETURN 0
+count = 0
+
+FOR i from 0 to n - 1:
+    product = 1
+    FOR j from i to n - 1:
+        product *= nums[j]
+        IF product < k:
+            count += 1
+        ELSE:
+            BREAK
+
+RETURN count
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Subarray Product Less Than K** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_subarray_product_less_than_k(s, k):
-    n = len(s)
-    best = 0
-    for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
+def subarray_product_bruteforce(nums, k):
+    if k <= 1:
+        return 0
+
+    count = 0
+
+    for i in range(len(nums)):
+        product = 1
+        for j in range(i, len(nums)):
+            product *= nums[j]
+            if product < k:
+                count += 1
             else:
                 break
-    return best
+
+    return count
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Product Window)
+
+#### Pseudocode
+```text
+IF k <= 1: RETURN 0
+left = 0
+product = 1
+count = 0
+
+FOR right from 0 to n - 1:
+    product *= nums[right]
+
+    WHILE product >= k:
+        product /= nums[left]
+        left += 1
+
+    count += right - left + 1
+
+RETURN count
+```
 
 #### Python
 ```python
-def better_subarray_product_less_than_k(s, k):
-    freq = {}
+def subarray_product_optimal(nums, k):
+    if k <= 1:
+        return 0
+
     left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
+    product = 1
+    count = 0
+
+    for right, x in enumerate(nums):
+        product *= x
+
+        while product >= k:
+            product //= nums[left]
             left += 1
-        best = max(best, right - left + 1)
-    return best
+
+        count += right - left + 1
+
+    return count
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_subarray_product_less_than_k(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q7. Longest Substring with At Most K Distinct Characters
 
-### Problem Statement (Concrete)
-Solve **Longest Substring with At Most K Distinct Characters** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given string `s` and integer `k`, return length of longest substring with at most `k` distinct chars.
 
-### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+Example: `s = "eceba", k = 2 -> 3`
 
-### Output
-- Index, boolean, count, or transformed string as required.
+### Brute Force Solution
 
-### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+IF k == 0: RETURN 0
+best = 0
+
+FOR i from 0 to n - 1:
+    freq = empty map
+    FOR j from i to n - 1:
+        freq[s[j]] += 1
+        IF distinct keys in freq > k:
+            BREAK
+        best = max(best, j - i + 1)
+
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Longest Substring with At Most K Distinct Characters** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every alignment and compare full pattern each time.
 
 #### Python
 ```python
-def brute_longest_substring_with_at_most_k_distinct_characters(text, pattern):
-    m, n = len(pattern), len(text)
-    for i in range(n - m + 1):
-        if text[i:i+m] == pattern:
-            return i
-    return -1
+def longest_k_distinct_bruteforce(s, k):
+    if k == 0:
+        return 0
+
+    best = 0
+
+    for i in range(len(s)):
+        freq = {}
+        for j in range(i, len(s)):
+            ch = s[j]
+            freq[ch] = freq.get(ch, 0) + 1
+            if len(freq) > k:
+                break
+            best = max(best, j - i + 1)
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n*m)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(min(k, sigma))`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Rolling hash filters candidate matches and verifies collisions.
+### Optimal Solution (At Most K Distinct Window)
+
+#### Pseudocode
+```text
+IF k == 0: RETURN 0
+left = 0
+freq = empty map
+best = 0
+
+FOR right from 0 to n - 1:
+    freq[s[right]] += 1
+
+    WHILE distinct keys in freq > k:
+        freq[s[left]] -= 1
+        IF freq[s[left]] == 0:
+            remove key
+        left += 1
+
+    best = max(best, right - left + 1)
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_longest_substring_with_at_most_k_distinct_characters(text, pattern):
-    # Rabin-Karp style rolling hash.
-    if not pattern:
+def longest_k_distinct_optimal(s, k):
+    if k == 0:
         return 0
-    base, mod = 911382323, 10**9 + 7
-    m = len(pattern)
-    p_hash = 0
-    t_hash = 0
-    power = 1
-    for i in range(m):
-        p_hash = (p_hash * base + ord(pattern[i])) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if i:
-            power = (power * base) % mod
-    if t_hash == p_hash and text[:m] == pattern:
-        return 0
-    for i in range(m, len(text)):
-        t_hash = (t_hash - ord(text[i-m]) * power) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
-            return i - m + 1
-    return -1
+
+    left = 0
+    freq = {}
+    best = 0
+
+    for right, ch in enumerate(s):
+        freq[ch] = freq.get(ch, 0) + 1
+
+        while len(freq) > k:
+            out = s[left]
+            freq[out] -= 1
+            if freq[out] == 0:
+                del freq[out]
+            left += 1
+
+        best = max(best, right - left + 1)
+
+    return best
 ```
 
 #### Complexity
-- Expected `O(n+m)`, worst-case with collisions can degrade.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
-
-#### Python
-```python
-def solve_longest_substring_with_at_most_k_distinct_characters(text, pattern):
-    if not pattern:
-        return 0
-
-    lps = [0] * len(pattern)
-    j = 0
-    for i in range(1, len(pattern)):
-        while j > 0 and pattern[i] != pattern[j]:
-            j = lps[j - 1]
-        if pattern[i] == pattern[j]:
-            j += 1
-            lps[i] = j
-
-    j = 0
-    for i, ch in enumerate(text):
-        while j > 0 and ch != pattern[j]:
-            j = lps[j - 1]
-        if ch == pattern[j]:
-            j += 1
-            if j == len(pattern):
-                return i - len(pattern) + 1
-    return -1
-```
-
-#### Correctness (Why This Works)
-- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
-- Pointer never moves backward in text, so each character is processed constant times.
-
-#### Complexity
-- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(min(k, sigma))`
 
 ---
 
 ## Q8. Max Consecutive Ones III
 
-### Problem Statement (Concrete)
-Solve **Max Consecutive Ones III** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given binary array `nums` and integer `k`, return maximum consecutive ones after flipping at most `k` zeros.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [1,1,1,0,0,0,1,1,1,1,0], k = 2 -> 6`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+best = 0
+FOR i from 0 to n - 1:
+    zeros = 0
+    FOR j from i to n - 1:
+        IF nums[j] == 0:
+            zeros += 1
+        IF zeros > k:
+            BREAK
+        best = max(best, j - i + 1)
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Max Consecutive Ones III** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_max_consecutive_ones_iii(s, k):
-    n = len(s)
+def max_ones_iii_bruteforce(nums, k):
     best = 0
-    for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
+
+    for i in range(len(nums)):
+        zeros = 0
+        for j in range(i, len(nums)):
+            if nums[j] == 0:
+                zeros += 1
+            if zeros > k:
                 break
+            best = max(best, j - i + 1)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (At Most K Zeros Window)
+
+#### Pseudocode
+```text
+left = 0
+zeros = 0
+best = 0
+
+FOR right from 0 to n - 1:
+    IF nums[right] == 0:
+        zeros += 1
+
+    WHILE zeros > k:
+        IF nums[left] == 0:
+            zeros -= 1
+        left += 1
+
+    best = max(best, right - left + 1)
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_max_consecutive_ones_iii(s, k):
-    freq = {}
+def max_ones_iii_optimal(nums, k):
     left = 0
+    zeros = 0
     best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
+
+    for right, x in enumerate(nums):
+        if x == 0:
+            zeros += 1
+
+        while zeros > k:
+            if nums[left] == 0:
+                zeros -= 1
             left += 1
+
         best = max(best, right - left + 1)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_max_consecutive_ones_iii(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q9. Frequency of the Most Frequent Element
 
-### Problem Statement (Concrete)
-Solve **Frequency of the Most Frequent Element** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given integer array `nums` and integer `k`, you may increment elements at most `k` times total. Return max possible frequency of any element.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [1,2,4], k = 5 -> 3`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+SORT nums
+prefix_sum[0] = 0
+FOR i from 0 to n - 1:
+    prefix_sum[i + 1] = prefix_sum[i] + nums[i]
+
+best = 1
+FOR right from 0 to n - 1:
+    FOR left from 0 to right:
+        window_sum = prefix_sum[right + 1] - prefix_sum[left]
+        need = nums[right] * (right - left + 1) - window_sum
+        IF need <= k:
+            best = max(best, right - left + 1)
+
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Frequency of the Most Frequent Element** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_frequency_of_the_most_frequent_element(s, k):
-    n = len(s)
-    best = 0
+def freq_most_frequent_bruteforce(nums, k):
+    nums = sorted(nums)
+    n = len(nums)
+
+    prefix = [0] * (n + 1)
     for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
-                break
+        prefix[i + 1] = prefix[i] + nums[i]
+
+    best = 1
+
+    for right in range(n):
+        for left in range(right + 1):
+            window_sum = prefix[right + 1] - prefix[left]
+            need = nums[right] * (right - left + 1) - window_sum
+            if need <= k:
+                best = max(best, right - left + 1)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n^2)` after sorting
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Sorted Window + Cost Formula)
+
+#### Pseudocode
+```text
+SORT nums
+left = 0
+window_sum = 0
+best = 1
+
+FOR right from 0 to n - 1:
+    window_sum += nums[right]
+
+    WHILE nums[right] * (right - left + 1) - window_sum > k:
+        window_sum -= nums[left]
+        left += 1
+
+    best = max(best, right - left + 1)
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_frequency_of_the_most_frequent_element(s, k):
-    freq = {}
+def freq_most_frequent_optimal(nums, k):
+    nums.sort()
+
     left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
+    window_sum = 0
+    best = 1
+
+    for right, x in enumerate(nums):
+        window_sum += x
+
+        while x * (right - left + 1) - window_sum > k:
+            window_sum -= nums[left]
             left += 1
+
         best = max(best, right - left + 1)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_frequency_of_the_most_frequent_element(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log n)`
+- Space: `O(1)` extra (excluding sort)
 
 ---
 
 ## Q10. Longest Subarray of 1's After Deleting One Element
 
-### Problem Statement (Concrete)
-Solve **Longest Subarray of 1's After Deleting One Element** using **Sliding Window (Variable Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given binary array `nums`, delete one element and return longest non-empty subarray containing only `1`s.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [1,1,0,1] -> 3`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+best = 0
+FOR i from 0 to n - 1:
+    zeros = 0
+    FOR j from i to n - 1:
+        IF nums[j] == 0:
+            zeros += 1
+        IF zeros > 1:
+            BREAK
+        best = max(best, j - i)  # delete one from this window
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Variable Size)**.
-- Red flags: brute force for **Longest Subarray of 1's After Deleting One Element** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_longest_subarray_of_1_s_after_deleting_one_element(s, k):
-    n = len(s)
+def longest_ones_delete_one_bruteforce(nums):
     best = 0
-    for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
+
+    for i in range(len(nums)):
+        zeros = 0
+        for j in range(i, len(nums)):
+            if nums[j] == 0:
+                zeros += 1
+            if zeros > 1:
                 break
+            best = max(best, j - i)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (At Most One Zero Window)
+
+#### Pseudocode
+```text
+left = 0
+zeros = 0
+best = 0
+
+FOR right from 0 to n - 1:
+    IF nums[right] == 0:
+        zeros += 1
+
+    WHILE zeros > 1:
+        IF nums[left] == 0:
+            zeros -= 1
+        left += 1
+
+    best = max(best, right - left)  # one deletion enforced
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_longest_subarray_of_1_s_after_deleting_one_element(s, k):
-    freq = {}
+def longest_ones_delete_one_optimal(nums):
     left = 0
+    zeros = 0
     best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
+
+    for right, x in enumerate(nums):
+        if x == 0:
+            zeros += 1
+
+        while zeros > 1:
+            if nums[left] == 0:
+                zeros -= 1
             left += 1
-        best = max(best, right - left + 1)
+
+        best = max(best, right - left)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_longest_subarray_of_1_s_after_deleting_one_element(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
+
+## Rapid Recall Checklist
+
+- Define one clear window validity condition before coding.
+- Expand right first, then shrink left until window is valid again.
+- Use `while` (not `if`) when repeated shrinking is required.
+- For shortest valid window, update answer inside the shrink loop.
