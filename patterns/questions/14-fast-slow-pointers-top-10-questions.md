@@ -1,829 +1,1045 @@
 # Pattern 14 Interview Playbook: Fast & Slow Pointers
 
-Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
+This playbook is aligned with [Pattern 14: Fast & Slow Pointers](../14-fast-slow-pointers.md).
+
+Use it when the prompt involves cycle detection, middle finding, or phase alignment in linked structures/sequences.
 
 ## Pattern Snapshot
 
-- What this pattern solves: Detects cycles, finds middle points, and identifies phase relationships in linked structures.
-- Core intuition: Move pointers at different speeds: - `slow` moves 1 step - `fast` moves 2 steps If there is a cycle, they must meet. If no cycle, `fast` reaches end.
-- Trigger cue 1: Linked list cycle, middle node, repeated-state loops.
-- Quick self-check: Can two-speed traversal detect cycle/phase alignment?
-- Target complexity: Time O(n), Space O(1)
+| Prompt shape | Pointer speeds | Outcome |
+|---|---|---|
+| detect cycle in linked list | `slow +1`, `fast +2` | meet => cycle |
+| find cycle entry | meet first, then reset one pointer to head | second meet => entry |
+| middle of linked list | `slow +1`, `fast +2` until end | `slow` at middle |
+| sequence cycle (happy number) | apply transition function with two speeds | detect loop without hash set |
+| compare list halves | use fast/slow to split, reverse second half | `O(1)` extra symmetry check |
+| one-pass nth-from-end | keep fixed gap between fast and slow | slow lands before target |
+
+## Query-Update Rules
+
+- Always guard `fast` and `fast.next` before jumping two steps.
+- Use node identity (`is`) for linked list cycle detection.
+- For cycle-entry problems: after first meet, reset one pointer to head and move both by one.
+- For odd-length split logic, skip middle node when needed before comparing halves.
+- For one-pass removal, create a dummy head and keep `n`-step gap.
 
 ---
 
 ## Q1. Linked List Cycle
 
-### Problem Statement (Concrete)
-Solve **Linked List Cycle** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `head` of a linked list, return `True` if the list contains a cycle, else `False`.
 
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
+Example: `3 -> 2 -> 0 -> -4` with tail connecting to node index `1` -> `True`
 
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
+### Brute Force Solution
 
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
+seen = empty set
+cur = head
+
+WHILE cur is not null:
+    IF cur in seen:
+        RETURN True
+    ADD cur to seen
+    cur = cur.next
+
+RETURN False
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Linked List Cycle** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
 
 #### Python
 ```python
-def brute_linked_list_cycle(head):
-    vals = []
+def has_cycle_bruteforce(head):
+    seen = set()
     cur = head
+
     while cur:
-        vals.append(cur.val)
+        if cur in seen:
+            return True
+        seen.add(cur)
         cur = cur.next
-    return vals == vals[::-1]
+
+    return False
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
+- Time: `O(n)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
+### Optimal Solution (Floyd's Tortoise and Hare)
 
-#### Python
-```python
-def better_linked_list_cycle(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
+#### Pseudocode
+```text
+slow = head
+fast = head
+
+WHILE fast is not null AND fast.next is not null:
+    slow = slow.next
+    fast = fast.next.next
+
+    IF slow == fast:
+        RETURN True
+
+RETURN False
 ```
 
-#### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
 #### Python
 ```python
-def solve_linked_list_cycle(head):
-    slow = fast = head
+def has_cycle_optimal(head):
+    slow = head
+    fast = head
+
     while fast and fast.next:
         slow = slow.next
         fast = fast.next.next
 
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
+        if slow is fast:
+            return True
 
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
+    return False
 ```
 
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q2. Linked List Cycle II
 
-### Problem Statement (Concrete)
-Solve **Linked List Cycle II** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `head` of a linked list, return the node where the cycle begins. If no cycle, return `None`.
 
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
+Example: `3 -> 2 -> 0 -> -4` with tail connecting to node index `1` -> return node with value `2`
 
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
+### Brute Force Solution
 
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
+seen = empty set
+cur = head
+
+WHILE cur is not null:
+    IF cur in seen:
+        RETURN cur
+    ADD cur to seen
+    cur = cur.next
+
+RETURN null
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Linked List Cycle II** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
 
 #### Python
 ```python
-def brute_linked_list_cycle_ii(head):
-    vals = []
+def detect_cycle_start_bruteforce(head):
+    seen = set()
     cur = head
+
     while cur:
-        vals.append(cur.val)
+        if cur in seen:
+            return cur
+        seen.add(cur)
         cur = cur.next
-    return vals == vals[::-1]
+
+    return None
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
+- Time: `O(n)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
+### Optimal Solution (Floyd Meet + Reset)
+
+#### Pseudocode
+```text
+slow = head
+fast = head
+
+WHILE fast and fast.next:
+    slow = slow.next
+    fast = fast.next.next
+    IF slow == fast:
+        BREAK
+
+IF no meeting happened:
+    RETURN null
+
+p1 = head
+p2 = slow
+WHILE p1 != p2:
+    p1 = p1.next
+    p2 = p2.next
+
+RETURN p1
+```
 
 #### Python
 ```python
-def better_linked_list_cycle_ii(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
-```
+def detect_cycle_start_optimal(head):
+    slow = head
+    fast = head
 
-#### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
-#### Python
-```python
-def solve_linked_list_cycle_ii(head):
-    slow = fast = head
     while fast and fast.next:
         slow = slow.next
         fast = fast.next.next
+        if slow is fast:
+            break
+    else:
+        return None
 
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
+    p1 = head
+    p2 = slow
 
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
+    while p1 is not p2:
+        p1 = p1.next
+        p2 = p2.next
+
+    return p1
 ```
 
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q3. Middle of the Linked List
 
-### Problem Statement (Concrete)
-Solve **Middle of the Linked List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `head` of a singly linked list, return the middle node. If two middle nodes exist, return the second one.
 
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
+Example: `1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8` -> return node with value `5`
 
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
+### Brute Force Solution
 
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
+n = 0
+cur = head
+WHILE cur:
+    n += 1
+    cur = cur.next
+
+steps = n // 2
+cur = head
+REPEAT steps times:
+    cur = cur.next
+
+RETURN cur
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Middle of the Linked List** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
 
 #### Python
 ```python
-def brute_middle_of_the_linked_list(head):
-    vals = []
+def middle_node_bruteforce(head):
+    n = 0
     cur = head
+
     while cur:
-        vals.append(cur.val)
+        n += 1
         cur = cur.next
-    return vals == vals[::-1]
+
+    cur = head
+    for _ in range(n // 2):
+        cur = cur.next
+
+    return cur
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
+- Time: `O(n)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
+### Optimal Solution (Fast + Slow in One Pass)
 
-#### Python
-```python
-def better_middle_of_the_linked_list(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
+#### Pseudocode
+```text
+slow = head
+fast = head
+
+WHILE fast and fast.next:
+    slow = slow.next
+    fast = fast.next.next
+
+RETURN slow
 ```
 
-#### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
 #### Python
 ```python
-def solve_middle_of_the_linked_list(head):
-    slow = fast = head
+def middle_node_optimal(head):
+    slow = head
+    fast = head
+
     while fast and fast.next:
         slow = slow.next
         fast = fast.next.next
 
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
-
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
+    return slow
 ```
 
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q4. Happy Number
 
-### Problem Statement (Concrete)
-Solve **Happy Number** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given integer `n`, return `True` if it is a happy number, else `False`.
 
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
+Example: `n = 19 -> True`
 
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
+### Brute Force Solution
 
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
+FUNCTION next_num(x):
+    sum = 0
+    WHILE x > 0:
+        digit = x mod 10
+        sum += digit * digit
+        x = x // 10
+    RETURN sum
+
+seen = empty set
+WHILE n != 1 AND n not in seen:
+    ADD n to seen
+    n = next_num(n)
+
+RETURN n == 1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Happy Number** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
 
 #### Python
 ```python
-def brute_happy_number(head):
-    vals = []
-    cur = head
-    while cur:
-        vals.append(cur.val)
-        cur = cur.next
-    return vals == vals[::-1]
+def is_happy_bruteforce(n):
+    def next_num(x):
+        s = 0
+        while x > 0:
+            d = x % 10
+            s += d * d
+            x //= 10
+        return s
+
+    seen = set()
+    while n != 1 and n not in seen:
+        seen.add(n)
+        n = next_num(n)
+
+    return n == 1
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
+- Time: `O(m)` transitions until repeat/1
+- Space: `O(m)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
+### Optimal Solution (Cycle Detection on Number Sequence)
+
+#### Pseudocode
+```text
+FUNCTION next_num(x): ...
+
+slow = n
+fast = n
+
+REPEAT:
+    slow = next_num(slow)
+    fast = next_num(next_num(fast))
+UNTIL slow == fast
+
+RETURN slow == 1
+```
 
 #### Python
 ```python
-def better_happy_number(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
+def is_happy_optimal(n):
+    def next_num(x):
+        s = 0
+        while x > 0:
+            d = x % 10
+            s += d * d
+            x //= 10
+        return s
+
+    slow = n
+    fast = n
+
+    while True:
+        slow = next_num(slow)
+        fast = next_num(next_num(fast))
+        if slow == fast:
+            break
+
+    return slow == 1
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
-#### Python
-```python
-def solve_happy_number(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
-
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
-```
-
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(m)`
+- Space: `O(1)`
 
 ---
 
 ## Q5. Find the Duplicate Number
 
-### Problem Statement (Concrete)
-Solve **Find the Duplicate Number** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` of length `n + 1` where each number is in `[1, n]`, return the duplicate number.
 
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
+Example: `nums = [1,3,4,2,2] -> 2`
 
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
+### Brute Force Solution
 
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
+seen = empty set
+FOR x in nums:
+    IF x in seen:
+        RETURN x
+    ADD x to seen
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Find the Duplicate Number** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
 
 #### Python
 ```python
-def brute_find_the_duplicate_number(head):
-    vals = []
-    cur = head
-    while cur:
-        vals.append(cur.val)
-        cur = cur.next
-    return vals == vals[::-1]
+def find_duplicate_bruteforce(nums):
+    seen = set()
+
+    for x in nums:
+        if x in seen:
+            return x
+        seen.add(x)
+
+    return -1
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
+- Time: `O(n)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
+### Optimal Solution (Floyd on Implicit Linked List)
+
+#### Pseudocode
+```text
+slow = nums[0]
+fast = nums[0]
+
+REPEAT:
+    slow = nums[slow]
+    fast = nums[nums[fast]]
+UNTIL slow == fast
+
+finder = nums[0]
+WHILE finder != slow:
+    finder = nums[finder]
+    slow = nums[slow]
+
+RETURN finder
+```
 
 #### Python
 ```python
-def better_find_the_duplicate_number(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
+def find_duplicate_optimal(nums):
+    slow = nums[0]
+    fast = nums[0]
+
+    while True:
+        slow = nums[slow]
+        fast = nums[nums[fast]]
+        if slow == fast:
+            break
+
+    finder = nums[0]
+    while finder != slow:
+        finder = nums[finder]
+        slow = nums[slow]
+
+    return finder
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
-#### Python
-```python
-def solve_find_the_duplicate_number(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
-
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
-```
-
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q6. Palindrome Linked List
 
-### Problem Statement (Concrete)
-Solve **Palindrome Linked List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `head` of a linked list, return `True` if it is a palindrome, else `False`.
 
-### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+Example: `1 -> 2 -> 2 -> 1 -> True`
 
-### Output
-- Index, boolean, count, or transformed string as required.
+### Brute Force Solution
 
-### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+vals = []
+cur = head
+WHILE cur:
+    APPEND cur.val to vals
+    cur = cur.next
+
+RETURN vals == reverse(vals)
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Palindrome Linked List** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every alignment and compare full pattern each time.
 
 #### Python
 ```python
-def brute_palindrome_linked_list(text, pattern):
-    m, n = len(pattern), len(text)
-    for i in range(n - m + 1):
-        if text[i:i+m] == pattern:
-            return i
-    return -1
+def is_palindrome_list_bruteforce(head):
+    vals = []
+    cur = head
+
+    while cur:
+        vals.append(cur.val)
+        cur = cur.next
+
+    return vals == vals[::-1]
 ```
 
 #### Complexity
-- Time `O(n*m)`, Space `O(1)`.
+- Time: `O(n)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Rolling hash filters candidate matches and verifies collisions.
+### Optimal Solution (Split + Reverse Second Half)
+
+#### Pseudocode
+```text
+IF head is null OR head.next is null:
+    RETURN True
+
+slow = head
+fast = head
+WHILE fast and fast.next:
+    slow = slow.next
+    fast = fast.next.next
+
+IF fast is not null:   # odd length
+    slow = slow.next
+
+reverse list starting at slow -> right_head
+left = head
+right = right_head
+WHILE right:
+    IF left.val != right.val:
+        RETURN False
+    left = left.next
+    right = right.next
+
+RETURN True
+```
 
 #### Python
 ```python
-def better_palindrome_linked_list(text, pattern):
-    # Rabin-Karp style rolling hash.
-    if not pattern:
-        return 0
-    base, mod = 911382323, 10**9 + 7
-    m = len(pattern)
-    p_hash = 0
-    t_hash = 0
-    power = 1
-    for i in range(m):
-        p_hash = (p_hash * base + ord(pattern[i])) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if i:
-            power = (power * base) % mod
-    if t_hash == p_hash and text[:m] == pattern:
-        return 0
-    for i in range(m, len(text)):
-        t_hash = (t_hash - ord(text[i-m]) * power) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
-            return i - m + 1
-    return -1
+def is_palindrome_list_optimal(head):
+    if not head or not head.next:
+        return True
+
+    slow = head
+    fast = head
+
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    if fast:
+        slow = slow.next
+
+    prev = None
+    cur = slow
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    left = head
+    right = prev
+    while right:
+        if left.val != right.val:
+            return False
+        left = left.next
+        right = right.next
+
+    return True
 ```
 
 #### Complexity
-- Expected `O(n+m)`, worst-case with collisions can degrade.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
-
-#### Python
-```python
-def solve_palindrome_linked_list(text, pattern):
-    if not pattern:
-        return 0
-
-    lps = [0] * len(pattern)
-    j = 0
-    for i in range(1, len(pattern)):
-        while j > 0 and pattern[i] != pattern[j]:
-            j = lps[j - 1]
-        if pattern[i] == pattern[j]:
-            j += 1
-            lps[i] = j
-
-    j = 0
-    for i, ch in enumerate(text):
-        while j > 0 and ch != pattern[j]:
-            j = lps[j - 1]
-        if ch == pattern[j]:
-            j += 1
-            if j == len(pattern):
-                return i - len(pattern) + 1
-    return -1
-```
-
-#### Correctness (Why This Works)
-- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
-- Pointer never moves backward in text, so each character is processed constant times.
-
-#### Complexity
-- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)` extra
 
 ---
 
 ## Q7. Reorder List
 
-### Problem Statement (Concrete)
-Solve **Reorder List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given list `L0 -> L1 -> ... -> Ln`, reorder it to `L0 -> Ln -> L1 -> Ln-1 -> ...`.
 
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
+Example: `1 -> 2 -> 3 -> 4 -> 5` becomes `1 -> 5 -> 2 -> 4 -> 3`
 
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
+### Brute Force Solution
 
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
+nodes = []
+cur = head
+WHILE cur:
+    APPEND cur to nodes
+    cur = cur.next
+
+i = 0
+j = len(nodes) - 1
+WHILE i < j:
+    nodes[i].next = nodes[j]
+    i += 1
+    IF i == j:
+        BREAK
+    nodes[j].next = nodes[i]
+    j -= 1
+
+nodes[i].next = null
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Reorder List** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
 
 #### Python
 ```python
-def brute_reorder_list(head):
+def reorder_list_bruteforce(head):
+    if not head:
+        return
+
+    nodes = []
+    cur = head
+    while cur:
+        nodes.append(cur)
+        cur = cur.next
+
+    i, j = 0, len(nodes) - 1
+    while i < j:
+        nodes[i].next = nodes[j]
+        i += 1
+
+        if i == j:
+            break
+
+        nodes[j].next = nodes[i]
+        j -= 1
+
+    nodes[i].next = None
+```
+
+#### Complexity
+- Time: `O(n)`
+- Space: `O(n)`
+
+### Optimal Solution (Middle + Reverse + Merge)
+
+#### Pseudocode
+```text
+IF head null OR head.next null:
+    RETURN
+
+# find middle
+slow = head
+fast = head
+WHILE fast.next and fast.next.next:
+    slow = slow.next
+    fast = fast.next.next
+
+# split and reverse second half
+second = slow.next
+slow.next = null
+reverse second -> rev
+
+# merge first and reversed second
+first = head
+WHILE rev:
+    t1 = first.next
+    t2 = rev.next
+
+    first.next = rev
+    rev.next = t1
+
+    first = t1
+    rev = t2
+```
+
+#### Python
+```python
+def reorder_list_optimal(head):
+    if not head or not head.next:
+        return
+
+    slow = head
+    fast = head
+    while fast.next and fast.next.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    second = slow.next
+    slow.next = None
+
+    prev = None
+    cur = second
+    while cur:
+        nxt = cur.next
+        cur.next = prev
+        prev = cur
+        cur = nxt
+
+    first = head
+    second = prev
+    while second:
+        t1 = first.next
+        t2 = second.next
+
+        first.next = second
+        second.next = t1
+
+        first = t1
+        second = t2
+```
+
+#### Complexity
+- Time: `O(n)`
+- Space: `O(1)` extra
+
+---
+
+## Q8. Remove Nth Node From End of List
+
+### Problem
+Given `head` and integer `n`, remove the nth node from the end and return head.
+
+Example: `1 -> 2 -> 3 -> 4 -> 5, n = 2 -> 1 -> 2 -> 3 -> 5`
+
+### Brute Force Solution
+
+#### Pseudocode
+```text
+length = 0
+cur = head
+WHILE cur:
+    length += 1
+    cur = cur.next
+
+idx_from_start = length - n
+IF idx_from_start == 0:
+    RETURN head.next
+
+cur = head
+REPEAT idx_from_start - 1 times:
+    cur = cur.next
+
+cur.next = cur.next.next
+RETURN head
+```
+
+#### Python
+```python
+def remove_nth_from_end_bruteforce(head, n):
+    length = 0
+    cur = head
+
+    while cur:
+        length += 1
+        cur = cur.next
+
+    idx = length - n
+    if idx == 0:
+        return head.next
+
+    cur = head
+    for _ in range(idx - 1):
+        cur = cur.next
+
+    cur.next = cur.next.next
+    return head
+```
+
+#### Complexity
+- Time: `O(n)`
+- Space: `O(1)`
+
+### Optimal Solution (One Pass with Fixed Gap)
+
+#### Pseudocode
+```text
+dummy = new node pointing to head
+fast = dummy
+slow = dummy
+
+REPEAT n times:
+    fast = fast.next
+
+WHILE fast.next:
+    fast = fast.next
+    slow = slow.next
+
+slow.next = slow.next.next
+RETURN dummy.next
+```
+
+#### Python
+```python
+def remove_nth_from_end_optimal(head, n):
+    dummy = ListNode(0, head)
+    fast = dummy
+    slow = dummy
+
+    for _ in range(n):
+        fast = fast.next
+
+    while fast.next:
+        fast = fast.next
+        slow = slow.next
+
+    slow.next = slow.next.next
+    return dummy.next
+```
+
+#### Complexity
+- Time: `O(n)`
+- Space: `O(1)`
+
+---
+
+## Q9. Circular Array Loop
+
+### Problem
+Given circular array `nums` where each value is jump length (positive forward, negative backward), return `True` if there is a cycle of length > 1 with same direction.
+
+Example: `nums = [2,-1,1,2,2] -> True`
+
+### Brute Force Solution
+
+#### Pseudocode
+```text
+n = len(nums)
+
+FOR each start in [0..n-1]:
+    direction = nums[start] > 0
+    seen_step = empty map
+    idx = start
+    step = 0
+
+    WHILE True:
+        IF direction of nums[idx] differs:
+            BREAK
+
+        next_idx = (idx + nums[idx]) mod n
+        IF next_idx == idx:
+            BREAK
+
+        IF idx in seen_step:
+            IF step - seen_step[idx] > 1:
+                RETURN True
+            BREAK
+
+        seen_step[idx] = step
+        idx = next_idx
+        step += 1
+
+RETURN False
+```
+
+#### Python
+```python
+def circular_array_loop_bruteforce(nums):
+    n = len(nums)
+
+    for start in range(n):
+        direction = nums[start] > 0
+        seen_step = {}
+        idx = start
+        step = 0
+
+        while True:
+            if (nums[idx] > 0) != direction:
+                break
+
+            nxt = (idx + nums[idx]) % n
+            if nxt == idx:
+                break
+
+            if idx in seen_step:
+                if step - seen_step[idx] > 1:
+                    return True
+                break
+
+            seen_step[idx] = step
+            idx = nxt
+            step += 1
+
+    return False
+```
+
+#### Complexity
+- Time: `O(n^2)`
+- Space: `O(n)` per start in worst case
+
+### Optimal Solution (Fast/Slow with Direction Guard)
+
+#### Pseudocode
+```text
+FUNCTION advance(nums, i, direction):
+    IF direction of nums[i] differs:
+        RETURN -1
+
+    nxt = (i + nums[i]) mod n
+    IF nxt == i:    # 1-length loop invalid
+        RETURN -1
+
+    RETURN nxt
+
+FOR each index i:
+    IF nums[i] == 0:
+        CONTINUE
+
+    direction = nums[i] > 0
+    slow = i
+    fast = i
+
+    WHILE True:
+        slow = advance(nums, slow, direction)
+        fast = advance(nums, fast, direction)
+        IF fast != -1:
+            fast = advance(nums, fast, direction)
+
+        IF slow == -1 OR fast == -1:
+            BREAK
+        IF slow == fast:
+            RETURN True
+
+    # cleanup this traversal path to avoid rework
+    idx = i
+    WHILE nums[idx] != 0 AND (nums[idx] > 0) == direction:
+        nxt = (idx + nums[idx]) mod n
+        nums[idx] = 0
+        idx = nxt
+
+RETURN False
+```
+
+#### Python
+```python
+def circular_array_loop_optimal(nums):
+    n = len(nums)
+
+    def advance(i, direction):
+        if (nums[i] > 0) != direction:
+            return -1
+
+        nxt = (i + nums[i]) % n
+        if nxt == i:
+            return -1
+
+        return nxt
+
+    for i in range(n):
+        if nums[i] == 0:
+            continue
+
+        direction = nums[i] > 0
+        slow = i
+        fast = i
+
+        while True:
+            slow = advance(slow, direction)
+            fast = advance(fast, direction)
+            if fast != -1:
+                fast = advance(fast, direction)
+
+            if slow == -1 or fast == -1:
+                break
+
+            if slow == fast:
+                return True
+
+        idx = i
+        while nums[idx] != 0 and (nums[idx] > 0) == direction:
+            nxt = (idx + nums[idx]) % n
+            nums[idx] = 0
+            idx = nxt
+
+    return False
+```
+
+#### Complexity
+- Time: `O(n)` amortized
+- Space: `O(1)`
+
+---
+
+## Q10. Maximum Twin Sum of a Linked List
+
+### Problem
+Given an even-length linked list, twin of node `i` is node `n-1-i`. Return maximum twin sum.
+
+Example: `5 -> 4 -> 2 -> 1 -> 6 -> 3` -> max twin sum is `11`
+
+### Brute Force Solution
+
+#### Pseudocode
+```text
+vals = []
+cur = head
+WHILE cur:
+    APPEND cur.val
+    cur = cur.next
+
+best = 0
+n = len(vals)
+FOR i from 0 to n/2 - 1:
+    best = max(best, vals[i] + vals[n - 1 - i])
+
+RETURN best
+```
+
+#### Python
+```python
+def pair_sum_bruteforce(head):
     vals = []
     cur = head
+
     while cur:
         vals.append(cur.val)
         cur = cur.next
-    return vals == vals[::-1]
+
+    best = 0
+    n = len(vals)
+
+    for i in range(n // 2):
+        best = max(best, vals[i] + vals[n - 1 - i])
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
+- Time: `O(n)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
+### Optimal Solution (Middle + Reverse + Pair Scan)
 
-#### Python
-```python
-def better_reorder_list(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
+#### Pseudocode
+```text
+slow = head
+fast = head
+WHILE fast and fast.next:
+    slow = slow.next
+    fast = fast.next.next
+
+reverse list starting at slow -> right
+left = head
+best = 0
+
+WHILE right:
+    best = max(best, left.val + right.val)
+    left = left.next
+    right = right.next
+
+RETURN best
 ```
 
-#### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
 #### Python
 ```python
-def solve_reorder_list(head):
-    slow = fast = head
+def pair_sum_optimal(head):
+    slow = head
+    fast = head
+
     while fast and fast.next:
         slow = slow.next
         fast = fast.next.next
@@ -836,386 +1052,28 @@ def solve_reorder_list(head):
         prev = cur
         cur = nxt
 
-    left, right = head, prev
+    left = head
+    right = prev
+    best = 0
+
     while right:
-        if left.val != right.val:
-            return False
+        best = max(best, left.val + right.val)
         left = left.next
         right = right.next
-    return True
+
+    return best
 ```
 
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)` extra
 
 ---
 
-## Q8. Circular Array Loop
-
-### Problem Statement (Concrete)
-Solve **Circular Array Loop** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
-
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
-
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
-
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
-```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
-```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Circular Array Loop** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
-
-#### Python
-```python
-def brute_circular_array_loop(head):
-    vals = []
-    cur = head
-    while cur:
-        vals.append(cur.val)
-        cur = cur.next
-    return vals == vals[::-1]
-```
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
-
-#### Python
-```python
-def better_circular_array_loop(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
-```
-
-#### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
-#### Python
-```python
-def solve_circular_array_loop(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
-
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
-```
-
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
-
----
-
-## Q9. Find Beginning of Loop in Linked List
-
-### Problem Statement (Concrete)
-Solve **Find Beginning of Loop in Linked List** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
-
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
-
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
-
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
-```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
-```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Find Beginning of Loop in Linked List** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
-
-#### Python
-```python
-def brute_find_beginning_of_loop_in_linked_list(head):
-    vals = []
-    cur = head
-    while cur:
-        vals.append(cur.val)
-        cur = cur.next
-    return vals == vals[::-1]
-```
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
-
-#### Python
-```python
-def better_find_beginning_of_loop_in_linked_list(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
-```
-
-#### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
-#### Python
-```python
-def solve_find_beginning_of_loop_in_linked_list(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
-
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
-```
-
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
-
----
-
-## Q10. Split Linked List in Parts
-
-### Problem Statement (Concrete)
-Solve **Split Linked List in Parts** using **Fast & Slow Pointers**. Return exactly the value/structure requested by the original prompt.
-
-### Input
-- `head`: ListNode | None
-- `k`/`left,right`: int for variants needing bounds
-
-### Output
-- Modified linked list head, node reference, or boolean depending on variant.
-
-### Constraints
-- `0 <= n <= 2 * 10^5`
-- In-place pointer updates are expected for optimal solutions.
-
-### Example (Exact)
-```text
-Input:  head = 1 -> 2 -> 3 -> 4 -> 5, k = 2
-Output: 1 -> 2 -> 3 -> 5
-Explanation: Pointer jumps and rewiring avoid extra memory for node traversal tasks.
-```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Fast & Slow Pointers**.
-- Red flags: brute force for **Split Linked List in Parts** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Materialize list values and solve on array representation.
-
-#### Python
-```python
-def brute_split_linked_list_in_parts(head):
-    vals = []
-    cur = head
-    while cur:
-        vals.append(cur.val)
-        cur = cur.next
-    return vals == vals[::-1]
-```
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use fast/slow split plus stack on first half for one-pass comparison.
-
-#### Python
-```python
-def better_split_linked_list_in_parts(head):
-    slow = fast = head
-    stack = []
-    while fast and fast.next:
-        stack.append(slow.val)
-        slow = slow.next
-        fast = fast.next.next
-    if fast:
-        slow = slow.next
-    while slow:
-        if stack.pop() != slow.val:
-            return False
-        slow = slow.next
-    return True
-```
-
-#### Complexity
-- Time `O(n)`, Space `O(n/2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reverse second half in place to compare symmetric nodes with constant extra memory.
-
-#### Python
-```python
-def solve_split_linked_list_in_parts(head):
-    slow = fast = head
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-
-    prev = None
-    cur = slow
-    while cur:
-        nxt = cur.next
-        cur.next = prev
-        prev = cur
-        cur = nxt
-
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
-            return False
-        left = left.next
-        right = right.next
-    return True
-```
-
-#### Correctness (Why This Works)
-- Fast/slow pointers split list at midpoint; reversing second half preserves element multiset and order relation for mirror comparison.
-- Pairwise comparison against first half verifies palindrome/cycle/relink conditions exactly.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)` extra.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
-
----
+## Rapid Recall Checklist
+
+- Cycle detect: `slow +1`, `fast +2`, identity comparison.
+- Cycle entry: after first meet, reset one pointer to head.
+- Middle: second middle is returned when using `while fast and fast.next`.
+- Half-compare problems: find middle, reverse second half, compare/merge.
+- One-pass removal from end: keep a fixed pointer gap with a dummy head.
