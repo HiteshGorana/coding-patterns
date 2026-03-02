@@ -1,1064 +1,872 @@
 # Pattern 05 Interview Playbook: Prefix Sum
 
-Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
+This playbook is aligned with [Pattern 05: Prefix Sum](../05-prefix-sum.md).
+
+Use it when repeated range aggregation or cumulative-state comparisons are needed.
 
 ## Pattern Snapshot
 
-- What this pattern solves: Prefix sums convert repeated range-sum queries from linear to constant time.
-- Core intuition: Define `prefix[i]` as sum of elements before index `i` (exclusive). Then any range sum can be computed as: `sum(l..r) = prefix[r + 1] - prefix[l]` For counting subarrays with target sum, store past prefix frequencies in a hash map.
-- Trigger cue 1: Many range sum queries.
-- Trigger cue 2: Count subarrays with target sum.
-- Quick self-check: Can I precompute cumulative state once and answer ranges quickly?
-- Target complexity: Time pattern-optimal, Space pattern-optimal
+| Prompt shape | Store this state | Query |
+|---|---|---|
+| range sum query | `prefix[i] = sum(nums[:i])` | `sum(l..r) = prefix[r+1] - prefix[l]` |
+| count subarrays by sum | prefix frequency map | add `freq[prefix - target]` |
+| modulo divisibility subarrays | remainder frequency map | count equal remainders |
+| max-length exact sum | first index of prefix sum | use earliest occurrence |
+| range increment updates | difference array | prefix-rebuild final values |
+| balance of two values (0/1) | transformed prefix/balance | same balance => valid interval |
+
+## Query-Update Rules
+
+- For immutable range queries, precompute prefix once and answer in O(1).
+- For counting subarrays, update answer before inserting current prefix when needed.
+- For longest-length objectives, store first occurrence only.
+- For interval add updates, use difference array then one prefix pass to materialize.
 
 ---
 
 ## Q1. Range Sum Query - Immutable
 
-### Problem Statement (Concrete)
-Solve **Range Sum Query - Immutable** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Design a structure for immutable array range-sum queries.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [-2,0,3,-5,2,-1], sumRange(0,2) = 1`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+STORE nums
+
+FUNCTION sumRange(left, right):
+    total = 0
+    FOR i from left to right:
+        total += nums[i]
+    RETURN total
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Range Sum Query - Immutable** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Compute each query sum directly over the range.
 
 #### Python
 ```python
-class brute_range_sum_query_immutable:
+class NumArrayBruteforce:
     def __init__(self, nums):
         self.nums = nums
 
     def sumRange(self, left, right):
-        return sum(self.nums[left:right+1])
+        total = 0
+        for i in range(left, right + 1):
+            total += self.nums[i]
+        return total
 ```
 
 #### Complexity
-- Per query `O(r-l+1)`, build `O(1)`.
+- Build: `O(1)`
+- Query: `O(right - left + 1)`
+- Space: `O(1)` extra
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Build prefix sums once and answer each query with two lookups.
+### Optimal Solution (Prefix Sum Array)
+
+#### Pseudocode
+```text
+BUILD prefix where prefix[0] = 0
+FOR each x in nums:
+    APPEND prefix[-1] + x
+
+FUNCTION sumRange(left, right):
+    RETURN prefix[right + 1] - prefix[left]
+```
 
 #### Python
 ```python
-class better_range_sum_query_immutable:
+class NumArrayOptimal:
     def __init__(self, nums):
-        self.pre = [0]
+        self.prefix = [0]
         for x in nums:
-            self.pre.append(self.pre[-1] + x)
+            self.prefix.append(self.prefix[-1] + x)
 
     def sumRange(self, left, right):
-        return self.pre[right + 1] - self.pre[left]
+        return self.prefix[right + 1] - self.prefix[left]
 ```
 
 #### Complexity
-- Build `O(n)`, query `O(1)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Prefix array is the optimal immutable-range-sum primitive.
-
-#### Python
-```python
-class better_range_sum_query_immutable:
-    def __init__(self, nums):
-        self.pre = [0]
-        for x in nums:
-            self.pre.append(self.pre[-1] + x)
-
-    def sumRange(self, left, right):
-        return self.pre[right + 1] - self.pre[left]
-```
-
-#### Correctness (Why This Works)
-- Range sum equals difference of two prefix sums by telescoping.
-- All immutable queries are answered exactly with this identity.
-
-#### Complexity
-- Build `O(n)`, query `O(1)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Build: `O(n)`
+- Query: `O(1)`
+- Space: `O(n)`
 
 ---
 
 ## Q2. Subarray Sum Equals K
 
-### Problem Statement (Concrete)
-Solve **Subarray Sum Equals K** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and `k`, return number of contiguous subarrays with sum exactly `k`.
 
-### Input
-- `nums`: list[int]
-- `k`: int
+Example: `nums = [1,1,1], k = 2 -> 2`
 
-### Output
-- Count of contiguous subarrays whose sum equals `k`.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^4 <= nums[i], k <= 10^4`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,1,1], k = 2
-Output: 2
-Explanation: Subarrays `[1,1]` at indices `(0,1)` and `(1,2)` both sum to 2.
+count = 0
+FOR i from 0 to n - 1:
+    total = 0
+    FOR j from i to n - 1:
+        total += nums[j]
+        IF total == k:
+            count += 1
+RETURN count
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Subarray Sum Equals K** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Evaluate every subarray sum directly.
 
 #### Python
 ```python
-def brute_subarray_sum_equals_k(nums, k):
-    ans = 0
-    n = len(nums)
-    for i in range(n):
+def subarray_sum_equals_k_bruteforce(nums, k):
+    count = 0
+
+    for i in range(len(nums)):
         total = 0
-        for j in range(i, n):
+        for j in range(i, len(nums)):
             total += nums[j]
             if total == k:
-                ans += 1
-    return ans
+                count += 1
+
+    return count
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute prefix sums to answer any range sum in O(1), but still enumerate ranges.
+### Optimal Solution (Prefix Frequency Hash Map)
 
-#### Python
-```python
-def better_subarray_sum_equals_k(nums, k):
-    pre = [0]
-    for x in nums:
-        pre.append(pre[-1] + x)
-    ans = 0
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums) + 1):
-            if pre[j] - pre[i] == k:
-                ans += 1
-    return ans
+#### Pseudocode
+```text
+freq = {0: 1}
+prefix = 0
+count = 0
+
+FOR x in nums:
+    prefix += x
+    count += freq.get(prefix - k, 0)
+    freq[prefix] = freq.get(prefix, 0) + 1
+
+RETURN count
 ```
 
-#### Complexity
-- Time `O(n^2)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Count how many previous prefixes would make current prefix form the required target difference.
-
 #### Python
 ```python
-def solve_subarray_sum_equals_k(nums, k):
+def subarray_sum_equals_k_optimal(nums, k):
     freq = {0: 1}
-    ans = 0
-    pref = 0
+    prefix = 0
+    count = 0
+
     for x in nums:
-        pref += x
-        ans += freq.get(pref - k, 0)
-        freq[pref] = freq.get(pref, 0) + 1
-    return ans
+        prefix += x
+        count += freq.get(prefix - k, 0)
+        freq[prefix] = freq.get(prefix, 0) + 1
+
+    return count
 ```
 
-#### Correctness (Why This Works)
-- For each position `j`, any `i < j` with `pref[i] = pref[j] - k` forms a valid subarray `i..j-1`.
-- Hash frequency of seen prefixes counts all such starts in O(1) amortized per element.
-
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)` average
+- Space: `O(n)`
 
 ---
 
 ## Q3. Continuous Subarray Sum
 
-### Problem Statement (Concrete)
-Solve **Continuous Subarray Sum** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and `k`, return `True` if there exists a subarray of length at least 2 whose sum is a multiple of `k`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [23,2,4,6,7], k = 6 -> True`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+FOR i from 0 to n - 1:
+    total = 0
+    FOR j from i to n - 1:
+        total += nums[j]
+        IF j - i + 1 >= 2:
+            IF k == 0 AND total == 0:
+                RETURN True
+            IF k != 0 AND total mod k == 0:
+                RETURN True
+RETURN False
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Continuous Subarray Sum** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Evaluate every subarray sum directly.
 
 #### Python
 ```python
-def brute_continuous_subarray_sum(nums, k):
-    ans = 0
+def continuous_subarray_sum_bruteforce(nums, k):
     n = len(nums)
+
     for i in range(n):
         total = 0
         for j in range(i, n):
             total += nums[j]
-            if total == k:
-                ans += 1
-    return ans
+            if j - i + 1 < 2:
+                continue
+
+            if k == 0:
+                if total == 0:
+                    return True
+            else:
+                if total % k == 0:
+                    return True
+
+    return False
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute prefix sums to answer any range sum in O(1), but still enumerate ranges.
+### Optimal Solution (Prefix Remainder First-Index Map)
+
+#### Pseudocode
+```text
+IF k == 0:
+    first = {0: -1}
+    prefix = 0
+    FOR i from 0 to n - 1:
+        prefix += nums[i]
+        IF prefix in first AND i - first[prefix] >= 2:
+            RETURN True
+        IF prefix not in first:
+            first[prefix] = i
+    RETURN False
+
+first = {0: -1}
+prefix = 0
+
+FOR i from 0 to n - 1:
+    prefix = (prefix + nums[i]) mod k
+    IF prefix in first:
+        IF i - first[prefix] >= 2:
+            RETURN True
+    ELSE:
+        first[prefix] = i
+
+RETURN False
+```
 
 #### Python
 ```python
-def better_continuous_subarray_sum(nums, k):
-    pre = [0]
-    for x in nums:
-        pre.append(pre[-1] + x)
-    ans = 0
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums) + 1):
-            if pre[j] - pre[i] == k:
-                ans += 1
-    return ans
+def continuous_subarray_sum_optimal(nums, k):
+    if k == 0:
+        first = {0: -1}
+        prefix = 0
+
+        for i, x in enumerate(nums):
+            prefix += x
+            if prefix in first:
+                if i - first[prefix] >= 2:
+                    return True
+            else:
+                first[prefix] = i
+
+        return False
+
+    first = {0: -1}
+    prefix = 0
+
+    for i, x in enumerate(nums):
+        prefix = (prefix + x) % k
+        if prefix in first:
+            if i - first[prefix] >= 2:
+                return True
+        else:
+            first[prefix] = i
+
+    return False
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Count how many previous prefixes would make current prefix form the required target difference.
-
-#### Python
-```python
-def solve_continuous_subarray_sum(nums, k):
-    freq = {0: 1}
-    ans = 0
-    pref = 0
-    for x in nums:
-        pref += x
-        ans += freq.get(pref - k, 0)
-        freq[pref] = freq.get(pref, 0) + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- For each position `j`, any `i < j` with `pref[i] = pref[j] - k` forms a valid subarray `i..j-1`.
-- Hash frequency of seen prefixes counts all such starts in O(1) amortized per element.
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(min(n, |k|))`
 
 ---
 
 ## Q4. Contiguous Array
 
-### Problem Statement (Concrete)
-Solve **Contiguous Array** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given binary array `nums`, return max length of contiguous subarray with equal number of `0` and `1`.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [0,1,0] -> 2`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+best = 0
+FOR i from 0 to n - 1:
+    balance = 0
+    FOR j from i to n - 1:
+        IF nums[j] == 1: balance += 1
+        ELSE: balance -= 1
+
+        IF balance == 0:
+            best = max(best, j - i + 1)
+
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Contiguous Array** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Evaluate every subarray sum directly.
 
 #### Python
 ```python
-def brute_contiguous_array(nums, k):
-    ans = 0
-    n = len(nums)
-    for i in range(n):
-        total = 0
-        for j in range(i, n):
-            total += nums[j]
-            if total == k:
-                ans += 1
-    return ans
-```
+def contiguous_array_bruteforce(nums):
+    best = 0
 
-#### Complexity
-- Time `O(n^2)`, Space `O(1)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute prefix sums to answer any range sum in O(1), but still enumerate ranges.
-
-#### Python
-```python
-def better_contiguous_array(nums, k):
-    pre = [0]
-    for x in nums:
-        pre.append(pre[-1] + x)
-    ans = 0
     for i in range(len(nums)):
-        for j in range(i + 1, len(nums) + 1):
-            if pre[j] - pre[i] == k:
-                ans += 1
-    return ans
+        balance = 0
+        for j in range(i, len(nums)):
+            if nums[j] == 1:
+                balance += 1
+            else:
+                balance -= 1
+
+            if balance == 0:
+                best = max(best, j - i + 1)
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(n)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 3: Optimal (Best)
-#### Intuition
-- Count how many previous prefixes would make current prefix form the required target difference.
+### Optimal Solution (Prefix Balance + First Occurrence)
+
+#### Pseudocode
+```text
+first = {0: -1}
+balance = 0
+best = 0
+
+FOR i from 0 to n - 1:
+    IF nums[i] == 1: balance += 1
+    ELSE: balance -= 1
+
+    IF balance in first:
+        best = max(best, i - first[balance])
+    ELSE:
+        first[balance] = i
+
+RETURN best
+```
 
 #### Python
 ```python
-def solve_contiguous_array(nums, k):
-    freq = {0: 1}
-    ans = 0
-    pref = 0
-    for x in nums:
-        pref += x
-        ans += freq.get(pref - k, 0)
-        freq[pref] = freq.get(pref, 0) + 1
-    return ans
+def contiguous_array_optimal(nums):
+    first = {0: -1}
+    balance = 0
+    best = 0
+
+    for i, x in enumerate(nums):
+        if x == 1:
+            balance += 1
+        else:
+            balance -= 1
+
+        if balance in first:
+            best = max(best, i - first[balance])
+        else:
+            first[balance] = i
+
+    return best
 ```
 
-#### Correctness (Why This Works)
-- For each position `j`, any `i < j` with `pref[i] = pref[j] - k` forms a valid subarray `i..j-1`.
-- Hash frequency of seen prefixes counts all such starts in O(1) amortized per element.
-
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(n)`
 
 ---
 
 ## Q5. Product of Array Except Self
 
-### Problem Statement (Concrete)
-Solve **Product of Array Except Self** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums`, return array `answer` where `answer[i]` is product of all elements except `nums[i]`, without division.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [1,2,3,4] -> [24,12,8,6]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+answer = empty list
+FOR i from 0 to n - 1:
+    product = 1
+    FOR j from 0 to n - 1:
+        IF j != i:
+            product *= nums[j]
+    APPEND product to answer
+RETURN answer
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Product of Array Except Self** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Multiply all other elements for each index separately.
 
 #### Python
 ```python
-def brute_product_of_array_except_self(nums):
+def product_except_self_bruteforce(nums):
     out = []
+
     for i in range(len(nums)):
-        p = 1
+        product = 1
         for j, x in enumerate(nums):
-            if i != j:
-                p *= x
-        out.append(p)
+            if j != i:
+                product *= x
+        out.append(product)
+
     return out
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)` extra.
+- Time: `O(n^2)`
+- Space: `O(1)` extra
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute left and right product arrays.
+### Optimal Solution (Prefix Product * Suffix Product)
 
-#### Python
-```python
-def better_product_of_array_except_self(nums):
-    n = len(nums)
-    left = [1] * n
-    right = [1] * n
-    for i in range(1, n):
-        left[i] = left[i - 1] * nums[i - 1]
-    for i in range(n - 2, -1, -1):
-        right[i] = right[i + 1] * nums[i + 1]
-    return [left[i] * right[i] for i in range(n)]
+#### Pseudocode
+```text
+out = array of 1s size n
+prefix = 1
+
+FOR i from 0 to n - 1:
+    out[i] = prefix
+    prefix *= nums[i]
+
+suffix = 1
+FOR i from n - 1 down to 0:
+    out[i] *= suffix
+    suffix *= nums[i]
+
+RETURN out
 ```
 
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Reuse output as left products, then multiply rolling suffix product in reverse.
-
 #### Python
 ```python
-def solve_product_of_array_except_self(nums):
+def product_except_self_optimal(nums):
     n = len(nums)
     out = [1] * n
-    pref = 1
+
+    prefix = 1
     for i in range(n):
-        out[i] = pref
-        pref *= nums[i]
-    suf = 1
+        out[i] = prefix
+        prefix *= nums[i]
+
+    suffix = 1
     for i in range(n - 1, -1, -1):
-        out[i] *= suf
-        suf *= nums[i]
+        out[i] *= suffix
+        suffix *= nums[i]
+
     return out
 ```
 
-#### Correctness (Why This Works)
-- For index `i`, required product factorizes into prefix(`i-1`) * suffix(`i+1`).
-- Two passes compute both factors without division and with constant extra memory.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)` extra (excluding output).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)` extra (excluding output)
 
 ---
 
 ## Q6. Find Pivot Index
 
-### Problem Statement (Concrete)
-Solve **Find Pivot Index** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums`, return leftmost pivot index where left sum equals right sum. If none, return `-1`.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [1,7,3,6,5,6] -> 3`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+FOR i from 0 to n - 1:
+    left_sum = sum(nums[0 .. i - 1])
+    right_sum = sum(nums[i + 1 .. n - 1])
+    IF left_sum == right_sum:
+        RETURN i
+RETURN -1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Find Pivot Index** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Recompute left and right sums for each index.
 
 #### Python
 ```python
-def brute_find_pivot_index(nums):
+def pivot_index_bruteforce(nums):
     for i in range(len(nums)):
-        if sum(nums[:i]) == sum(nums[i+1:]):
+        if sum(nums[:i]) == sum(nums[i + 1:]):
             return i
     return -1
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Track running left sum; derive right sum from total.
+### Optimal Solution (Total Sum + Running Left)
+
+#### Pseudocode
+```text
+total = sum(nums)
+left = 0
+
+FOR i from 0 to n - 1:
+    IF left == total - left - nums[i]:
+        RETURN i
+    left += nums[i]
+
+RETURN -1
+```
 
 #### Python
 ```python
-def better_find_pivot_index(nums):
+def pivot_index_optimal(nums):
     total = sum(nums)
     left = 0
+
     for i, x in enumerate(nums):
         if left == total - left - x:
             return i
         left += x
+
     return -1
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Single-pass balance check is optimal for pivot detection.
-
-#### Python
-```python
-def better_find_pivot_index(nums):
-    total = sum(nums)
-    left = 0
-    for i, x in enumerate(nums):
-        if left == total - left - x:
-            return i
-        left += x
-    return -1
-```
-
-#### Correctness (Why This Works)
-- At index `i`, right sum is `total - left - nums[i]`.
-- Equality with `left` is exactly the pivot condition.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q7. Corporate Flight Bookings
 
-### Problem Statement (Concrete)
-Solve **Corporate Flight Bookings** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given bookings `[first, last, seats]` and `n` flights (1-indexed), return seats booked for each flight.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `bookings = [[1,2,10],[2,3,20],[2,5,25]], n = 5 -> [10,55,45,25,25]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+ans = array of 0 size n
+
+FOR each booking [first, last, seats]:
+    FOR i from first - 1 to last - 1:
+        ans[i] += seats
+
+RETURN ans
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Corporate Flight Bookings** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Evaluate every subarray sum directly.
 
 #### Python
 ```python
-def brute_corporate_flight_bookings(nums, k):
-    ans = 0
-    n = len(nums)
-    for i in range(n):
-        total = 0
-        for j in range(i, n):
-            total += nums[j]
-            if total == k:
-                ans += 1
+def corp_flight_bookings_bruteforce(bookings, n):
+    ans = [0] * n
+
+    for first, last, seats in bookings:
+        for i in range(first - 1, last):
+            ans[i] += seats
+
     return ans
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(m * n)` worst case
+- Space: `O(1)` extra
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute prefix sums to answer any range sum in O(1), but still enumerate ranges.
+### Optimal Solution (Difference Array + Prefix)
+
+#### Pseudocode
+```text
+diff = array of 0 size n
+
+FOR each booking [first, last, seats]:
+    diff[first - 1] += seats
+    IF last < n:
+        diff[last] -= seats
+
+ans[0] = diff[0]
+FOR i from 1 to n - 1:
+    ans[i] = ans[i - 1] + diff[i]
+
+RETURN ans
+```
 
 #### Python
 ```python
-def better_corporate_flight_bookings(nums, k):
-    pre = [0]
-    for x in nums:
-        pre.append(pre[-1] + x)
-    ans = 0
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums) + 1):
-            if pre[j] - pre[i] == k:
-                ans += 1
+def corp_flight_bookings_optimal(bookings, n):
+    diff = [0] * n
+
+    for first, last, seats in bookings:
+        diff[first - 1] += seats
+        if last < n:
+            diff[last] -= seats
+
+    ans = [0] * n
+    ans[0] = diff[0]
+
+    for i in range(1, n):
+        ans[i] = ans[i - 1] + diff[i]
+
     return ans
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Count how many previous prefixes would make current prefix form the required target difference.
-
-#### Python
-```python
-def solve_corporate_flight_bookings(nums, k):
-    freq = {0: 1}
-    ans = 0
-    pref = 0
-    for x in nums:
-        pref += x
-        ans += freq.get(pref - k, 0)
-        freq[pref] = freq.get(pref, 0) + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- For each position `j`, any `i < j` with `pref[i] = pref[j] - k` forms a valid subarray `i..j-1`.
-- Hash frequency of seen prefixes counts all such starts in O(1) amortized per element.
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(m + n)`
+- Space: `O(n)`
 
 ---
 
 ## Q8. Car Pooling
 
-### Problem Statement (Concrete)
-Solve **Car Pooling** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given trips `[numPassengers, from, to]` and `capacity`, return `True` if trips can be completed without exceeding capacity.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `trips = [[2,1,5],[3,3,7]], capacity = 4 -> False`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+max_pos = maximum drop-off position
+load = array of 0 size max_pos + 1
+
+FOR each trip [p, start, end]:
+    FOR pos from start to end - 1:
+        load[pos] += p
+        IF load[pos] > capacity:
+            RETURN False
+
+RETURN True
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Car Pooling** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Evaluate every subarray sum directly.
 
 #### Python
 ```python
-def brute_car_pooling(nums, k):
-    ans = 0
-    n = len(nums)
-    for i in range(n):
-        total = 0
-        for j in range(i, n):
-            total += nums[j]
-            if total == k:
-                ans += 1
-    return ans
+def car_pooling_bruteforce(trips, capacity):
+    max_pos = 0
+    for _, _, end in trips:
+        max_pos = max(max_pos, end)
+
+    load = [0] * (max_pos + 1)
+
+    for p, start, end in trips:
+        for pos in range(start, end):
+            load[pos] += p
+            if load[pos] > capacity:
+                return False
+
+    return True
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(total_distance)`
+- Space: `O(U)` where `U` is max position
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute prefix sums to answer any range sum in O(1), but still enumerate ranges.
+### Optimal Solution (Difference Array + Prefix)
+
+#### Pseudocode
+```text
+max_pos = maximum drop-off position
+diff = array of 0 size max_pos + 1
+
+FOR each trip [p, start, end]:
+    diff[start] += p
+    diff[end] -= p
+
+current = 0
+FOR pos from 0 to max_pos:
+    current += diff[pos]
+    IF current > capacity:
+        RETURN False
+
+RETURN True
+```
 
 #### Python
 ```python
-def better_car_pooling(nums, k):
-    pre = [0]
-    for x in nums:
-        pre.append(pre[-1] + x)
-    ans = 0
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums) + 1):
-            if pre[j] - pre[i] == k:
-                ans += 1
-    return ans
+def car_pooling_optimal(trips, capacity):
+    max_pos = 0
+    for _, _, end in trips:
+        max_pos = max(max_pos, end)
+
+    diff = [0] * (max_pos + 1)
+
+    for p, start, end in trips:
+        diff[start] += p
+        diff[end] -= p
+
+    current = 0
+    for x in diff:
+        current += x
+        if current > capacity:
+            return False
+
+    return True
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Count how many previous prefixes would make current prefix form the required target difference.
-
-#### Python
-```python
-def solve_car_pooling(nums, k):
-    freq = {0: 1}
-    ans = 0
-    pref = 0
-    for x in nums:
-        pref += x
-        ans += freq.get(pref - k, 0)
-        freq[pref] = freq.get(pref, 0) + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- For each position `j`, any `i < j` with `pref[i] = pref[j] - k` forms a valid subarray `i..j-1`.
-- Hash frequency of seen prefixes counts all such starts in O(1) amortized per element.
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(m + U)`
+- Space: `O(U)`
 
 ---
 
 ## Q9. Subarray Sums Divisible by K
 
-### Problem Statement (Concrete)
-Solve **Subarray Sums Divisible by K** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and `k`, return count of subarrays whose sum is divisible by `k`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [4,5,0,-2,-3,1], k = 5 -> 7`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+count = 0
+FOR i from 0 to n - 1:
+    total = 0
+    FOR j from i to n - 1:
+        total += nums[j]
+        IF total mod k == 0:
+            count += 1
+RETURN count
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Subarray Sums Divisible by K** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Evaluate every subarray sum directly.
 
 #### Python
 ```python
-def brute_subarray_sums_divisible_by_k(nums, k):
-    ans = 0
-    n = len(nums)
-    for i in range(n):
-        total = 0
-        for j in range(i, n):
-            total += nums[j]
-            if total == k:
-                ans += 1
-    return ans
-```
+def subarrays_div_by_k_bruteforce(nums, k):
+    count = 0
 
-#### Complexity
-- Time `O(n^2)`, Space `O(1)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute prefix sums to answer any range sum in O(1), but still enumerate ranges.
-
-#### Python
-```python
-def better_subarray_sums_divisible_by_k(nums, k):
-    pre = [0]
-    for x in nums:
-        pre.append(pre[-1] + x)
-    ans = 0
     for i in range(len(nums)):
-        for j in range(i + 1, len(nums) + 1):
-            if pre[j] - pre[i] == k:
-                ans += 1
-    return ans
+        total = 0
+        for j in range(i, len(nums)):
+            total += nums[j]
+            if total % k == 0:
+                count += 1
+
+    return count
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(n)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 3: Optimal (Best)
-#### Intuition
-- Count how many previous prefixes would make current prefix form the required target difference.
+### Optimal Solution (Prefix Remainder Frequency)
+
+#### Pseudocode
+```text
+freq = {0: 1}
+prefix = 0
+count = 0
+
+FOR x in nums:
+    prefix = (prefix + x) mod k
+    count += freq.get(prefix, 0)
+    freq[prefix] = freq.get(prefix, 0) + 1
+
+RETURN count
+```
 
 #### Python
 ```python
-def solve_subarray_sums_divisible_by_k(nums, k):
+def subarrays_div_by_k_optimal(nums, k):
     freq = {0: 1}
-    ans = 0
-    pref = 0
+    prefix = 0
+    count = 0
+
     for x in nums:
-        pref += x
-        ans += freq.get(pref - k, 0)
-        freq[pref] = freq.get(pref, 0) + 1
-    return ans
+        prefix = (prefix + x) % k
+        count += freq.get(prefix, 0)
+        freq[prefix] = freq.get(prefix, 0) + 1
+
+    return count
 ```
 
-#### Correctness (Why This Works)
-- For each position `j`, any `i < j` with `pref[i] = pref[j] - k` forms a valid subarray `i..j-1`.
-- Hash frequency of seen prefixes counts all such starts in O(1) amortized per element.
-
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(min(n, k))`
 
 ---
 
 ## Q10. Maximum Size Subarray Sum Equals k
 
-### Problem Statement (Concrete)
-Solve **Maximum Size Subarray Sum Equals k** using **Prefix Sum**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and `k`, return maximum length of a subarray that sums to `k`.
 
-### Input
-- `nums`: list[int]
-- `k`: int
+Example: `nums = [1,-1,5,-2,3], k = 3 -> 4`
 
-### Output
-- Count of contiguous subarrays whose sum equals `k`.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^4 <= nums[i], k <= 10^4`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,1,1], k = 2
-Output: 2
-Explanation: Subarrays `[1,1]` at indices `(0,1)` and `(1,2)` both sum to 2.
+best = 0
+FOR i from 0 to n - 1:
+    total = 0
+    FOR j from i to n - 1:
+        total += nums[j]
+        IF total == k:
+            best = max(best, j - i + 1)
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Prefix Sum**.
-- Red flags: brute force for **Maximum Size Subarray Sum Equals k** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Evaluate every subarray sum directly.
 
 #### Python
 ```python
-def brute_maximum_size_subarray_sum_equals_k(nums, k):
-    ans = 0
-    n = len(nums)
-    for i in range(n):
+def max_size_subarray_sum_k_bruteforce(nums, k):
+    best = 0
+
+    for i in range(len(nums)):
         total = 0
-        for j in range(i, n):
+        for j in range(i, len(nums)):
             total += nums[j]
             if total == k:
-                ans += 1
-    return ans
+                best = max(best, j - i + 1)
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute prefix sums to answer any range sum in O(1), but still enumerate ranges.
+### Optimal Solution (Prefix Sum First Occurrence)
+
+#### Pseudocode
+```text
+first = {0: -1}
+prefix = 0
+best = 0
+
+FOR i from 0 to n - 1:
+    prefix += nums[i]
+
+    IF (prefix - k) in first:
+        best = max(best, i - first[prefix - k])
+
+    IF prefix not in first:
+        first[prefix] = i
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_maximum_size_subarray_sum_equals_k(nums, k):
-    pre = [0]
-    for x in nums:
-        pre.append(pre[-1] + x)
-    ans = 0
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums) + 1):
-            if pre[j] - pre[i] == k:
-                ans += 1
-    return ans
+def max_size_subarray_sum_k_optimal(nums, k):
+    first = {0: -1}
+    prefix = 0
+    best = 0
+
+    for i, x in enumerate(nums):
+        prefix += x
+
+        if prefix - k in first:
+            best = max(best, i - first[prefix - k])
+
+        if prefix not in first:
+            first[prefix] = i
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Count how many previous prefixes would make current prefix form the required target difference.
-
-#### Python
-```python
-def solve_maximum_size_subarray_sum_equals_k(nums, k):
-    freq = {0: 1}
-    ans = 0
-    pref = 0
-    for x in nums:
-        pref += x
-        ans += freq.get(pref - k, 0)
-        freq[pref] = freq.get(pref, 0) + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- For each position `j`, any `i < j` with `pref[i] = pref[j] - k` forms a valid subarray `i..j-1`.
-- Hash frequency of seen prefixes counts all such starts in O(1) amortized per element.
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(n)`
 
 ---
+
+## Rapid Recall Checklist
+
+- Define `prefix` convention early (exclusive prefix is safest).
+- For counts, seed base case like `freq[0] = 1`.
+- For max length, keep first prefix occurrence only.
+- For range updates, use diff-array endpoints then prefix-reconstruct.
