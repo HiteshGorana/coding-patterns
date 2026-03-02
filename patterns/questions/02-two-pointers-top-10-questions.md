@@ -1,58 +1,49 @@
 # Pattern 02 Interview Playbook: Two Pointers
 
-Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
+This playbook is aligned with [Pattern 02: Two Pointers](../02-two-pointers.md).
+
+Use it when two moving indices can eliminate impossible candidates in arrays/strings.
 
 ## Pattern Snapshot
 
-- What this pattern solves: Two pointers is ideal for problems on arrays/strings where two positions move with rules.
-- Core intuition: Each pointer movement should eliminate impossible candidates. When pointers move with monotonic logic, every element is processed a limited number of times.
-- Trigger cue 1: Sorted array/string.
-- Trigger cue 2: Need pair/triplet relation (`sum`, `diff`, palindrome).
-- Quick self-check: If I move one pointer, can I prove I never miss optimum?
-- Target complexity: Time usually O(n) after sorting, Space O(1) extra (excluding optional sort cost)
+| Prompt shape | Pointer setup | Move rule |
+|---|---|---|
+| sorted pair/target | `l = 0, r = n-1` | move `l` if sum small, `r` if sum large |
+| palindrome check | `l = 0, r = n-1` | move inward while chars match/skip invalid |
+| merge/partition in-place | read pointer + write pointer | write valid values forward |
+| max area/water walls | two boundaries | move smaller boundary |
+| k-sum on sorted array | fixed outer + inner `l/r` | skip duplicates + monotonic moves |
+
+## Pointer Movement Rules
+
+- Prove each pointer move removes only impossible states.
+- In sorted arrays, movement is monotonic; do not move both pointers blindly.
+- For de-dup problems (3Sum/4Sum), sort first and skip equal neighbors.
+- For in-place compaction, separate read pointer from write pointer.
 
 ---
 
 ## Q1. Two Sum II - Input Array Is Sorted
 
-### Problem Statement (Concrete)
-Solve **Two Sum II - Input Array Is Sorted** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given sorted array `numbers` and `target`, return 1-indexed positions of two numbers adding to `target`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `numbers = [2,7,11,15], target = 9 -> [1,2]`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+FOR i from 0 to n - 1:
+    FOR j from i + 1 to n - 1:
+        IF numbers[i] + numbers[j] == target:
+            RETURN [i + 1, j + 1]
+RETURN []
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Two Sum II - Input Array Is Sorted** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Check all pairs in sorted array.
 
 #### Python
 ```python
-def brute_two_sum_ii_input_array_is_sorted(numbers, target):
+def two_sum_ii_bruteforce(numbers, target):
     n = len(numbers)
     for i in range(n):
         for j in range(i + 1, n):
@@ -62,34 +53,30 @@ def brute_two_sum_ii_input_array_is_sorted(numbers, target):
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- For each left index, binary search needed complement.
+### Optimal Solution (Two Pointers)
 
-#### Python
-```python
-def better_two_sum_ii_input_array_is_sorted(numbers, target):
-    import bisect
-    for i, x in enumerate(numbers):
-        j = bisect.bisect_left(numbers, target - x, i + 1)
-        if j < len(numbers) and numbers[j] == target - x:
-            return [i + 1, j + 1]
-    return []
+#### Pseudocode
+```text
+l = 0, r = n - 1
+WHILE l < r:
+    s = numbers[l] + numbers[r]
+    IF s == target:
+        RETURN [l + 1, r + 1]
+    IF s < target:
+        l += 1
+    ELSE:
+        r -= 1
+RETURN []
 ```
 
-#### Complexity
-- Time `O(n log n)`, Space `O(1)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Two pointers exploit sorted order to move toward target monotonically.
-
 #### Python
 ```python
-def solve_two_sum_ii_input_array_is_sorted(numbers, target):
+def two_sum_ii_optimal(numbers, target):
     l, r = 0, len(numbers) - 1
+
     while l < r:
         s = numbers[l] + numbers[r]
         if s == target:
@@ -98,119 +85,96 @@ def solve_two_sum_ii_input_array_is_sorted(numbers, target):
             l += 1
         else:
             r -= 1
+
     return []
 ```
 
-#### Correctness (Why This Works)
-- If sum is too small, only increasing left can help; if too large, only decreasing right can help.
-- Thus each move discards only impossible pairs and never drops a valid solution.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q2. 3Sum
 
-### Problem Statement (Concrete)
-Solve **3Sum** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Return all unique triplets `[a, b, c]` such that `a + b + c = 0`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [-1,0,1,2,-1,-4] -> [[-1,-1,2],[-1,0,1]]`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+triplets = empty set
+FOR i from 0 to n - 1:
+    FOR j from i + 1 to n - 1:
+        FOR k from j + 1 to n - 1:
+            IF nums[i] + nums[j] + nums[k] == 0:
+                ADD sorted triple to set
+RETURN set converted to list
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **3Sum** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Enumerate all triplets and deduplicate.
 
 #### Python
 ```python
-def brute_q_3sum(nums):
+def three_sum_bruteforce(nums):
     n = len(nums)
     out = set()
+
     for i in range(n):
         for j in range(i + 1, n):
             for k in range(j + 1, n):
                 if nums[i] + nums[j] + nums[k] == 0:
                     out.add(tuple(sorted((nums[i], nums[j], nums[k]))))
-    return [list(x) for x in sorted(out)]
+
+    return [list(t) for t in sorted(out)]
 ```
 
 #### Complexity
-- Time `O(n^3)`, Space `O(n)` for set.
+- Time: `O(n^3)`
+- Space: `O(n)` plus output
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Fix first value and use hash-set for two-sum on suffix.
+### Optimal Solution (Sort + Two Pointers)
 
-#### Python
-```python
-def better_q_3sum(nums):
-    nums.sort()
-    out = []
-    for i in range(len(nums)):
-        seen = set()
-        for j in range(i + 1, len(nums)):
-            need = -nums[i] - nums[j]
-            if need in seen:
-                cand = [nums[i], need, nums[j]]
-                if not out or out[-1] != cand:
-                    out.append(cand)
-            seen.add(nums[j])
-    return out
+#### Pseudocode
+```text
+SORT nums
+ans = []
+FOR i from 0 to n - 1:
+    IF i > 0 AND nums[i] == nums[i - 1]:
+        CONTINUE
+
+    l = i + 1, r = n - 1
+    WHILE l < r:
+        s = nums[i] + nums[l] + nums[r]
+        IF s == 0:
+            APPEND [nums[i], nums[l], nums[r]]
+            l += 1, r -= 1
+            SKIP duplicates at l
+            SKIP duplicates at r
+        ELSE IF s < 0:
+            l += 1
+        ELSE:
+            r -= 1
+RETURN ans
 ```
 
-#### Complexity
-- Time `O(n^2)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Sort + two-pointer sweep for each fixed first index handles duplicates cleanly.
-
 #### Python
 ```python
-def solve_q_3sum(nums):
+def three_sum_optimal(nums):
     nums.sort()
-    out = []
     n = len(nums)
+    ans = []
+
     for i in range(n):
         if i > 0 and nums[i] == nums[i - 1]:
             continue
+
         l, r = i + 1, n - 1
         while l < r:
             s = nums[i] + nums[l] + nums[r]
             if s == 0:
-                out.append([nums[i], nums[l], nums[r]])
+                ans.append([nums[i], nums[l], nums[r]])
                 l += 1
                 r -= 1
                 while l < r and nums[l] == nums[l - 1]:
@@ -221,132 +185,101 @@ def solve_q_3sum(nums):
                 l += 1
             else:
                 r -= 1
-    return out
+
+    return ans
 ```
 
-#### Correctness (Why This Works)
-- Sorted order enables monotonic pointer moves for each fixed `i`.
-- Duplicate skipping ensures each value-combination is emitted exactly once.
-
 #### Complexity
-- Time `O(n^2)`, Space `O(1)` extra (excluding output).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n^2)`
+- Space: `O(1)` extra (excluding output)
 
 ---
 
 ## Q3. 4Sum
 
-### Problem Statement (Concrete)
-Solve **4Sum** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Return all unique quadruplets `[a,b,c,d]` such that `a + b + c + d = target`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [1,0,-1,0,-2,2], target = 0 -> [[-2,-1,1,2],[-2,0,0,2],[-1,0,0,1]]`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+quads = empty set
+FOR i from 0 to n - 1:
+    FOR j from i + 1 to n - 1:
+        FOR k from j + 1 to n - 1:
+            FOR l from k + 1 to n - 1:
+                IF nums[i] + nums[j] + nums[k] + nums[l] == target:
+                    ADD sorted quadruplet to set
+RETURN set converted to list
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **4Sum** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try all quadruples and keep those summing to target.
 
 #### Python
 ```python
-def brute_q_4sum(nums, target):
-    nums.sort()
+def four_sum_bruteforce(nums, target):
     n = len(nums)
     out = set()
+
     for i in range(n):
         for j in range(i + 1, n):
             for k in range(j + 1, n):
                 for l in range(k + 1, n):
                     if nums[i] + nums[j] + nums[k] + nums[l] == target:
-                        out.add((nums[i], nums[j], nums[k], nums[l]))
-    return [list(x) for x in sorted(out)]
+                        out.add(tuple(sorted((nums[i], nums[j], nums[k], nums[l]))))
+
+    return [list(q) for q in sorted(out)]
 ```
 
 #### Complexity
-- Time `O(n^4)`, Space `O(1)` plus output.
+- Time: `O(n^4)`
+- Space: `O(n)` plus output
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute pair sums and combine disjoint pairs.
+### Optimal Solution (Sort + Nested Fix + Two Pointers)
 
-#### Python
-```python
-def better_q_4sum(nums, target):
-    nums.sort()
-    n = len(nums)
-    out = []
-    pair = {}
-    for i in range(n):
-        for j in range(i + 1, n):
-            pair.setdefault(nums[i] + nums[j], []).append((i, j))
-    seen = set()
-    for s, pairs in pair.items():
-        need = target - s
-        if need not in pair:
-            continue
-        for i, j in pairs:
-            for k, l in pair[need]:
-                if j < k:
-                    quad = (nums[i], nums[j], nums[k], nums[l])
-                    if quad not in seen:
-                        seen.add(quad)
-                        out.append(list(quad))
-    return out
+#### Pseudocode
+```text
+SORT nums
+ans = []
+FOR i from 0 to n - 1:
+    SKIP duplicate nums[i]
+    FOR j from i + 1 to n - 1:
+        SKIP duplicate nums[j]
+        l = j + 1, r = n - 1
+        WHILE l < r:
+            s = nums[i] + nums[j] + nums[l] + nums[r]
+            IF s == target:
+                APPEND quadruplet
+                l += 1, r -= 1
+                SKIP duplicates at l and r
+            ELSE IF s < target:
+                l += 1
+            ELSE:
+                r -= 1
+RETURN ans
 ```
 
-#### Complexity
-- Time up to `O(n^3)` average-heavy, Space `O(n^2)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Sort and reduce 4-sum to repeated 2-pointer 2-sum over suffix.
-
 #### Python
 ```python
-def solve_q_4sum(nums, target):
+def four_sum_optimal(nums, target):
     nums.sort()
     n = len(nums)
-    out = []
+    ans = []
+
     for i in range(n):
         if i > 0 and nums[i] == nums[i - 1]:
             continue
+
         for j in range(i + 1, n):
             if j > i + 1 and nums[j] == nums[j - 1]:
                 continue
+
             l, r = j + 1, n - 1
             while l < r:
                 s = nums[i] + nums[j] + nums[l] + nums[r]
                 if s == target:
-                    out.append([nums[i], nums[j], nums[l], nums[r]])
+                    ans.append([nums[i], nums[j], nums[l], nums[r]])
                     l += 1
                     r -= 1
                     while l < r and nums[l] == nums[l - 1]:
@@ -357,656 +290,469 @@ def solve_q_4sum(nums, target):
                     l += 1
                 else:
                     r -= 1
-    return out
+
+    return ans
 ```
 
-#### Correctness (Why This Works)
-- For fixed `(i,j)`, remaining pair is classic sorted 2-sum solved optimally by two pointers.
-- Duplicate checks at each level prevent repeated quadruples.
-
 #### Complexity
-- Time `O(n^3)`, Space `O(1)` extra (excluding output).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n^3)`
+- Space: `O(1)` extra (excluding output)
 
 ---
 
 ## Q4. Container With Most Water
 
-### Problem Statement (Concrete)
-Solve **Container With Most Water** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given heights, return max water area between two lines.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `height = [1,8,6,2,5,4,8,3,7] -> 49`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+best = 0
+FOR i from 0 to n - 1:
+    FOR j from i + 1 to n - 1:
+        area = (j - i) * min(height[i], height[j])
+        best = max(best, area)
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Container With Most Water** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Enumerate all pointer pairs and evaluate objective exactly.
 
 #### Python
 ```python
-def brute_container_with_most_water(nums):
+def container_bruteforce(height):
+    n = len(height)
     best = 0
-    n = len(nums)
+
     for i in range(n):
         for j in range(i + 1, n):
-            width = j - i
-            height = min(nums[i], nums[j])
-            best = max(best, width * height)
+            area = (j - i) * min(height[i], height[j])
+            best = max(best, area)
+
     return best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use ordering to move one pointer deterministically and cut search space.
+### Optimal Solution (Two Boundary Pointers)
+
+#### Pseudocode
+```text
+l = 0, r = n - 1
+best = 0
+WHILE l < r:
+    area = (r - l) * min(height[l], height[r])
+    best = max(best, area)
+    IF height[l] <= height[r]:
+        l += 1
+    ELSE:
+        r -= 1
+RETURN best
+```
 
 #### Python
 ```python
-def better_container_with_most_water(nums):
-    # Sorting enables directional pointer movement for many two-pointer variants.
-    arr = sorted(nums)
-    l, r = 0, len(arr) - 1
+def container_optimal(height):
+    l, r = 0, len(height) - 1
     best = 0
+
     while l < r:
-        best = max(best, arr[l] + arr[r])
-        if arr[l] < arr[r]:
+        area = (r - l) * min(height[l], height[r])
+        best = max(best, area)
+
+        if height[l] <= height[r]:
             l += 1
         else:
             r -= 1
+
     return best
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)` (if sorting copy).
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Maintain two boundary pointers and discard provably dominated boundaries each step.
-
-#### Python
-```python
-def solve_container_with_most_water(nums):
-    l, r = 0, len(nums) - 1
-    ans = 0
-    while l < r:
-        ans = max(ans, (r - l) * min(nums[l], nums[r]))
-        if nums[l] <= nums[r]:
-            l += 1
-        else:
-            r -= 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- When boundary heights differ, moving the taller side cannot improve the limiting height at same or smaller width.
-- Therefore discarding the smaller-height boundary is safe and does not remove the optimal answer.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q5. Valid Palindrome
 
-### Problem Statement (Concrete)
-Solve **Valid Palindrome** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Return `True` if string is a palindrome considering only alphanumeric chars and ignoring case.
 
-### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+Example: `s = "A man, a plan, a canal: Panama" -> True`
 
-### Output
-- Index, boolean, count, or transformed string as required.
+### Brute Force Solution
 
-### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+clean = lowercase alphanumeric chars from s
+RETURN clean == reverse(clean)
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Valid Palindrome** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every alignment and compare full pattern each time.
 
 #### Python
 ```python
-def brute_valid_palindrome(text, pattern):
-    m, n = len(pattern), len(text)
-    for i in range(n - m + 1):
-        if text[i:i+m] == pattern:
-            return i
-    return -1
+def valid_palindrome_bruteforce(s):
+    clean = ''.join(ch.lower() for ch in s if ch.isalnum())
+    return clean == clean[::-1]
 ```
 
 #### Complexity
-- Time `O(n*m)`, Space `O(1)`.
+- Time: `O(n)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Rolling hash filters candidate matches and verifies collisions.
+### Optimal Solution (In-Place Two Pointers)
+
+#### Pseudocode
+```text
+l = 0, r = len(s) - 1
+WHILE l < r:
+    WHILE l < r AND s[l] is not alnum:
+        l += 1
+    WHILE l < r AND s[r] is not alnum:
+        r -= 1
+
+    IF lowercase(s[l]) != lowercase(s[r]):
+        RETURN False
+
+    l += 1
+    r -= 1
+RETURN True
+```
 
 #### Python
 ```python
-def better_valid_palindrome(text, pattern):
-    # Rabin-Karp style rolling hash.
-    if not pattern:
-        return 0
-    base, mod = 911382323, 10**9 + 7
-    m = len(pattern)
-    p_hash = 0
-    t_hash = 0
-    power = 1
-    for i in range(m):
-        p_hash = (p_hash * base + ord(pattern[i])) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if i:
-            power = (power * base) % mod
-    if t_hash == p_hash and text[:m] == pattern:
-        return 0
-    for i in range(m, len(text)):
-        t_hash = (t_hash - ord(text[i-m]) * power) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
-            return i - m + 1
-    return -1
+def valid_palindrome_optimal(s):
+    l, r = 0, len(s) - 1
+
+    while l < r:
+        while l < r and not s[l].isalnum():
+            l += 1
+        while l < r and not s[r].isalnum():
+            r -= 1
+
+        if s[l].lower() != s[r].lower():
+            return False
+
+        l += 1
+        r -= 1
+
+    return True
 ```
 
 #### Complexity
-- Expected `O(n+m)`, worst-case with collisions can degrade.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
-
-#### Python
-```python
-def solve_valid_palindrome(text, pattern):
-    if not pattern:
-        return 0
-
-    lps = [0] * len(pattern)
-    j = 0
-    for i in range(1, len(pattern)):
-        while j > 0 and pattern[i] != pattern[j]:
-            j = lps[j - 1]
-        if pattern[i] == pattern[j]:
-            j += 1
-            lps[i] = j
-
-    j = 0
-    for i, ch in enumerate(text):
-        while j > 0 and ch != pattern[j]:
-            j = lps[j - 1]
-        if ch == pattern[j]:
-            j += 1
-            if j == len(pattern):
-                return i - len(pattern) + 1
-    return -1
-```
-
-#### Correctness (Why This Works)
-- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
-- Pointer never moves backward in text, so each character is processed constant times.
-
-#### Complexity
-- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q6. Squares of a Sorted Array
 
-### Problem Statement (Concrete)
-Solve **Squares of a Sorted Array** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given sorted `nums`, return array of squares also sorted.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [-4,-1,0,3,10] -> [0,1,9,16,100]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+ans = []
+FOR x in nums:
+    APPEND x * x to ans
+SORT ans
+RETURN ans
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Squares of a Sorted Array** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Enumerate all pointer pairs and evaluate objective exactly.
 
 #### Python
 ```python
-def brute_squares_of_a_sorted_array(nums):
-    best = 0
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            width = j - i
-            height = min(nums[i], nums[j])
-            best = max(best, width * height)
-    return best
-```
-
-#### Complexity
-- Time `O(n^2)`, Space `O(1)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use ordering to move one pointer deterministically and cut search space.
-
-#### Python
-```python
-def better_squares_of_a_sorted_array(nums):
-    # Sorting enables directional pointer movement for many two-pointer variants.
-    arr = sorted(nums)
-    l, r = 0, len(arr) - 1
-    best = 0
-    while l < r:
-        best = max(best, arr[l] + arr[r])
-        if arr[l] < arr[r]:
-            l += 1
-        else:
-            r -= 1
-    return best
-```
-
-#### Complexity
-- Time `O(n log n)`, Space `O(n)` (if sorting copy).
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Maintain two boundary pointers and discard provably dominated boundaries each step.
-
-#### Python
-```python
-def solve_squares_of_a_sorted_array(nums):
-    l, r = 0, len(nums) - 1
-    ans = 0
-    while l < r:
-        ans = max(ans, (r - l) * min(nums[l], nums[r]))
-        if nums[l] <= nums[r]:
-            l += 1
-        else:
-            r -= 1
+def sorted_squares_bruteforce(nums):
+    ans = [x * x for x in nums]
+    ans.sort()
     return ans
 ```
 
-#### Correctness (Why This Works)
-- When boundary heights differ, moving the taller side cannot improve the limiting height at same or smaller width.
-- Therefore discarding the smaller-height boundary is safe and does not remove the optimal answer.
+#### Complexity
+- Time: `O(n log n)`
+- Space: `O(n)`
+
+### Optimal Solution (Two Pointers from Ends)
+
+#### Pseudocode
+```text
+l = 0, r = n - 1
+ans = array size n
+write = n - 1
+WHILE l <= r:
+    left_sq = nums[l] * nums[l]
+    right_sq = nums[r] * nums[r]
+    IF left_sq > right_sq:
+        ans[write] = left_sq
+        l += 1
+    ELSE:
+        ans[write] = right_sq
+        r -= 1
+    write -= 1
+RETURN ans
+```
+
+#### Python
+```python
+def sorted_squares_optimal(nums):
+    n = len(nums)
+    ans = [0] * n
+    l, r = 0, n - 1
+    write = n - 1
+
+    while l <= r:
+        left_sq = nums[l] * nums[l]
+        right_sq = nums[r] * nums[r]
+
+        if left_sq > right_sq:
+            ans[write] = left_sq
+            l += 1
+        else:
+            ans[write] = right_sq
+            r -= 1
+
+        write -= 1
+
+    return ans
+```
 
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(n)`
 
 ---
 
 ## Q7. Remove Duplicates from Sorted Array
 
-### Problem Statement (Concrete)
-Solve **Remove Duplicates from Sorted Array** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Remove duplicates in-place from sorted `nums`, return count `k` of unique values.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [0,0,1,1,1,2,2,3,3,4] -> k = 5`, prefix becomes `[0,1,2,3,4]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+IF nums empty:
+    RETURN 0
+
+unique = [nums[0]]
+FOR i from 1 to n - 1:
+    IF nums[i] != nums[i - 1]:
+        APPEND nums[i] to unique
+
+FOR i from 0 to len(unique) - 1:
+    nums[i] = unique[i]
+
+RETURN len(unique)
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Remove Duplicates from Sorted Array** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Enumerate all pointer pairs and evaluate objective exactly.
 
 #### Python
 ```python
-def brute_remove_duplicates_from_sorted_array(nums):
-    best = 0
-    n = len(nums)
-    for i in range(n):
-        for j in range(i + 1, n):
-            width = j - i
-            height = min(nums[i], nums[j])
-            best = max(best, width * height)
-    return best
+def remove_duplicates_bruteforce(nums):
+    if not nums:
+        return 0
+
+    unique = [nums[0]]
+    for i in range(1, len(nums)):
+        if nums[i] != nums[i - 1]:
+            unique.append(nums[i])
+
+    for i, x in enumerate(unique):
+        nums[i] = x
+
+    return len(unique)
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(1)`.
+- Time: `O(n)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use ordering to move one pointer deterministically and cut search space.
+### Optimal Solution (Read/Write Pointers)
+
+#### Pseudocode
+```text
+IF nums empty:
+    RETURN 0
+
+write = 1
+FOR read from 1 to n - 1:
+    IF nums[read] != nums[write - 1]:
+        nums[write] = nums[read]
+        write += 1
+
+RETURN write
+```
 
 #### Python
 ```python
-def better_remove_duplicates_from_sorted_array(nums):
-    # Sorting enables directional pointer movement for many two-pointer variants.
-    arr = sorted(nums)
-    l, r = 0, len(arr) - 1
-    best = 0
-    while l < r:
-        best = max(best, arr[l] + arr[r])
-        if arr[l] < arr[r]:
-            l += 1
-        else:
-            r -= 1
-    return best
+def remove_duplicates_optimal(nums):
+    if not nums:
+        return 0
+
+    write = 1
+    for read in range(1, len(nums)):
+        if nums[read] != nums[write - 1]:
+            nums[write] = nums[read]
+            write += 1
+
+    return write
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space `O(n)` (if sorting copy).
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Maintain two boundary pointers and discard provably dominated boundaries each step.
-
-#### Python
-```python
-def solve_remove_duplicates_from_sorted_array(nums):
-    l, r = 0, len(nums) - 1
-    ans = 0
-    while l < r:
-        ans = max(ans, (r - l) * min(nums[l], nums[r]))
-        if nums[l] <= nums[r]:
-            l += 1
-        else:
-            r -= 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- When boundary heights differ, moving the taller side cannot improve the limiting height at same or smaller width.
-- Therefore discarding the smaller-height boundary is safe and does not remove the optimal answer.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q8. Move Zeroes
 
-### Problem Statement (Concrete)
-Solve **Move Zeroes** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Move all zeroes to end while keeping relative order of non-zero elements.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [0,1,0,3,12] -> [1,3,12,0,0]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+FOR i from 0 to n - 1:
+    IF nums[i] == 0:
+        j = i
+        WHILE j + 1 < n:
+            nums[j] = nums[j + 1]
+            j += 1
+        nums[n - 1] = 0
+RETURN nums
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Move Zeroes** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Build a new array with non-zeros followed by zeros.
 
 #### Python
 ```python
-def brute_move_zeroes(nums):
-    arr = [x for x in nums if x != 0] + [0] * nums.count(0)
-    for i in range(len(nums)):
-        nums[i] = arr[i]
+def move_zeroes_bruteforce(nums):
+    n = len(nums)
+
+    i = 0
+    while i < n:
+        if nums[i] == 0:
+            j = i
+            while j + 1 < n:
+                nums[j] = nums[j + 1]
+                j += 1
+            nums[n - 1] = 0
+            n -= 1
+        else:
+            i += 1
+
     return nums
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(n)`.
+- Time: `O(n^2)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Compact non-zeros in-place then fill remaining suffix with zeros.
+### Optimal Solution (Two Pointers)
+
+#### Pseudocode
+```text
+write = 0
+FOR read from 0 to n - 1:
+    IF nums[read] != 0:
+        SWAP nums[write], nums[read]
+        write += 1
+RETURN nums
+```
 
 #### Python
 ```python
-def better_move_zeroes(nums):
-    insert = 0
-    for x in nums:
-        if x != 0:
-            nums[insert] = x
-            insert += 1
-    while insert < len(nums):
-        nums[insert] = 0
-        insert += 1
+def move_zeroes_optimal(nums):
+    write = 0
+
+    for read in range(len(nums)):
+        if nums[read] != 0:
+            nums[write], nums[read] = nums[read], nums[write]
+            write += 1
+
     return nums
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Two pointers swap next non-zero into earliest zero slot directly.
-
-#### Python
-```python
-def solve_move_zeroes(nums):
-    l = 0
-    for r in range(len(nums)):
-        if nums[r] != 0:
-            nums[l], nums[r] = nums[r], nums[l]
-            l += 1
-    return nums
-```
-
-#### Correctness (Why This Works)
-- `l` always marks next position that should contain a non-zero.
-- Swapping when `nums[r] != 0` preserves relative order of non-zero elements.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q9. Trapping Rain Water
 
-### Problem Statement (Concrete)
-Solve **Trapping Rain Water** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given elevation map `height`, compute total trapped rain water.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `height = [0,1,0,2,1,0,1,3,2,1,2,1] -> 6`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+water = 0
+FOR i from 0 to n - 1:
+    left_max = max(height[0..i])
+    right_max = max(height[i..n-1])
+    water += min(left_max, right_max) - height[i]
+RETURN water
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Trapping Rain Water** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- For each index, recompute max wall on both sides.
 
 #### Python
 ```python
-def brute_trapping_rain_water(height):
+def trap_bruteforce(height):
     n = len(height)
-    ans = 0
-    for i in range(n):
-        left = max(height[:i+1])
-        right = max(height[i:])
-        ans += min(left, right) - height[i]
-    return ans
-```
-
-#### Complexity
-- Time `O(n^2)`, Space `O(1)`.
-
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Precompute left/right maxima arrays once.
-
-#### Python
-```python
-def better_trapping_rain_water(height):
-    n = len(height)
-    left = [0] * n
-    right = [0] * n
-    for i in range(n):
-        left[i] = max(left[i-1], height[i]) if i else height[i]
-    for i in range(n - 1, -1, -1):
-        right[i] = max(right[i+1], height[i]) if i + 1 < n else height[i]
-    return sum(min(left[i], right[i]) - height[i] for i in range(n))
-```
-
-#### Complexity
-- Time `O(n)`, Space `O(n)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Two-pointer method finalizes trapped water on smaller boundary side immediately.
-
-#### Python
-```python
-def solve_trapping_rain_water(height):
-    l, r = 0, len(height) - 1
-    left_max = right_max = 0
     water = 0
+
+    for i in range(n):
+        left_max = max(height[: i + 1])
+        right_max = max(height[i:])
+        water += min(left_max, right_max) - height[i]
+
+    return water
+```
+
+#### Complexity
+- Time: `O(n^2)`
+- Space: `O(1)`
+
+### Optimal Solution (Two Pointers with Running Max)
+
+#### Pseudocode
+```text
+l = 0, r = n - 1
+left_max = 0, right_max = 0
+water = 0
+
+WHILE l < r:
+    IF height[l] <= height[r]:
+        left_max = max(left_max, height[l])
+        water += left_max - height[l]
+        l += 1
+    ELSE:
+        right_max = max(right_max, height[r])
+        water += right_max - height[r]
+        r -= 1
+
+RETURN water
+```
+
+#### Python
+```python
+def trap_optimal(height):
+    l, r = 0, len(height) - 1
+    left_max = 0
+    right_max = 0
+    water = 0
+
     while l < r:
         if height[l] <= height[r]:
             left_max = max(left_max, height[l])
@@ -1016,124 +762,90 @@ def solve_trapping_rain_water(height):
             right_max = max(right_max, height[r])
             water += right_max - height[r]
             r -= 1
+
     return water
 ```
 
-#### Correctness (Why This Works)
-- If left boundary is smaller, trapped water at left depends only on left max, independent of unseen interior right details.
-- Symmetric logic applies when right boundary is smaller.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q10. Sort Colors
 
-### Problem Statement (Concrete)
-Solve **Sort Colors** using **Two Pointers**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Sort array of `0`, `1`, `2` in-place.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [2,0,2,1,1,0] -> [0,0,1,1,2,2]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+SORT nums
+RETURN nums
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Two Pointers**.
-- Red flags: brute force for **Sort Colors** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Use full sort.
 
 #### Python
 ```python
-def brute_sort_colors(nums):
+def sort_colors_bruteforce(nums):
     nums.sort()
     return nums
 ```
 
 #### Complexity
-- Time `O(n log n)`, Space depends on sort implementation.
+- Time: `O(n log n)`
+- Space: depends on sorting implementation
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Count 0/1/2 and overwrite array.
+### Optimal Solution (Dutch National Flag)
 
-#### Python
-```python
-def better_sort_colors(nums):
-    cnt = [0, 0, 0]
-    for x in nums:
-        cnt[x] += 1
-    i = 0
-    for val in range(3):
-        for _ in range(cnt[val]):
-            nums[i] = val
-            i += 1
-    return nums
+#### Pseudocode
+```text
+low = 0, mid = 0, high = n - 1
+WHILE mid <= high:
+    IF nums[mid] == 0:
+        SWAP nums[low], nums[mid]
+        low += 1
+        mid += 1
+    ELSE IF nums[mid] == 1:
+        mid += 1
+    ELSE:
+        SWAP nums[mid], nums[high]
+        high -= 1
+RETURN nums
 ```
 
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Dutch National Flag partitions array into three color regions in one pass.
-
 #### Python
 ```python
-def solve_sort_colors(nums):
-    l = i = 0
-    r = len(nums) - 1
-    while i <= r:
-        if nums[i] == 0:
-            nums[l], nums[i] = nums[i], nums[l]
-            l += 1
-            i += 1
-        elif nums[i] == 2:
-            nums[i], nums[r] = nums[r], nums[i]
-            r -= 1
+def sort_colors_optimal(nums):
+    low = 0
+    mid = 0
+    high = len(nums) - 1
+
+    while mid <= high:
+        if nums[mid] == 0:
+            nums[low], nums[mid] = nums[mid], nums[low]
+            low += 1
+            mid += 1
+        elif nums[mid] == 1:
+            mid += 1
         else:
-            i += 1
+            nums[mid], nums[high] = nums[high], nums[mid]
+            high -= 1
+
     return nums
 ```
 
-#### Correctness (Why This Works)
-- Invariant maintains `[0..l-1]=0`, `[l..i-1]=1`, `[r+1..]=2` at all times.
-- Each swap places at least one element into its final partition.
-
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
+
+## Rapid Recall Checklist
+
+- Start by proving the pointer move rule before coding.
+- In sorted arrays, rely on monotonic sum behavior.
+- Skip duplicates carefully for 3Sum/4Sum.
+- For in-place array edits, use separate read/write boundaries.
