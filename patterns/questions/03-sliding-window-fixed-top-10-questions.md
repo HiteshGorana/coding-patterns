@@ -1,1205 +1,964 @@
 # Pattern 03 Interview Playbook: Sliding Window (Fixed Size)
 
-Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
+This playbook is aligned with [Pattern 03: Sliding Window (Fixed)](../03-sliding-window-fixed.md).
+
+Use it when every answer depends on a contiguous window of exact size `k`.
 
 ## Pattern Snapshot
 
-- What this pattern solves: Fixed-size sliding window optimizes repeated computations over all subarrays/substrings of length `k`.
-- Core intuition: Adjacent windows overlap heavily. Instead of recomputing, update window result incrementally: - add incoming element - remove outgoing element This turns `O(n*k)` into `O(n)`.
-- Trigger cue 1: Window size `k` is fixed.
-- Trigger cue 2: Need max/min/sum/avg over every size-k segment.
-- Quick self-check: Can current window answer be updated with +incoming -outgoing?
-- Target complexity: Time O(n), Space O(1) or O(alphabet) if frequency table needed
+| Prompt shape | Window state to store | Update rule |
+|---|---|---|
+| max/min/sum/avg over size `k` | running sum or counter | `+ incoming`, `- outgoing` |
+| fixed-size frequency match | char frequency array/map | add right char, remove left char |
+| count valid size-`k` windows | running sum + threshold check | compare each full window |
+| circular fixed window | duplicated array + running sum | slide one step for each index |
+| fixed-size best metric | base score + window gain | maintain best gain while sliding |
+
+## Query-Update Rules
+
+- Build the first full window once.
+- Then slide by one index: add new right element and remove old left element.
+- Only evaluate answer after window reaches exact size `k`.
+- For frequency windows, keep state deterministic (array for lowercase alphabets when possible).
 
 ---
 
 ## Q1. Maximum Average Subarray I
 
-### Problem Statement (Concrete)
-Solve **Maximum Average Subarray I** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and integer `k`, return the maximum average value among all subarrays of length `k`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [1,12,-5,-6,50,3], k = 4 -> 12.75`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+best_sum = -infinity
+FOR i from 0 to n - k:
+    window_sum = sum(nums[i .. i + k - 1])
+    best_sum = max(best_sum, window_sum)
+RETURN best_sum / k
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Maximum Average Subarray I** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Compute each length-`k` window sum independently.
 
 #### Python
 ```python
-def brute_maximum_average_subarray_i(nums, k):
-    best = -10**18
+def max_average_bruteforce(nums, k):
+    best_sum = float('-inf')
+
     for i in range(len(nums) - k + 1):
-        best = max(best, sum(nums[i:i+k]))
-    return best / k
+        window_sum = 0
+        for j in range(i, i + k):
+            window_sum += nums[j]
+        best_sum = max(best_sum, window_sum)
+
+    return best_sum / k
 ```
 
 #### Complexity
-- Time `O(n*k)`, Space `O(1)`.
+- Time: `O(n * k)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Slide fixed-size window by adding entering and removing leaving element.
+### Optimal Solution (Fixed Window Sum)
+
+#### Pseudocode
+```text
+window_sum = sum(first k elements)
+best_sum = window_sum
+
+FOR r from k to n - 1:
+    window_sum += nums[r]
+    window_sum -= nums[r - k]
+    best_sum = max(best_sum, window_sum)
+
+RETURN best_sum / k
+```
 
 #### Python
 ```python
-def better_maximum_average_subarray_i(nums, k):
-    window = sum(nums[:k])
-    best = window
-    for i in range(k, len(nums)):
-        window += nums[i] - nums[i - k]
-        best = max(best, window)
-    return best / k
+def max_average_optimal(nums, k):
+    window_sum = sum(nums[:k])
+    best_sum = window_sum
+
+    for r in range(k, len(nums)):
+        window_sum += nums[r] - nums[r - k]
+        best_sum = max(best_sum, window_sum)
+
+    return best_sum / k
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Fixed window update is already asymptotically optimal.
-
-#### Python
-```python
-def better_maximum_average_subarray_i(nums, k):
-    window = sum(nums[:k])
-    best = window
-    for i in range(k, len(nums)):
-        window += nums[i] - nums[i - k]
-        best = max(best, window)
-    return best / k
-```
-
-#### Correctness (Why This Works)
-- Every window differs from previous by exactly two elements.
-- Maintaining running sum yields exact value for each window in O(1) update.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q2. Max Sum Subarray of Size K
 
-### Problem Statement (Concrete)
-Solve **Max Sum Subarray of Size K** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and `k`, return the maximum sum of any contiguous subarray of size `k`.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [2,1,5,1,3,2], k = 3 -> 9`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+best = -infinity
+FOR i from 0 to n - k:
+    curr = sum(nums[i .. i + k - 1])
+    best = max(best, curr)
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Max Sum Subarray of Size K** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Compute each length-`k` window sum independently.
 
 #### Python
 ```python
-def brute_max_sum_subarray_of_size_k(nums, k):
-    best = -10**18
+def max_sum_size_k_bruteforce(nums, k):
+    best = float('-inf')
+
     for i in range(len(nums) - k + 1):
-        best = max(best, sum(nums[i:i+k]))
-    return best / k
+        curr = 0
+        for j in range(i, i + k):
+            curr += nums[j]
+        best = max(best, curr)
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n*k)`, Space `O(1)`.
+- Time: `O(n * k)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Slide fixed-size window by adding entering and removing leaving element.
+### Optimal Solution (Fixed Window Sum)
+
+#### Pseudocode
+```text
+window = sum(first k elements)
+best = window
+
+FOR r from k to n - 1:
+    window += nums[r]
+    window -= nums[r - k]
+    best = max(best, window)
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_max_sum_subarray_of_size_k(nums, k):
+def max_sum_size_k_optimal(nums, k):
     window = sum(nums[:k])
     best = window
-    for i in range(k, len(nums)):
-        window += nums[i] - nums[i - k]
+
+    for r in range(k, len(nums)):
+        window += nums[r] - nums[r - k]
         best = max(best, window)
-    return best / k
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Fixed window update is already asymptotically optimal.
-
-#### Python
-```python
-def better_max_sum_subarray_of_size_k(nums, k):
-    window = sum(nums[:k])
-    best = window
-    for i in range(k, len(nums)):
-        window += nums[i] - nums[i - k]
-        best = max(best, window)
-    return best / k
-```
-
-#### Correctness (Why This Works)
-- Every window differs from previous by exactly two elements.
-- Maintaining running sum yields exact value for each window in O(1) update.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q3. Find All Anagrams in a String
 
-### Problem Statement (Concrete)
-Solve **Find All Anagrams in a String** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given strings `s` and `p`, return all start indices of `p`'s anagrams in `s`.
 
-### Input
-- `s`: str
-- `t`/`p`: str
+Example: `s = "cbaebabacd", p = "abc" -> [0, 6]`
 
-### Output
-- Boolean or list of start indices, depending on variant.
+### Brute Force Solution
 
-### Constraints
-- `1 <= len(s), len(t) <= 2 * 10^5`
-- `s`/`t` are lowercase English letters unless stated otherwise.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  s = "cbaebabacd", p = "abc"
-Output: [0, 6]
-Explanation: Window frequency count equals pattern frequency at matching starts.
+need = sort(p)
+ans = []
+m = length(p)
+
+FOR i from 0 to n - m:
+    IF sort(s[i .. i + m - 1]) == need:
+        APPEND i to ans
+
+RETURN ans
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Find All Anagrams in a String** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Sort every fixed-length candidate window.
 
 #### Python
 ```python
-def brute_find_all_anagrams_in_a_string(s, p):
-    m = len(p)
-    key = sorted(p)
-    for i in range(len(s) - m + 1):
-        if sorted(s[i:i+m]) == key:
-            return True
-    return False
+def find_anagrams_bruteforce(s, p):
+    m, n = len(p), len(s)
+    if m > n:
+        return []
+
+    need = ''.join(sorted(p))
+    ans = []
+
+    for i in range(n - m + 1):
+        if ''.join(sorted(s[i:i + m])) == need:
+            ans.append(i)
+
+    return ans
 ```
 
 #### Complexity
-- Time `O((n-m+1) * m log m)`.
+- Time: `O((n - m + 1) * m log m)`
+- Space: `O(m)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Fixed-size frequency window for pattern length.
+### Optimal Solution (Fixed Frequency Window)
+
+#### Pseudocode
+```text
+IF m > n: RETURN []
+
+need[26] = freq of p
+win[26] = freq of first m chars in s
+matches = count of indices where need[i] == win[i]
+ans = []
+IF matches == 26: APPEND 0
+
+FOR r from m to n - 1:
+    add_idx = index(s[r])
+    rem_idx = index(s[r - m])
+
+    UPDATE matches for add_idx before/after increment
+    UPDATE matches for rem_idx before/after decrement
+
+    IF matches == 26:
+        APPEND r - m + 1
+
+RETURN ans
+```
 
 #### Python
 ```python
-def better_find_all_anagrams_in_a_string(s, p):
-    m = len(p)
-    if m > len(s):
-        return False
+def find_anagrams_optimal(s, p):
+    m, n = len(p), len(s)
+    if m > n:
+        return []
+
     need = [0] * 26
     win = [0] * 26
+
     for ch in p:
-        need[ord(ch) - 97] += 1
-    for i, ch in enumerate(s):
-        win[ord(ch) - 97] += 1
-        if i >= m:
-            win[ord(s[i - m]) - 97] -= 1
-        if win == need:
-            return True
-    return False
+        need[ord(ch) - ord('a')] += 1
+    for i in range(m):
+        win[ord(s[i]) - ord('a')] += 1
+
+    matches = sum(1 for i in range(26) if need[i] == win[i])
+    ans = []
+    if matches == 26:
+        ans.append(0)
+
+    for r in range(m, n):
+        add_idx = ord(s[r]) - ord('a')
+        rem_idx = ord(s[r - m]) - ord('a')
+
+        if win[add_idx] == need[add_idx]:
+            matches -= 1
+        win[add_idx] += 1
+        if win[add_idx] == need[add_idx]:
+            matches += 1
+
+        if win[rem_idx] == need[rem_idx]:
+            matches -= 1
+        win[rem_idx] -= 1
+        if win[rem_idx] == need[rem_idx]:
+            matches += 1
+
+        if matches == 26:
+            ans.append(r - m + 1)
+
+    return ans
 ```
 
 #### Complexity
-- Time `O(n * sigma)` with small alphabet constant.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Frequency-array window is optimal for lowercase alphabet.
-
-#### Python
-```python
-def better_find_all_anagrams_in_a_string(s, p):
-    m = len(p)
-    if m > len(s):
-        return False
-    need = [0] * 26
-    win = [0] * 26
-    for ch in p:
-        need[ord(ch) - 97] += 1
-    for i, ch in enumerate(s):
-        win[ord(ch) - 97] += 1
-        if i >= m:
-            win[ord(s[i - m]) - 97] -= 1
-        if win == need:
-            return True
-    return False
-```
-
-#### Correctness (Why This Works)
-- An anagram exists exactly when window frequency vector equals pattern vector.
-- Sliding window updates counts in O(1) per move.
-
-#### Complexity
-- Time `O(n)`, Space `O(1)` for fixed alphabet.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)` for fixed lowercase alphabet
+- Space: `O(1)` for fixed lowercase alphabet
 
 ---
 
 ## Q4. Permutation in String
 
-### Problem Statement (Concrete)
-Solve **Permutation in String** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `s1` and `s2`, return `True` if some permutation of `s1` is a substring of `s2`.
 
-### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+Example: `s1 = "ab", s2 = "eidbaooo" -> True`
 
-### Output
-- Index, boolean, count, or transformed string as required.
+### Brute Force Solution
 
-### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+need = sort(s1)
+m = length(s1)
+
+FOR i from 0 to n - m:
+    IF sort(s2[i .. i + m - 1]) == need:
+        RETURN True
+
+RETURN False
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-- Disconnected graph or unreachable target must return documented sentinel (`-1`, empty list, or `False`).
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Permutation in String** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Depth-first exploration tries all paths and tracks best found depth.
 
 #### Python
 ```python
-from collections import deque
+def permutation_in_string_bruteforce(s1, s2):
+    m, n = len(s1), len(s2)
+    if m > n:
+        return False
 
-def brute_permutation_in_string(start, target):
-    # DFS/backtracking over state graph (practical only for tiny spaces).
-    best = 10**9
-    seen = set()
-    def dfs(state, steps):
-        nonlocal best
-        if steps >= best or state in seen:
-            return
-        if state == target:
-            best = min(best, steps)
-            return
-        seen.add(state)
-        for i in range(len(state)):
-            d = int(state[i])
-            for nd in ((d + 1) % 10, (d - 1) % 10):
-                nxt = state[:i] + str(nd) + state[i+1:]
-                dfs(nxt, steps + 1)
-        seen.remove(state)
-    dfs(start, 0)
-    return -1 if best == 10**9 else best
+    need = ''.join(sorted(s1))
+
+    for i in range(n - m + 1):
+        if ''.join(sorted(s2[i:i + m])) == need:
+            return True
+
+    return False
 ```
 
 #### Complexity
-- Time exponential in branching depth, Space `O(depth)`.
+- Time: `O((n - m + 1) * m log m)`
+- Space: `O(m)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Classic BFS over state graph gives shortest steps in unweighted transitions.
+### Optimal Solution (Fixed Frequency Window)
+
+#### Pseudocode
+```text
+IF m > n: RETURN False
+
+need[26] = freq of s1
+win[26] = freq of first m chars in s2
+matches = count equal positions between need and win
+
+IF matches == 26: RETURN True
+
+FOR r from m to n - 1:
+    add_idx = index(s2[r])
+    rem_idx = index(s2[r - m])
+
+    UPDATE matches for add_idx and rem_idx
+
+    IF matches == 26:
+        RETURN True
+
+RETURN False
+```
 
 #### Python
 ```python
-from collections import deque
+def permutation_in_string_optimal(s1, s2):
+    m, n = len(s1), len(s2)
+    if m > n:
+        return False
 
-def better_permutation_in_string(start, target, dead=None):
-    dead = set(dead or [])
-    if start in dead:
-        return -1
-    q = deque([(start, 0)])
-    seen = {start}
-    while q:
-        state, d = q.popleft()
-        if state == target:
-            return d
-        for i in range(len(state)):
-            x = int(state[i])
-            for y in ((x + 1) % 10, (x - 1) % 10):
-                nxt = state[:i] + str(y) + state[i+1:]
-                if nxt not in seen and nxt not in dead:
-                    seen.add(nxt)
-                    q.append((nxt, d + 1))
-    return -1
+    need = [0] * 26
+    win = [0] * 26
+
+    for ch in s1:
+        need[ord(ch) - ord('a')] += 1
+    for i in range(m):
+        win[ord(s2[i]) - ord('a')] += 1
+
+    matches = sum(1 for i in range(26) if need[i] == win[i])
+    if matches == 26:
+        return True
+
+    for r in range(m, n):
+        add_idx = ord(s2[r]) - ord('a')
+        rem_idx = ord(s2[r - m]) - ord('a')
+
+        if win[add_idx] == need[add_idx]:
+            matches -= 1
+        win[add_idx] += 1
+        if win[add_idx] == need[add_idx]:
+            matches += 1
+
+        if win[rem_idx] == need[rem_idx]:
+            matches -= 1
+        win[rem_idx] -= 1
+        if win[rem_idx] == need[rem_idx]:
+            matches += 1
+
+        if matches == 26:
+            return True
+
+    return False
 ```
 
 #### Complexity
-- Time `O(V + E)` over reachable states, Space `O(V)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Bidirectional BFS shrinks explored frontier dramatically on symmetric state spaces.
-
-#### Python
-```python
-from collections import deque
-
-def solve_permutation_in_string(start, target, dead=None):
-    dead = set(dead or [])
-    if start in dead or target in dead:
-        return -1
-    if start == target:
-        return 0
-
-    front = {start}
-    back = {target}
-    seen = {start, target}
-    steps = 0
-
-    while front and back:
-        if len(front) > len(back):
-            front, back = back, front
-        nxt_front = set()
-        steps += 1
-        for state in front:
-            for i in range(len(state)):
-                x = int(state[i])
-                for y in ((x + 1) % 10, (x - 1) % 10):
-                    nxt = state[:i] + str(y) + state[i+1:]
-                    if nxt in dead:
-                        continue
-                    if nxt in back:
-                        return steps
-                    if nxt not in seen:
-                        seen.add(nxt)
-                        nxt_front.add(nxt)
-        front = nxt_front
-    return -1
-```
-
-#### Correctness (Why This Works)
-- Each frontier expansion adds exactly one step distance from its side.
-- First frontier intersection corresponds to minimal combined distance by BFS layering.
-
-#### Complexity
-- Time `O(b^(d/2))` typical, Space `O(b^(d/2))`, where `b` is branching factor.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)` for fixed lowercase alphabet
+- Space: `O(1)` for fixed lowercase alphabet
 
 ---
 
 ## Q5. Sliding Window Maximum
 
-### Problem Statement (Concrete)
-Solve **Sliding Window Maximum** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and `k`, return the maximum in each sliding window of size `k`.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `nums = [1,3,-1,-3,5,3,6,7], k = 3 -> [3,3,5,5,6,7]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+ans = []
+FOR i from 0 to n - k:
+    APPEND max(nums[i .. i + k - 1]) to ans
+RETURN ans
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Sliding Window Maximum** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Take max over each window separately.
 
 #### Python
 ```python
-def brute_sliding_window_maximum(nums, k):
-    return [max(nums[i:i+k]) for i in range(len(nums) - k + 1)]
+def sliding_window_max_bruteforce(nums, k):
+    ans = []
+
+    for i in range(len(nums) - k + 1):
+        ans.append(max(nums[i:i + k]))
+
+    return ans
 ```
 
 #### Complexity
-- Time `O(n*k)`, Space `O(1)`.
+- Time: `O(n * k)`
+- Space: `O(1)` extra
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Monotonic deque keeps candidate maximum indices for current window.
+### Optimal Solution (Monotonic Deque)
 
-#### Python
-```python
-from collections import deque
+#### Pseudocode
+```text
+dq = empty deque of indices
+ans = []
 
-def better_sliding_window_maximum(nums, k):
-    dq = deque()
-    out = []
-    for i, x in enumerate(nums):
-        while dq and dq[0] <= i - k:
-            dq.popleft()
-        while dq and nums[dq[-1]] <= x:
-            dq.pop()
-        dq.append(i)
-        if i >= k - 1:
-            out.append(nums[dq[0]])
-    return out
+FOR i from 0 to n - 1:
+    REMOVE indices from front if out of window (<= i - k)
+    REMOVE indices from back while nums[back] <= nums[i]
+    PUSH i to back
+    IF i >= k - 1:
+        APPEND nums[dq.front] to ans
+
+RETURN ans
 ```
-
-#### Complexity
-- Time `O(n)`, Space `O(k)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Each index is inserted and removed at most once in deque.
 
 #### Python
 ```python
 from collections import deque
 
-def better_sliding_window_maximum(nums, k):
+
+def sliding_window_max_optimal(nums, k):
     dq = deque()
-    out = []
+    ans = []
+
     for i, x in enumerate(nums):
         while dq and dq[0] <= i - k:
             dq.popleft()
+
         while dq and nums[dq[-1]] <= x:
             dq.pop()
+
         dq.append(i)
+
         if i >= k - 1:
-            out.append(nums[dq[0]])
-    return out
+            ans.append(nums[dq[0]])
+
+    return ans
 ```
 
-#### Correctness (Why This Works)
-- Deque is strictly decreasing by value and contains only in-window indices.
-- Front index is always maximum for current window.
-
 #### Complexity
-- Time `O(n)`, Space `O(k)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(k)`
 
 ---
 
 ## Q6. Defuse the Bomb
 
-### Problem Statement (Concrete)
-Solve **Defuse the Bomb** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given circular array `code` and integer `k`:
+- if `k > 0`, replace each index with sum of next `k` values,
+- if `k < 0`, replace each index with sum of previous `|k|` values,
+- if `k == 0`, replace with `0`.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `code = [5,7,1,4], k = 3 -> [12,10,16,13]`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+n = length(code)
+ans = array of zeros length n
+
+IF k == 0:
+    RETURN ans
+
+FOR i from 0 to n - 1:
+    total = 0
+    IF k > 0:
+        FOR step from 1 to k:
+            total += code[(i + step) mod n]
+    ELSE:
+        FOR step from 1 to abs(k):
+            total += code[(i - step + n) mod n]
+    ans[i] = total
+
+RETURN ans
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Defuse the Bomb** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_defuse_the_bomb(s, k):
-    n = len(s)
-    best = 0
+def defuse_bomb_bruteforce(code, k):
+    n = len(code)
+    ans = [0] * n
+
+    if k == 0:
+        return ans
+
     for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
-                break
-    return best
+        total = 0
+        if k > 0:
+            for step in range(1, k + 1):
+                total += code[(i + step) % n]
+        else:
+            for step in range(1, -k + 1):
+                total += code[(i - step + n) % n]
+        ans[i] = total
+
+    return ans
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n * |k|)`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Circular Fixed Window)
+
+#### Pseudocode
+```text
+n = length(code)
+ans = array of zeros length n
+IF k == 0: RETURN ans
+arr = code + code
+
+IF k > 0:
+    left = 1, right = k
+ELSE:
+    k = abs(k)
+    left = n - k, right = n - 1
+
+window = sum(arr[left .. right])
+
+FOR i from 0 to n - 1:
+    ans[i] = window
+    window -= arr[left]
+    left += 1
+    right += 1
+    window += arr[right]
+
+RETURN ans
+```
 
 #### Python
 ```python
-def better_defuse_the_bomb(s, k):
-    freq = {}
-    left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
-            left += 1
-        best = max(best, right - left + 1)
-    return best
+def defuse_bomb_optimal(code, k):
+    n = len(code)
+    ans = [0] * n
+
+    if k == 0:
+        return ans
+
+    arr = code + code
+
+    if k > 0:
+        left, right = 1, k
+    else:
+        k = -k
+        left, right = n - k, n - 1
+
+    window = sum(arr[left:right + 1])
+
+    for i in range(n):
+        ans[i] = window
+        window -= arr[left]
+        left += 1
+        right += 1
+        window += arr[right]
+
+    return ans
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_defuse_the_bomb(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(n)`
 
 ---
 
 ## Q7. K Radius Subarray Averages
 
-### Problem Statement (Concrete)
-Solve **K Radius Subarray Averages** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+For each index `i`, return average of subarray centered at `i` with radius `k` (`2k+1` size), else `-1` if not enough elements.
 
-### Input
-- `nums`: list[int]
-- `target`/`k`: int (if required by the variant)
+Example: `nums = [7,4,3,9,1,8,5,2,6], k = 3 -> [-1,-1,-1,5,4,4,-1,-1,-1]`
 
-### Output
-- Indices, count, or value requested by the exact statement.
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- `-10^9 <= nums[i], target <= 10^9`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-Explanation: Complement lookup identifies the pair in one linear scan.
+n = length(nums)
+ans = array of -1 length n
+w = 2k + 1
+
+FOR center from 0 to n - 1:
+    left = center - k
+    right = center + k
+    IF left < 0 OR right >= n:
+        CONTINUE
+
+    total = sum(nums[left .. right])
+    ans[center] = floor(total / w)
+
+RETURN ans
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **K Radius Subarray Averages** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_k_radius_subarray_averages(s, k):
-    n = len(s)
-    best = 0
-    for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
-                break
-    return best
+def k_radius_averages_bruteforce(nums, k):
+    n = len(nums)
+    ans = [-1] * n
+    w = 2 * k + 1
+
+    for center in range(n):
+        left = center - k
+        right = center + k
+        if left < 0 or right >= n:
+            continue
+
+        total = 0
+        for i in range(left, right + 1):
+            total += nums[i]
+
+        ans[center] = total // w
+
+    return ans
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n * (2k + 1))`
+- Space: `O(n)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Fixed Window Length `2k+1`)
+
+#### Pseudocode
+```text
+n = length(nums)
+ans = array of -1 length n
+w = 2k + 1
+IF w > n: RETURN ans
+
+window = sum(first w elements)
+ans[k] = floor(window / w)
+
+FOR r from w to n - 1:
+    window += nums[r]
+    window -= nums[r - w]
+    center = r - k
+    ans[center] = floor(window / w)
+
+RETURN ans
+```
 
 #### Python
 ```python
-def better_k_radius_subarray_averages(s, k):
-    freq = {}
-    left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
-            left += 1
-        best = max(best, right - left + 1)
-    return best
+def k_radius_averages_optimal(nums, k):
+    n = len(nums)
+    ans = [-1] * n
+    w = 2 * k + 1
+
+    if w > n:
+        return ans
+
+    window = sum(nums[:w])
+    ans[k] = window // w
+
+    for r in range(w, n):
+        window += nums[r] - nums[r - w]
+        center = r - k
+        ans[center] = window // w
+
+    return ans
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_k_radius_subarray_averages(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(n)`
 
 ---
 
 ## Q8. Number of Sub-arrays of Size K and Average >= Threshold
 
-### Problem Statement (Concrete)
-Solve **Number of Sub-arrays of Size K and Average >= Threshold** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `arr`, `k`, and `threshold`, return count of subarrays of size `k` with average at least `threshold`.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `arr = [2,2,2,2,5,5,5,8], k = 3, threshold = 4 -> 3`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+count = 0
+FOR i from 0 to n - k:
+    total = sum(arr[i .. i + k - 1])
+    IF total / k >= threshold:
+        count += 1
+RETURN count
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Number of Sub-arrays of Size K and Average >= Threshold** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_number_of_sub_arrays_of_size_k_and_average_threshold(s, k):
-    n = len(s)
-    best = 0
-    for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
-                break
-    return best
+def count_subarrays_avg_threshold_bruteforce(arr, k, threshold):
+    count = 0
+
+    for i in range(len(arr) - k + 1):
+        total = 0
+        for j in range(i, i + k):
+            total += arr[j]
+        if total / k >= threshold:
+            count += 1
+
+    return count
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n * k)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Fixed Window Sum)
+
+#### Pseudocode
+```text
+target = k * threshold
+window = sum(first k elements)
+count = 1 if window >= target else 0
+
+FOR r from k to n - 1:
+    window += arr[r]
+    window -= arr[r - k]
+    IF window >= target:
+        count += 1
+
+RETURN count
+```
 
 #### Python
 ```python
-def better_number_of_sub_arrays_of_size_k_and_average_threshold(s, k):
-    freq = {}
-    left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
-            left += 1
-        best = max(best, right - left + 1)
-    return best
+def count_subarrays_avg_threshold_optimal(arr, k, threshold):
+    target = k * threshold
+    window = sum(arr[:k])
+    count = 1 if window >= target else 0
+
+    for r in range(k, len(arr)):
+        window += arr[r] - arr[r - k]
+        if window >= target:
+            count += 1
+
+    return count
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_number_of_sub_arrays_of_size_k_and_average_threshold(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q9. Maximum Number of Vowels in a Substring of Given Length
 
-### Problem Statement (Concrete)
-Solve **Maximum Number of Vowels in a Substring of Given Length** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given string `s` and integer `k`, return max number of vowels in any substring of length `k`.
 
-### Input
-- `text`/`s`: str
-- `pattern`/`queries`: variant-specific
+Example: `s = "abciiidef", k = 3 -> 3`
 
-### Output
-- Index, boolean, count, or transformed string as required.
+### Brute Force Solution
 
-### Constraints
-- `1 <= length <= 2 * 10^5`
-- Use near-linear processing to avoid `O(n*m)` restarts.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  text = "sadbutsad", pattern = "sad"
-Output: 0
-Explanation: Efficient preprocessing avoids rechecking already-matched characters.
+vowels = {a,e,i,o,u}
+best = 0
+
+FOR i from 0 to n - k:
+    count = 0
+    FOR j from i to i + k - 1:
+        IF s[j] in vowels:
+            count += 1
+    best = max(best, count)
+
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Maximum Number of Vowels in a Substring of Given Length** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every alignment and compare full pattern each time.
 
 #### Python
 ```python
-def brute_maximum_number_of_vowels_in_a_substring_of_given_length(text, pattern):
-    m, n = len(pattern), len(text)
-    for i in range(n - m + 1):
-        if text[i:i+m] == pattern:
-            return i
-    return -1
+def max_vowels_bruteforce(s, k):
+    vowels = set('aeiou')
+    best = 0
+
+    for i in range(len(s) - k + 1):
+        count = 0
+        for j in range(i, i + k):
+            if s[j] in vowels:
+                count += 1
+        best = max(best, count)
+
+    return best
 ```
 
 #### Complexity
-- Time `O(n*m)`, Space `O(1)`.
+- Time: `O(n * k)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Rolling hash filters candidate matches and verifies collisions.
+### Optimal Solution (Fixed Window Count)
+
+#### Pseudocode
+```text
+vowels = {a,e,i,o,u}
+count = number of vowels in first k chars
+best = count
+
+FOR r from k to n - 1:
+    IF s[r] is vowel: count += 1
+    IF s[r - k] is vowel: count -= 1
+    best = max(best, count)
+
+RETURN best
+```
 
 #### Python
 ```python
-def better_maximum_number_of_vowels_in_a_substring_of_given_length(text, pattern):
-    # Rabin-Karp style rolling hash.
-    if not pattern:
-        return 0
-    base, mod = 911382323, 10**9 + 7
-    m = len(pattern)
-    p_hash = 0
-    t_hash = 0
-    power = 1
-    for i in range(m):
-        p_hash = (p_hash * base + ord(pattern[i])) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if i:
-            power = (power * base) % mod
-    if t_hash == p_hash and text[:m] == pattern:
-        return 0
-    for i in range(m, len(text)):
-        t_hash = (t_hash - ord(text[i-m]) * power) % mod
-        t_hash = (t_hash * base + ord(text[i])) % mod
-        if t_hash == p_hash and text[i-m+1:i+1] == pattern:
-            return i - m + 1
-    return -1
+def max_vowels_optimal(s, k):
+    vowels = set('aeiou')
+
+    count = 0
+    for i in range(k):
+        if s[i] in vowels:
+            count += 1
+
+    best = count
+
+    for r in range(k, len(s)):
+        if s[r] in vowels:
+            count += 1
+        if s[r - k] in vowels:
+            count -= 1
+        best = max(best, count)
+
+    return best
 ```
 
 #### Complexity
-- Expected `O(n+m)`, worst-case with collisions can degrade.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- KMP/Z/Manacher-style preprocessing reuses prefix structure to avoid restart comparisons.
-
-#### Python
-```python
-def solve_maximum_number_of_vowels_in_a_substring_of_given_length(text, pattern):
-    if not pattern:
-        return 0
-
-    lps = [0] * len(pattern)
-    j = 0
-    for i in range(1, len(pattern)):
-        while j > 0 and pattern[i] != pattern[j]:
-            j = lps[j - 1]
-        if pattern[i] == pattern[j]:
-            j += 1
-            lps[i] = j
-
-    j = 0
-    for i, ch in enumerate(text):
-        while j > 0 and ch != pattern[j]:
-            j = lps[j - 1]
-        if ch == pattern[j]:
-            j += 1
-            if j == len(pattern):
-                return i - len(pattern) + 1
-    return -1
-```
-
-#### Correctness (Why This Works)
-- LPS/Z/palindrome radius arrays encode longest reusable match after mismatch.
-- Pointer never moves backward in text, so each character is processed constant times.
-
-#### Complexity
-- Time `O(n+m)`, Space `O(m)` (or variant-specific linear auxiliary arrays).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
 
 ## Q10. Grumpy Bookstore Owner
 
-### Problem Statement (Concrete)
-Solve **Grumpy Bookstore Owner** using **Sliding Window (Fixed Size)**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `customers`, `grumpy`, and `minutes`, maximize satisfied customers by choosing one `minutes`-length window where owner is not grumpy.
 
-### Input
-- Variant-specific array/string input parameters
+Example: `customers = [1,0,1,2,1,1,7,5], grumpy = [0,1,0,1,0,1,0,1], minutes = 3 -> 16`
 
-### Output
-- Return exactly what the problem asks (value/index/list/boolean).
+### Brute Force Solution
 
-### Constraints
-- `1 <= n <= 2 * 10^5`
-- Choose algorithm based on time-limit pressure.
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1, 2, 3, 4]
-Output: 2
-Explanation: Use the pattern invariant to avoid repeated recomputation and redundant scans.
+base = sum(customers[i] where grumpy[i] == 0)
+best = 0
+
+FOR start from 0 to n - minutes:
+    extra = 0
+    FOR i from start to start + minutes - 1:
+        IF grumpy[i] == 1:
+            extra += customers[i]
+    best = max(best, extra)
+
+RETURN base + best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Sliding Window (Fixed Size)**.
-- Red flags: brute force for **Grumpy Bookstore Owner** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Try every start and extend until constraint breaks.
 
 #### Python
 ```python
-def brute_grumpy_bookstore_owner(s, k):
-    n = len(s)
-    best = 0
+def grumpy_bookstore_bruteforce(customers, grumpy, minutes):
+    n = len(customers)
+    base = 0
+
     for i in range(n):
-        freq = {}
-        for j in range(i, n):
-            ch = s[j]
-            freq[ch] = freq.get(ch, 0) + 1
-            if len(freq) <= k:
-                best = max(best, j - i + 1)
-            else:
-                break
-    return best
+        if grumpy[i] == 0:
+            base += customers[i]
+
+    best = 0
+
+    for start in range(n - minutes + 1):
+        extra = 0
+        for i in range(start, start + minutes):
+            if grumpy[i] == 1:
+                extra += customers[i]
+        best = max(best, extra)
+
+    return base + best
 ```
 
 #### Complexity
-- Time `O(n^2)`, Space `O(sigma)`.
+- Time: `O(n * minutes)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Maintain dynamic window with hashmap counts; shrink only when invalid.
+### Optimal Solution (Base + Sliding Extra Gain)
+
+#### Pseudocode
+```text
+base = sum(customers[i] where grumpy[i] == 0)
+
+window_extra = sum(customers[i] for i in first minutes where grumpy[i] == 1)
+best_extra = window_extra
+
+FOR r from minutes to n - 1:
+    IF grumpy[r] == 1: window_extra += customers[r]
+    IF grumpy[r - minutes] == 1: window_extra -= customers[r - minutes]
+    best_extra = max(best_extra, window_extra)
+
+RETURN base + best_extra
+```
 
 #### Python
 ```python
-def better_grumpy_bookstore_owner(s, k):
-    freq = {}
-    left = 0
-    best = 0
-    for right, ch in enumerate(s):
-        freq[ch] = freq.get(ch, 0) + 1
-        while len(freq) > k:
-            out = s[left]
-            freq[out] -= 1
-            if freq[out] == 0:
-                del freq[out]
-            left += 1
-        best = max(best, right - left + 1)
-    return best
+def grumpy_bookstore_optimal(customers, grumpy, minutes):
+    n = len(customers)
+
+    base = 0
+    for i in range(n):
+        if grumpy[i] == 0:
+            base += customers[i]
+
+    window_extra = 0
+    for i in range(minutes):
+        if grumpy[i] == 1:
+            window_extra += customers[i]
+
+    best_extra = window_extra
+
+    for r in range(minutes, n):
+        if grumpy[r] == 1:
+            window_extra += customers[r]
+        if grumpy[r - minutes] == 1:
+            window_extra -= customers[r - minutes]
+        best_extra = max(best_extra, window_extra)
+
+    return base + best_extra
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(sigma)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Use constant-size frequency table for tighter constants while preserving same invariant.
-
-#### Python
-```python
-def solve_grumpy_bookstore_owner(s, k):
-    freq = [0] * 128
-    left = 0
-    distinct = 0
-    best = 0
-    for right, ch in enumerate(s):
-        idx = ord(ch)
-        if freq[idx] == 0:
-            distinct += 1
-        freq[idx] += 1
-        while distinct > k:
-            out = ord(s[left])
-            freq[out] -= 1
-            if freq[out] == 0:
-                distinct -= 1
-            left += 1
-        if right - left + 1 > best:
-            best = right - left + 1
-    return best
-```
-
-#### Correctness (Why This Works)
-- Window invariant: it always represents a valid candidate after shrink loop finishes.
-- Each index enters and exits the window at most once, so total pointer movement is linear.
-
-#### Complexity
-- Time `O(n)`, Space `O(sigma)` (often constant for bounded alphabet).
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n)`
+- Space: `O(1)`
 
 ---
+
+## Rapid Recall Checklist
+
+- Confirm the window size is fixed before choosing this pattern.
+- Initialize first full window explicitly, then slide with `+in -out`.
+- Record answers only when window has exact size `k`.
+- For string frequency problems, prefer fixed arrays when alphabet is bounded.
