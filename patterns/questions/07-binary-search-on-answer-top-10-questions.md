@@ -1,1036 +1,981 @@
 # Pattern 07 Interview Playbook: Binary Search on Answer
 
-Each question below is fully concrete with exact I/O, constraints, edge-case expectations, three progressively optimized Python approaches, correctness proof for the optimal approach, pattern-recognition cues, and interview follow-ups.
+This playbook is aligned with [Pattern 07: Binary Search on Answer](../07-binary-search-on-answer.md).
+
+Use it when answer is numeric and feasibility is monotonic.
 
 ## Pattern Snapshot
 
-- What this pattern solves: Use this when answer is a numeric value and feasibility is monotonic: - if value `x` works, all larger/smaller values also work (depending on problem)
-- Core intuition: Search not over array indices, but over the answer range `[low, high]`. At each midpoint, run predicate `can(mid)`: - If feasible, try better side. - If infeasible, move opposite side.
-- Trigger cue 1: "minimum feasible", "maximum feasible"
-- Trigger cue 2: Rate/capacity/time threshold problems.
-- Quick self-check: If `x` works, do all larger/smaller values also work?
-- Target complexity: Time O(C * log R), Space depends on check, often O(1).
+| Prompt shape | Search target | Feasibility direction |
+|---|---|---|
+| minimum feasible rate/capacity/day | first `True` boundary | infeasible -> feasible |
+| maximum feasible distance/value | last `True` boundary | feasible -> infeasible |
+| partition/load minimization | `max(nums)` to `sum(nums)` | larger limit => easier |
+| distribution/rate minimization | `1` to max quantity | larger divisor/rate => easier |
+| spacing maximization | `1` to max gap | larger gap => harder |
+| floating-time constraints | integer speed + real check | larger speed => easier |
+
+## Query-Update Rules
+
+- Build a predicate `can(x)` that is monotonic.
+- Derive safe search bounds that must include the answer.
+- For minimum feasible answer: keep left side when `can(mid)` is true.
+- For maximum feasible answer: keep right side when `can(mid)` is true.
 
 ---
 
 ## Q1. Koko Eating Bananas
 
-### Problem Statement (Concrete)
-Solve **Koko Eating Bananas** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `piles` and `h`, return minimum integer eating speed `k` so Koko finishes within `h` hours.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `piles = [3,6,7,11], h = 8 -> 4`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+FOR k from 1 to max(piles):
+    hours = 0
+    FOR p in piles:
+        hours += ceil(p / k)
+    IF hours <= h:
+        RETURN k
+RETURN -1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Koko Eating Bananas** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_koko_eating_bananas(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
+def koko_bruteforce(piles, h):
+    max_p = max(piles)
+
+    for k in range(1, max_p + 1):
+        hours = 0
+        for p in piles:
+            hours += (p + k - 1) // k
+        if hours <= h:
+            return k
+
     return -1
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O(max(piles) * n)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Min Feasible Speed)
+
+#### Pseudocode
+```text
+l = 1, r = max(piles)
+
+WHILE l < r:
+    mid = l + (r - l) // 2
+    hours = sum(ceil(p / mid) for p in piles)
+
+    IF hours <= h:
+        r = mid
+    ELSE:
+        l = mid + 1
+
+RETURN l
+```
 
 #### Python
 ```python
-def better_koko_eating_bananas(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def koko_optimal(piles, h):
+    l, r = 1, max(piles)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        hours = 0
+        for p in piles:
+            hours += (p + mid - 1) // mid
+
+        if hours <= h:
+            r = mid
         else:
-            lo = mid + 1
-    return ans
+            l = mid + 1
+
+    return l
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_koko_eating_bananas(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log max(piles))`
+- Space: `O(1)`
 
 ---
 
 ## Q2. Capacity To Ship Packages Within D Days
 
-### Problem Statement (Concrete)
-Solve **Capacity To Ship Packages Within D Days** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `weights` and `days`, return minimum ship capacity to deliver all packages in order within `days`.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `weights = [1,2,3,4,5,6,7,8,9,10], days = 5 -> 15`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+FOR cap from max(weights) to sum(weights):
+    needed_days = 1
+    curr = 0
+    FOR w in weights:
+        IF curr + w <= cap:
+            curr += w
+        ELSE:
+            needed_days += 1
+            curr = w
+    IF needed_days <= days:
+        RETURN cap
+RETURN -1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Capacity To Ship Packages Within D Days** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_capacity_to_ship_packages_within_d_days(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
+def ship_capacity_bruteforce(weights, days):
+    lo = max(weights)
+    hi = sum(weights)
+
+    for cap in range(lo, hi + 1):
+        needed_days = 1
+        curr = 0
+
+        for w in weights:
+            if curr + w <= cap:
+                curr += w
+            else:
+                needed_days += 1
+                curr = w
+
+        if needed_days <= days:
+            return cap
+
     return -1
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O((sum-max) * n)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Min Feasible Capacity)
+
+#### Pseudocode
+```text
+l = max(weights), r = sum(weights)
+
+WHILE l < r:
+    mid = l + (r - l) // 2
+    needed_days = days_required(mid)
+
+    IF needed_days <= days:
+        r = mid
+    ELSE:
+        l = mid + 1
+
+RETURN l
+```
 
 #### Python
 ```python
-def better_capacity_to_ship_packages_within_d_days(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def ship_capacity_optimal(weights, days):
+    def required_days(cap):
+        needed = 1
+        curr = 0
+
+        for w in weights:
+            if curr + w <= cap:
+                curr += w
+            else:
+                needed += 1
+                curr = w
+
+        return needed
+
+    l, r = max(weights), sum(weights)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        if required_days(mid) <= days:
+            r = mid
         else:
-            lo = mid + 1
-    return ans
+            l = mid + 1
+
+    return l
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_capacity_to_ship_packages_within_d_days(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log(sum(weights)))`
+- Space: `O(1)`
 
 ---
 
 ## Q3. Split Array Largest Sum
 
-### Problem Statement (Concrete)
-Solve **Split Array Largest Sum** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `nums` and `m`, split into `m` non-empty contiguous subarrays minimizing largest subarray sum.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `nums = [7,2,5,10,8], m = 2 -> 18`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+DP solution:
+Let dp[i][k] = min possible largest sum by splitting first i elements into k groups
+Transition over cut point j
+RETURN dp[n][m]
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Split Array Largest Sum** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_split_array_largest_sum(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
-    return -1
+def split_array_bruteforce(nums, m):
+    n = len(nums)
+    prefix = [0] * (n + 1)
+
+    for i in range(n):
+        prefix[i + 1] = prefix[i] + nums[i]
+
+    inf = 10**30
+    dp = [[inf] * (m + 1) for _ in range(n + 1)]
+    dp[0][0] = 0
+
+    for i in range(1, n + 1):
+        for k in range(1, min(i, m) + 1):
+            for j in range(k - 1, i):
+                largest = max(dp[j][k - 1], prefix[i] - prefix[j])
+                if largest < dp[i][k]:
+                    dp[i][k] = largest
+
+    return dp[n][m]
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O(n^2 * m)`
+- Space: `O(n * m)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Min Feasible Largest Sum)
+
+#### Pseudocode
+```text
+l = max(nums), r = sum(nums)
+
+WHILE l < r:
+    mid = l + (r - l) // 2
+    parts = partitions_needed_with_limit(mid)
+
+    IF parts <= m:
+        r = mid
+    ELSE:
+        l = mid + 1
+
+RETURN l
+```
 
 #### Python
 ```python
-def better_split_array_largest_sum(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def split_array_optimal(nums, m):
+    def parts_needed(limit):
+        parts = 1
+        curr = 0
+
+        for x in nums:
+            if curr + x <= limit:
+                curr += x
+            else:
+                parts += 1
+                curr = x
+
+        return parts
+
+    l, r = max(nums), sum(nums)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        if parts_needed(mid) <= m:
+            r = mid
         else:
-            lo = mid + 1
-    return ans
+            l = mid + 1
+
+    return l
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_split_array_largest_sum(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log(sum(nums)))`
+- Space: `O(1)`
 
 ---
 
 ## Q4. Minimized Maximum of Products Distributed to Any Store
 
-### Problem Statement (Concrete)
-Solve **Minimized Maximum of Products Distributed to Any Store** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `n` stores and `quantities` for product types, return minimum possible maximum products assigned to any store.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `n = 6, quantities = [11,6] -> 3`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+FOR x from 1 to max(quantities):
+    stores_needed = sum(ceil(q / x) for q in quantities)
+    IF stores_needed <= n:
+        RETURN x
+RETURN -1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Minimized Maximum of Products Distributed to Any Store** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Scan linearly until match found.
 
 #### Python
 ```python
-def brute_minimized_maximum_of_products_distributed_to_any_store(nums, target):
-    for i, x in enumerate(nums):
-        if x == target:
-            return i
+def minimized_maximum_bruteforce(n, quantities):
+    max_q = max(quantities)
+
+    for x in range(1, max_q + 1):
+        needed = 0
+        for q in quantities:
+            needed += (q + x - 1) // x
+        if needed <= n:
+            return x
+
     return -1
 ```
 
 #### Complexity
-- Time `O(n)`, Space `O(1)`.
+- Time: `O(max(quantities) * len(quantities))`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use library-assisted partition index to avoid manual boundary bugs.
+### Optimal Solution (Min Feasible Max-per-Store)
 
-#### Python
-```python
-def better_minimized_maximum_of_products_distributed_to_any_store(nums, target):
-    # Python library binary search style (still logarithmic).
-    import bisect
-    i = bisect.bisect_left(nums, target)
-    return i if i < len(nums) and nums[i] == target else -1
+#### Pseudocode
+```text
+l = 1, r = max(quantities)
+WHILE l < r:
+    mid = l + (r - l) // 2
+    needed = sum(ceil(q / mid) for q in quantities)
+
+    IF needed <= n:
+        r = mid
+    ELSE:
+        l = mid + 1
+
+RETURN l
 ```
 
-#### Complexity
-- Time `O(log n)`, Space `O(1)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Maintain closed interval invariant and discard half each iteration.
-
 #### Python
 ```python
-def solve_minimized_maximum_of_products_distributed_to_any_store(nums, target):
-    lo, hi = 0, len(nums) - 1
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if nums[mid] == target:
-            return mid
-        if nums[mid] < target:
-            lo = mid + 1
+def minimized_maximum_optimal(n, quantities):
+    l, r = 1, max(quantities)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        needed = 0
+
+        for q in quantities:
+            needed += (q + mid - 1) // mid
+
+        if needed <= n:
+            r = mid
         else:
-            hi = mid - 1
-    return -1
+            l = mid + 1
+
+    return l
 ```
 
-#### Correctness (Why This Works)
-- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
-- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
-
 #### Complexity
-- Time `O(log n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(len(quantities) * log(max(quantities)))`
+- Space: `O(1)`
 
 ---
 
 ## Q5. Magnetic Force Between Two Balls
 
-### Problem Statement (Concrete)
-Solve **Magnetic Force Between Two Balls** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given basket positions and integer `m`, place `m` balls maximizing minimum pairwise distance.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `position = [1,2,3,4,7], m = 3 -> 3`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+SORT positions
+best = 0
+FOR d from 1 to max_gap:
+    IF can_place_with_distance(d):
+        best = d
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Magnetic Force Between Two Balls** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Scan linearly until match found.
 
 #### Python
 ```python
-def brute_magnetic_force_between_two_balls(nums, target):
-    for i, x in enumerate(nums):
-        if x == target:
-            return i
-    return -1
-```
+def magnetic_force_bruteforce(position, m):
+    position.sort()
+    max_gap = position[-1] - position[0]
 
-#### Complexity
-- Time `O(n)`, Space `O(1)`.
+    def can_place(d):
+        count = 1
+        last = position[0]
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Use library-assisted partition index to avoid manual boundary bugs.
+        for x in position[1:]:
+            if x - last >= d:
+                count += 1
+                last = x
+                if count >= m:
+                    return True
 
-#### Python
-```python
-def better_magnetic_force_between_two_balls(nums, target):
-    # Python library binary search style (still logarithmic).
-    import bisect
-    i = bisect.bisect_left(nums, target)
-    return i if i < len(nums) and nums[i] == target else -1
+        return False
+
+    best = 0
+    for d in range(1, max_gap + 1):
+        if can_place(d):
+            best = d
+
+    return best
 ```
 
 #### Complexity
-- Time `O(log n)`, Space `O(1)`.
+- Time: `O(max_gap * n)`
+- Space: `O(1)`
 
-### Approach 3: Optimal (Best)
-#### Intuition
-- Maintain closed interval invariant and discard half each iteration.
+### Optimal Solution (Max Feasible Distance)
+
+#### Pseudocode
+```text
+SORT positions
+l = 1, r = max_gap
+WHILE l < r:
+    mid = l + (r - l + 1) // 2  # upper mid for last true
+    IF can_place(mid):
+        l = mid
+    ELSE:
+        r = mid - 1
+RETURN l
+```
 
 #### Python
 ```python
-def solve_magnetic_force_between_two_balls(nums, target):
-    lo, hi = 0, len(nums) - 1
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if nums[mid] == target:
-            return mid
-        if nums[mid] < target:
-            lo = mid + 1
+def magnetic_force_optimal(position, m):
+    position.sort()
+
+    def can_place(d):
+        count = 1
+        last = position[0]
+
+        for x in position[1:]:
+            if x - last >= d:
+                count += 1
+                last = x
+                if count >= m:
+                    return True
+
+        return False
+
+    l, r = 1, position[-1] - position[0]
+
+    while l < r:
+        mid = l + (r - l + 1) // 2
+        if can_place(mid):
+            l = mid
         else:
-            hi = mid - 1
-    return -1
+            r = mid - 1
+
+    return l
 ```
 
-#### Correctness (Why This Works)
-- Sorted order guarantees that comparison at `mid` partitions impossible half completely.
-- Invariant `target` (if present) always remains within `[lo, hi]` until found or interval empties.
-
 #### Complexity
-- Time `O(log n)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log(max_gap))`
+- Space: `O(1)`
 
 ---
 
 ## Q6. Minimum Number of Days to Make m Bouquets
 
-### Problem Statement (Concrete)
-Solve **Minimum Number of Days to Make m Bouquets** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `bloomDay`, integers `m` and `k`, return minimum day to make `m` bouquets of `k` adjacent flowers. If impossible, return `-1`.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `bloomDay = [1,10,3,10,2], m = 3, k = 1 -> 3`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+IF m * k > n: RETURN -1
+FOR day from min(bloomDay) to max(bloomDay):
+    bouquets = bouquets_possible(day)
+    IF bouquets >= m:
+        RETURN day
+RETURN -1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Minimum Number of Days to Make m Bouquets** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_minimum_number_of_days_to_make_m_bouquets(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
+def min_days_bouquets_bruteforce(bloomDay, m, k):
+    n = len(bloomDay)
+    if m * k > n:
+        return -1
+
+    low = min(bloomDay)
+    high = max(bloomDay)
+
+    for day in range(low, high + 1):
+        bouquets = 0
+        run = 0
+
+        for b in bloomDay:
+            if b <= day:
+                run += 1
+                if run == k:
+                    bouquets += 1
+                    run = 0
+            else:
+                run = 0
+
+        if bouquets >= m:
+            return day
+
     return -1
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O((max_day - min_day + 1) * n)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Min Feasible Day)
+
+#### Pseudocode
+```text
+IF m * k > n: RETURN -1
+l = min(bloomDay), r = max(bloomDay)
+
+WHILE l < r:
+    mid = l + (r - l) // 2
+    bouquets = bouquets_possible(mid)
+
+    IF bouquets >= m:
+        r = mid
+    ELSE:
+        l = mid + 1
+
+RETURN l
+```
 
 #### Python
 ```python
-def better_minimum_number_of_days_to_make_m_bouquets(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def min_days_bouquets_optimal(bloomDay, m, k):
+    n = len(bloomDay)
+    if m * k > n:
+        return -1
+
+    def can(day):
+        bouquets = 0
+        run = 0
+
+        for b in bloomDay:
+            if b <= day:
+                run += 1
+                if run == k:
+                    bouquets += 1
+                    run = 0
+            else:
+                run = 0
+
+        return bouquets >= m
+
+    l, r = min(bloomDay), max(bloomDay)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        if can(mid):
+            r = mid
         else:
-            lo = mid + 1
-    return ans
+            l = mid + 1
+
+    return l
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_minimum_number_of_days_to_make_m_bouquets(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log(max_day))`
+- Space: `O(1)`
 
 ---
 
 ## Q7. Find the Smallest Divisor Given a Threshold
 
-### Problem Statement (Concrete)
-Solve **Find the Smallest Divisor Given a Threshold** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given integer array `nums` and `threshold`, return smallest divisor so sum of rounded-up divisions is <= `threshold`.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `nums = [1,2,5,9], threshold = 6 -> 5`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+FOR d from 1 to max(nums):
+    total = sum(ceil(x / d) for x in nums)
+    IF total <= threshold:
+        RETURN d
+RETURN -1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Find the Smallest Divisor Given a Threshold** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_find_the_smallest_divisor_given_a_threshold(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
+def smallest_divisor_bruteforce(nums, threshold):
+    max_v = max(nums)
+
+    for d in range(1, max_v + 1):
+        total = 0
+        for x in nums:
+            total += (x + d - 1) // d
+        if total <= threshold:
+            return d
+
     return -1
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O(max(nums) * n)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Min Feasible Divisor)
+
+#### Pseudocode
+```text
+l = 1, r = max(nums)
+WHILE l < r:
+    mid = l + (r - l) // 2
+    total = sum(ceil(x / mid) for x in nums)
+
+    IF total <= threshold:
+        r = mid
+    ELSE:
+        l = mid + 1
+
+RETURN l
+```
 
 #### Python
 ```python
-def better_find_the_smallest_divisor_given_a_threshold(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def smallest_divisor_optimal(nums, threshold):
+    l, r = 1, max(nums)
+
+    while l < r:
+        mid = l + (r - l) // 2
+        total = 0
+
+        for x in nums:
+            total += (x + mid - 1) // mid
+
+        if total <= threshold:
+            r = mid
         else:
-            lo = mid + 1
-    return ans
+            l = mid + 1
+
+    return l
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_find_the_smallest_divisor_given_a_threshold(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log(max(nums)))`
+- Space: `O(1)`
 
 ---
 
 ## Q8. Aggressive Cows
 
-### Problem Statement (Concrete)
-Solve **Aggressive Cows** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given stall positions and number of cows `k`, place cows to maximize minimum pairwise distance.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `stalls = [1,2,4,8,9], k = 3 -> 3`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+SORT stalls
+best = 0
+FOR d from 1 to max_gap:
+    IF can_place(d):
+        best = d
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Aggressive Cows** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_aggressive_cows(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
-    return -1
+def aggressive_cows_bruteforce(stalls, k):
+    stalls.sort()
+    max_gap = stalls[-1] - stalls[0]
+
+    def can_place(d):
+        count = 1
+        last = stalls[0]
+
+        for x in stalls[1:]:
+            if x - last >= d:
+                count += 1
+                last = x
+                if count >= k:
+                    return True
+
+        return False
+
+    best = 0
+    for d in range(1, max_gap + 1):
+        if can_place(d):
+            best = d
+
+    return best
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O(max_gap * n)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Max Feasible Distance)
+
+#### Pseudocode
+```text
+SORT stalls
+l = 1, r = max_gap
+WHILE l < r:
+    mid = l + (r - l + 1) // 2
+    IF can_place(mid):
+        l = mid
+    ELSE:
+        r = mid - 1
+RETURN l
+```
 
 #### Python
 ```python
-def better_aggressive_cows(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def aggressive_cows_optimal(stalls, k):
+    stalls.sort()
+
+    def can_place(d):
+        count = 1
+        last = stalls[0]
+
+        for x in stalls[1:]:
+            if x - last >= d:
+                count += 1
+                last = x
+                if count >= k:
+                    return True
+
+        return False
+
+    l, r = 1, stalls[-1] - stalls[0]
+
+    while l < r:
+        mid = l + (r - l + 1) // 2
+        if can_place(mid):
+            l = mid
         else:
-            lo = mid + 1
-    return ans
+            r = mid - 1
+
+    return l
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_aggressive_cows(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log(max_gap))`
+- Space: `O(1)`
 
 ---
 
 ## Q9. Maximum Candies Allocated to K Children
 
-### Problem Statement (Concrete)
-Solve **Maximum Candies Allocated to K Children** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `candies` piles and `k` children, each child gets equal candies from one pile split, return maximum candies per child.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `candies = [5,8,6], k = 3 -> 5`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+IF sum(candies) < k: RETURN 0
+best = 0
+FOR x from 1 to max(candies):
+    children = sum(floor(pile / x) for pile in candies)
+    IF children >= k:
+        best = x
+RETURN best
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Maximum Candies Allocated to K Children** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_maximum_candies_allocated_to_k_children(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
-    return -1
+def max_candies_bruteforce(candies, k):
+    if sum(candies) < k:
+        return 0
+
+    best = 0
+    max_c = max(candies)
+
+    for x in range(1, max_c + 1):
+        children = 0
+        for pile in candies:
+            children += pile // x
+        if children >= k:
+            best = x
+
+    return best
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O(max(candies) * n)`
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Max Feasible Candies Per Child)
+
+#### Pseudocode
+```text
+IF sum(candies) < k: RETURN 0
+l = 1, r = max(candies)
+WHILE l < r:
+    mid = l + (r - l + 1) // 2
+    children = sum(floor(pile / mid) for pile in candies)
+
+    IF children >= k:
+        l = mid
+    ELSE:
+        r = mid - 1
+
+RETURN l
+```
 
 #### Python
 ```python
-def better_maximum_candies_allocated_to_k_children(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def max_candies_optimal(candies, k):
+    if sum(candies) < k:
+        return 0
+
+    l, r = 1, max(candies)
+
+    while l < r:
+        mid = l + (r - l + 1) // 2
+        children = 0
+
+        for pile in candies:
+            children += pile // mid
+
+        if children >= k:
+            l = mid
         else:
-            lo = mid + 1
-    return ans
+            r = mid - 1
+
+    return l
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_maximum_candies_allocated_to_k_children(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log(max(candies)))`
+- Space: `O(1)`
 
 ---
 
 ## Q10. Minimum Speed to Arrive on Time
 
-### Problem Statement (Concrete)
-Solve **Minimum Speed to Arrive on Time** using **Binary Search on Answer**. Return exactly the value/structure requested by the original prompt.
+### Problem
+Given `dist` and real `hour`, return minimum integer speed to arrive on time, where all but last segment times are rounded up. If impossible, return `-1`.
 
-### Input
-- `arr`/`nums`: sorted or search-space-backed input
-- `target`/`threshold`/`days`: variant-specific
+Example: `dist = [1,3,2], hour = 6 -> 1`
 
-### Output
-- Index, minimum feasible value, or boolean feasibility.
+### Brute Force Solution
 
-### Constraints
-- Monotonicity condition must hold for answer-space search.
-- `1 <= n <= 2 * 10^5`
-
-### Example (Exact)
+#### Pseudocode
 ```text
-Input:  nums = [1,3,5,6], target = 5
-Output: 2
-Explanation: Binary search halves candidate space by preserving invariant boundaries.
+n = length(dist)
+IF hour <= n - 1: RETURN -1
+
+FOR speed from 1 to 10^7:
+    time = 0
+    FOR i from 0 to n - 2:
+        time += ceil(dist[i] / speed)
+    time += dist[n - 1] / speed
+
+    IF time <= hour:
+        RETURN speed
+
+RETURN -1
 ```
-
-### Edge-Case Expectations
-- Empty or minimum-size input should return defined neutral output without crash.
-- Duplicate values / parallel edges / repeated states must not break invariants.
-- Boundary values (max size, negative values if allowed, impossible target) should be handled explicitly.
-
-### Pattern Recognition
-- Trigger phrases: terms in the prompt like dependencies/nearest/window/merge/search that align with **Binary Search on Answer**.
-- Red flags: brute force for **Minimum Speed to Arrive on Time** likely explodes under upper constraints.
-- Why other patterns are worse: alternatives either break key invariants or add unnecessary complexity for this objective.
-
-### Approach 1: Brute Force (Worst)
-#### Intuition
-- Linearly test each candidate answer until first feasible.
 
 #### Python
 ```python
-def brute_minimum_speed_to_arrive_on_time(lo, hi, feasible):
-    for x in range(lo, hi + 1):
-        if feasible(x):
-            return x
+def min_speed_on_time_bruteforce(dist, hour):
+    n = len(dist)
+    if hour <= n - 1:
+        return -1
+
+    for speed in range(1, 10**7 + 1):
+        total = 0.0
+
+        for i in range(n - 1):
+            total += (dist[i] + speed - 1) // speed
+        total += dist[-1] / speed
+
+        if total <= hour:
+            return speed
+
     return -1
 ```
 
 #### Complexity
-- Time `O(range * check_cost)`.
+- Time: `O(10^7 * n)` worst case
+- Space: `O(1)`
 
-### Approach 2: Better (Intermediate)
-#### Intuition
-- Binary search on monotonic feasibility boundary.
+### Optimal Solution (Min Feasible Speed)
+
+#### Pseudocode
+```text
+n = length(dist)
+IF hour <= n - 1: RETURN -1
+l = 1, r = 10^7
+
+WHILE l < r:
+    mid = l + (r - l) // 2
+    time = travel_time(mid)
+
+    IF time <= hour:
+        r = mid
+    ELSE:
+        l = mid + 1
+
+RETURN l
+```
 
 #### Python
 ```python
-def better_minimum_speed_to_arrive_on_time(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
+def min_speed_on_time_optimal(dist, hour):
+    n = len(dist)
+    if hour <= n - 1:
+        return -1
+
+    def can(speed):
+        total = 0.0
+
+        for i in range(n - 1):
+            total += (dist[i] + speed - 1) // speed
+        total += dist[-1] / speed
+
+        return total <= hour
+
+    l, r = 1, 10**7
+
+    while l < r:
+        mid = l + (r - l) // 2
+        if can(mid):
+            r = mid
         else:
-            lo = mid + 1
-    return ans
+            l = mid + 1
+
+    return l if can(l) else -1
 ```
 
 #### Complexity
-- Time `O(log range * check_cost)`.
-
-### Approach 3: Optimal (Best)
-#### Intuition
-- Answer-space binary search is optimal once monotonic predicate is proven.
-
-#### Python
-```python
-def better_minimum_speed_to_arrive_on_time(lo, hi, feasible):
-    ans = hi
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        if feasible(mid):
-            ans = mid
-            hi = mid - 1
-        else:
-            lo = mid + 1
-    return ans
-```
-
-#### Correctness (Why This Works)
-- Predicate changes from infeasible to feasible at most once by monotonicity.
-- Binary search preserves this boundary and converges to minimum feasible value.
-
-#### Complexity
-- Time `O(log range * check_cost)`, Space `O(1)`.
-
-### Interviewer Follow-Ups
-- Streaming input: how would you support incremental arrivals without recomputing from scratch?
-- Memory limits: what tradeoff would you make if only sublinear extra memory is allowed?
-- Online updates: how to handle frequent updates plus queries efficiently?
-- Distributed scale: how would you shard/state-sync this logic for very large datasets?
+- Time: `O(n log 10^7)`
+- Space: `O(1)`
 
 ---
+
+## Rapid Recall Checklist
+
+- Prove monotonicity of `can(x)` before searching.
+- Set bounds that definitely contain the answer.
+- Use lower-mid for first true, upper-mid for last true.
+- Keep feasibility check pure and deterministic.
