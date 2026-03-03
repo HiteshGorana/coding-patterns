@@ -1,42 +1,23 @@
 """
-123. Jump Game
-Difficulty: Medium
+Problem:
+You are given an integer array nums. You are initially positioned at the array's first index, and each element in the array represents your maximum jump length at that position. Return true if you can reach the last index, or false otherwise.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [2,3,1,1,4]
+Output: true
+Explanation: Jump 1 step from index 0 to 1, then 3 steps to the last index.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [3,2,1,0,4]
+Output: false
+Explanation: You will always arrive at index 3 no matter what. Its maximum jump length is 0, which makes it impossible to reach the last index.
 
-Problem Statement:
-Given `nums`, where `nums[i]` is max jump length from index `i`, return `True` if you can reach the last index.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given `nums`, where `nums[i]` is max jump length from index `i`, return `True` if you can reach the last index.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-nums = [2,3,1,1,4]
-
-How to Read the Input:
-- `nums` = [2,3,1,1,4] (list of values)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [2,3,1,1,4].
-2. Apply the rule in the problem statement: Given `nums`, where `nums[i]` is max jump length from index `i`, return `True` if you can reach the last index.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 10^4

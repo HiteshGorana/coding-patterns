@@ -1,41 +1,23 @@
 """
-113. Best Time to Buy and Sell Stock with Cooldown
-Difficulty: Medium
+Problem:
+You are given an array prices where prices[i] is the price of a given stock on the i^th day. Find the maximum profit you can achieve. You may complete as many transactions as you like (i.e., buy one and sell one share of the stock multiple times) with the following restrictions: - After you sell your stock, you cannot buy stock on the next day (i.e., cooldown one day).
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: prices = [1,2,3,0,2]
+Output: 3
+Explanation: transactions = [buy, sell, cooldown, buy, sell]
 
-Hint:
-- TBD
+Example 2:
+Input: prices = [1]
+Output: 0
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-You may buy/sell stock multiple times but after selling there is a cooldown of one day; return the maximum profit.
-
-Easy Explanation:
-- Given: prices.
-- Task: You may buy/sell stock multiple times but after selling there is a cooldown of one day; return the maximum profit.
-- Return: an integer.
-
-Input (Example 1):
-prices = [1,2,3,0,2]
-
-How to Read the Input:
-- `prices` = [1,2,3,0,2] (list of values)
-
-Output (Example 1):
-3
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: prices = [1,2,3,0,2].
-2. Apply the rule in the problem statement: You may buy/sell stock multiple times but after selling there is a cooldown of one day; return the maximum profit.
-3. For this example, the correct result is 3.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= prices.length <= 5000

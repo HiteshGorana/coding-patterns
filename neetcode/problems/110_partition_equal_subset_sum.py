@@ -1,42 +1,23 @@
 """
-110. Partition Equal Subset Sum
-Difficulty: Medium
+Problem:
+Given an integer array nums, return true if you can partition the array into two subsets such that the sum of the elements in both subsets is equal or false otherwise.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [1,5,11,5]
+Output: true
+Explanation: The array can be partitioned as [1, 5, 5] and [11].
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [1,2,3,5]
+Output: false
+Explanation: The array cannot be partitioned into equal sum subsets.
 
-Problem Statement:
-Given a non-empty array nums, determine if it can be partitioned into two subsets with equal sum.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given a non-empty array nums, determine if it can be partitioned into two subsets with equal sum.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-nums = [1,5,11,5]
-
-How to Read the Input:
-- `nums` = [1,5,11,5] (list of values)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [1,5,11,5].
-2. Apply the rule in the problem statement: Given a non-empty array nums, determine if it can be partitioned into two subsets with equal sum.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 200

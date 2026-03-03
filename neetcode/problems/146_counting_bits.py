@@ -1,42 +1,23 @@
 """
-146. Counting Bits
-Difficulty: Easy
+Problem:
+Given an integer n, return an array ans of length n + 1 such that for each i (0 <= i <= n), ans[i] is the number of 1's in the binary representation of i.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: n = 2
+Output: [0,1,1]
+Explanation: 0 --> 0 1 --> 1 2 --> 10
 
-Hint:
-- TBD
+Example 2:
+Input: n = 5
+Output: [0,1,1,2,1,2]
+Explanation: 0 --> 0 1 --> 1 2 --> 10 3 --> 11 4 --> 100 5 --> 101
 
-Problem Statement:
-Given an integer n, return an array ans where ans[i] is the number of 1 bits in i for 0 <= i <= n.
-
-Easy Explanation:
-- Given: n.
-- Task: Given an integer n, return an array ans where ans[i] is the number of 1 bits in i for 0 <= i <= n.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-n = 5
-
-How to Read the Input:
-- `n` = 5 (integer)
-
-Output (Example 1):
-[0,1,1,2,1,2]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: n = 5.
-2. Apply the rule in the problem statement: Given an integer n, return an array ans where ans[i] is the number of 1 bits in i for 0 <= i <= n.
-3. For this example, the correct result is [0,1,1,2,1,2].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 0 <= n <= 10^5

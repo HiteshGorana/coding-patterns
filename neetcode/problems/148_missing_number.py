@@ -1,41 +1,23 @@
 """
-148. Missing Number
-Difficulty: Easy
+Problem:
+Given an array nums containing n distinct numbers in the range [0, n], return the only number in the range that is missing from the array.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [3,0,1]
+Output: 2
+Explanation: n = 3 since there are 3 numbers, so all numbers are in the range [0,3]. 2 is the missing number in the range since it does not appear in nums.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [0,1]
+Output: 2
+Explanation: n = 2 since there are 2 numbers, so all numbers are in the range [0,2]. 2 is the missing number in the range since it does not appear in nums.
 
-Problem Statement:
-Given an array nums containing n distinct numbers in range [0, n], return the missing number.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given an array nums containing n distinct numbers in range [0, n], return the missing number.
-- Return: an integer.
-
-Input (Example 1):
-nums = [3,0,1]
-
-How to Read the Input:
-- `nums` = [3,0,1] (list of values)
-
-Output (Example 1):
-2
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [3,0,1].
-2. Apply the rule in the problem statement: Given an array nums containing n distinct numbers in range [0, n], return the missing number.
-3. For this example, the correct result is 2.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: nums = [9,6,4,2,3,5,7,0,1]
+Output: 8
+Explanation: n = 9 since there are 9 numbers, so all numbers are in the range [0,9]. 8 is the missing number in the range since it does not appear in nums.
 
 Constraints:
 - n == nums.length

@@ -1,42 +1,23 @@
 """
-114. Coin Change II
-Difficulty: Medium
+Problem:
+You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money. Return the number of combinations that make up that amount. If that amount of money cannot be made up by any combination of the coins, return 0. You may assume that you have an infinite number of each kind of coin. The answer is guaranteed to fit into a signed 32-bit integer.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: amount = 5, coins = [1,2,5]
+Output: 4
+Explanation: there are four ways to make up the amount: 5=5 5=2+2+1 5=2+1+1+1 5=1+1+1+1+1
 
-Hint:
-- TBD
+Example 2:
+Input: amount = 3, coins = [2]
+Output: 0
+Explanation: the amount of 3 cannot be made up just with coins of 2.
 
-Problem Statement:
-Given amount and coin denominations, return the number of combinations that make up the amount.
-
-Easy Explanation:
-- Given: amount, coins.
-- Task: Given amount and coin denominations, return the number of combinations that make up the amount.
-- Return: an integer.
-
-Input (Example 1):
-amount = 5, coins = [1,2,5]
-
-How to Read the Input:
-- `amount` = 5 (integer)
-- `coins` = [1,2,5] (list of values)
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: amount = 5, coins = [1,2,5].
-2. Apply the rule in the problem statement: Given amount and coin denominations, return the number of combinations that make up the amount.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: amount = 10, coins = [10]
+Output: 1
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= coins.length <= 300

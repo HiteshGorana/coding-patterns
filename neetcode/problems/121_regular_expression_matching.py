@@ -1,43 +1,23 @@
 """
-121. Regular Expression Matching
-Difficulty: Hard
+Problem:
+Given an input string s and a pattern p, implement regular expression matching with support for '.' and '*' where: - '.' Matches any single character.​​​​ - '*' Matches zero or more of the preceding element. Return a boolean indicating whether the matching covers the entire input string (not partial).
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "aa", p = "a"
+Output: false
+Explanation: "a" does not match the entire string "aa".
 
-Hint:
-- TBD
+Example 2:
+Input: s = "aa", p = "a*"
+Output: true
+Explanation: '*' means zero or more of the preceding element, 'a'. Therefore, by repeating 'a' once, it becomes "aa".
 
-Problem Statement:
-Implement regular expression matching with support for "." and "*" where "*" means zero or more of the preceding element.
-
-Easy Explanation:
-- Given: s, p.
-- Task: Implement regular expression matching with support for "." and "*" where "*" means zero or more of the preceding element.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-s = "aab", p = "c*a*b"
-
-How to Read the Input:
-- `s` = "aab" (string)
-- `p` = "c*a*b" (string)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "aab", p = "c*a*b".
-2. Apply the rule in the problem statement: Implement regular expression matching with support for "." and "*" where "*" means zero or more of the preceding element.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: s = "ab", p = ".*"
+Output: true
+Explanation: ".*" means "zero or more (*) of any character (.)".
 
 Constraints:
 - 1 <= s.length <= 20

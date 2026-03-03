@@ -1,41 +1,23 @@
 """
-144. Single Number
-Difficulty: Easy
+Problem:
+Given a non-empty array of integers nums, every element appears twice except for one. Find that single one. You must implement a solution with a linear runtime complexity and use only constant extra space.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [2,2,1]
+Output: 1
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [4,1,2,1,2]
+Output: 4
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given a non-empty array where every element appears twice except one, find that single one.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given a non-empty array where every element appears twice except one, find that single one.
-- Return: an integer.
-
-Input (Example 1):
-nums = [2,2,1]
-
-How to Read the Input:
-- `nums` = [2,2,1] (list of values)
-
-Output (Example 1):
-1
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [2,2,1].
-2. Apply the rule in the problem statement: Given a non-empty array where every element appears twice except one, find that single one.
-3. For this example, the correct result is 1.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: nums = [1]
+Output: 1
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= nums.length <= 3 * 10^4

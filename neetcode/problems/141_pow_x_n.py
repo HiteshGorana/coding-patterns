@@ -1,46 +1,27 @@
 """
-141. Pow(x, n)
-Difficulty: Medium
+Problem:
+Implement pow(x, n), which calculates x raised to the power n (i.e., x^n).
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: x = 2.00000, n = 10
+Output: 1024.00000
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: x = 2.10000, n = 3
+Output: 9.26100
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Implement pow(x, n), which calculates x raised to power n.
-
-Easy Explanation:
-- Given: x, n.
-- Task: Implement pow(x, n), which calculates x raised to power n.
-- Return: a numeric value.
-
-Input (Example 1):
-x = 2.00000, n = 10
-
-How to Read the Input:
-- `x` = 2.00000 (number)
-- `n` = 10 (integer)
-
-Output (Example 1):
-1024.00000
-
-How to Read the Output:
-- The returned value should be a number.
-
-Example 1 Walkthrough:
-1. Start with the given input: x = 2.00000, n = 10.
-2. Apply the rule in the problem statement: Implement pow(x, n), which calculates x raised to power n.
-3. For this example, the correct result is 1024.00000.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: x = 2.00000, n = -2
+Output: 0.25000
+Explanation: 2^-2 = 1/2^2 = 1/4 = 0.25
 
 Constraints:
 - -100.0 < x < 100.0
-- -2^31 <= n <= 2^31-1
+- -2^31 <= n <= 2^31 - 1
 - n is an integer.
 - Either x is not zero or n > 0.
 - -10^4 <= x^n <= 10^4

@@ -1,43 +1,23 @@
 """
-108. Word Break
-Difficulty: Medium
+Problem:
+Given a string s and a dictionary of strings wordDict, return true if s can be segmented into a space-separated sequence of one or more dictionary words. Note that the same word in the dictionary may be reused multiple times in the segmentation.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "leetcode", wordDict = ["leet","code"]
+Output: true
+Explanation: Return true because "leetcode" can be segmented as "leet code".
 
-Hint:
-- TBD
+Example 2:
+Input: s = "applepenapple", wordDict = ["apple","pen"]
+Output: true
+Explanation: Return true because "applepenapple" can be segmented as "apple pen apple". Note that you are allowed to reuse a dictionary word.
 
-Problem Statement:
-Given a string and a dictionary of words, return true if the string can be segmented into dictionary words.
-
-Easy Explanation:
-- Given: s, wordDict.
-- Task: Given a string and a dictionary of words, return true if the string can be segmented into dictionary words.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-s = "leetcode", wordDict = ["leet","code"]
-
-How to Read the Input:
-- `s` = "leetcode" (string)
-- `wordDict` = ["leet","code"] (list of strings/values)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "leetcode", wordDict = ["leet","code"].
-2. Apply the rule in the problem statement: Given a string and a dictionary of words, return true if the string can be segmented into dictionary words.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: s = "catsandog", wordDict = ["cats","dog","sand","and","cat"]
+Output: false
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= s.length <= 300

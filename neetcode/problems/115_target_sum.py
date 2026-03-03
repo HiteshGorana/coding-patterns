@@ -1,42 +1,23 @@
 """
-115. Target Sum
-Difficulty: Medium
+Problem:
+You are given an integer array nums and an integer target. You want to build an expression out of nums by adding one of the symbols '+' and '-' before each integer in nums and then concatenate all the integers. - For example, if nums = [2, 1], you can add a '+' before 2 and a '-' before 1 and concatenate them to build the expression "+2-1". Return the number of different expressions that you can build, which evaluates to target.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [1,1,1,1,1], target = 3
+Output: 5
+Explanation: There are 5 ways to assign symbols to make the sum of nums be target 3. -1 + 1 + 1 + 1 + 1 = 3 +1 - 1 + 1 + 1 + 1 = 3 +1 + 1 - 1 + 1 + 1 = 3 +1 + 1 + 1 - 1 + 1 = 3 +1 + 1 + 1 + 1 - 1 = 3
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [1], target = 1
+Output: 1
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Assign + or - signs to array elements to reach target and return the number of ways.
-
-Easy Explanation:
-- Given: nums, target.
-- Task: Assign + or - signs to array elements to reach target and return the number of ways.
-- Return: an integer.
-
-Input (Example 1):
-nums = [1,1,1,1,1], target = 3
-
-How to Read the Input:
-- `nums` = [1,1,1,1,1] (list of values)
-- `target` = 3 (integer)
-
-Output (Example 1):
-5
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [1,1,1,1,1], target = 3.
-2. Apply the rule in the problem statement: Assign + or - signs to array elements to reach target and return the number of ways.
-3. For this example, the correct result is 5.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 20

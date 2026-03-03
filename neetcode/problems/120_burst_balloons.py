@@ -1,41 +1,23 @@
 """
-120. Burst Balloons
-Difficulty: Hard
+Problem:
+You are given n balloons, indexed from 0 to n - 1. Each balloon is painted with a number on it represented by an array nums. You are asked to burst all the balloons. If you burst the i^th balloon, you will get nums[i - 1] * nums[i] * nums[i + 1] coins. If i - 1 or i + 1 goes out of bounds of the array, then treat it as if there is a balloon with a 1 painted on it. Return the maximum coins you can collect by bursting the balloons wisely.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [3,1,5,8]
+Output: 167
+Explanation: nums = [3,1,5,8] --> [3,5,8] --> [3,8] --> [8] --> [] coins = 3*1*5 + 3*5*8 + 1*3*8 + 1*8*1 = 167
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [1,5]
+Output: 10
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given nums representing balloons with values, return the maximum coins you can collect by bursting balloons optimally.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given nums representing balloons with values, return the maximum coins you can collect by bursting balloons optimally.
-- Return: an integer.
-
-Input (Example 1):
-nums = [3,1,5,8]
-
-How to Read the Input:
-- `nums` = [3,1,5,8] (list of values)
-
-Output (Example 1):
-167
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [3,1,5,8].
-2. Apply the rule in the problem statement: Given nums representing balloons with values, return the maximum coins you can collect by bursting balloons optimally.
-3. For this example, the correct result is 167.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - n == nums.length

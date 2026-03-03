@@ -1,42 +1,23 @@
 """
-143. Detect Squares
-Difficulty: Medium
+Problem:
+You are given a stream of points on the X-Y plane. Design an algorithm that: - Adds new points from the stream into a data structure. Duplicate points are allowed and should be treated as different points. - Given a query point, counts the number of ways to choose three points from the data structure such that the three points and the query point form an axis-aligned square with positive area. An axis-aligned square is a square whose edges are all the same length and are either parallel or perpendicular to the x-axis and y-axis. Implement the DetectSquares class: - DetectSquares() Initializes the object with an empty data structure. - void add(int[] point) Adds a new point point = [x, y] to the data structure. - int count(int[] point) Counts the number of ways to form axis-aligned squares with point point = [x, y] as described above.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: TBD
+Output: TBD
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
-Problem Statement:
-Design a data structure that adds points and counts the number of axis-aligned squares that can be formed with a given query point.
-
-Easy Explanation:
-- Given: operations.
-- Task: Design a data structure that adds points and counts the number of axis-aligned squares that can be formed with a given query point.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-operations = ["add([3,10])", "add([11,2])", "add([3,2])", "count([11,10])", "count([14,8])", "add([11,2])", "count([11,10])"]
-
-How to Read the Input:
-- `operations` = ["add([3,10])", "add([11,2])", "add([3,2])", "count([11,10])", "count([14,8])", "add([11,2])", "count([11,10])"] (2D list (matrix))
-
-Output (Example 1):
-[null, null, null, 1, 0, null, 2]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: operations = ["add([3,10])", "add([11,2])", "add([3,2])", "count([11,10])", "count([14,8])", "add([11,2])", "count([11,10])"].
-2. Apply the rule in the problem statement: Design a data structure that adds points and counts the number of axis-aligned squares that can be formed with a given query point.
-3. For this example, the correct result is [null, null, null, 1, 0, null, 2].
-4. Each entry is the return value for each operation in order (`null` for constructors/void operations).
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - point.length == 2

@@ -1,41 +1,23 @@
 """
-109. Longest Increasing Subsequence
-Difficulty: Medium
-
-Topics:
-- TBD
-
-Companies:
-- TBD
-
-Hint:
-- TBD
-
-Problem Statement:
+Problem:
 Given an integer array nums, return the length of the longest strictly increasing subsequence.
 
-Easy Explanation:
-- Given: nums.
-- Task: Given an integer array nums, return the length of the longest strictly increasing subsequence.
-- Return: an integer.
+Examples:
 
-Input (Example 1):
-nums = [10,9,2,5,3,7,101,18]
+Example 1:
+Input: nums = [10,9,2,5,3,7,101,18]
+Output: 4
+Explanation: The longest increasing subsequence is [2,3,7,101], therefore the length is 4.
 
-How to Read the Input:
-- `nums` = [10,9,2,5,3,7,101,18] (list of values)
+Example 2:
+Input: nums = [0,1,0,3,2,3]
+Output: 4
+Explanation: This is the expected result for the given input.
 
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [10,9,2,5,3,7,101,18].
-2. Apply the rule in the problem statement: Given an integer array nums, return the length of the longest strictly increasing subsequence.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: nums = [7,7,7,7,7,7,7]
+Output: 1
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= nums.length <= 2500

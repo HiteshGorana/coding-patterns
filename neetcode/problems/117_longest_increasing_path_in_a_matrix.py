@@ -1,41 +1,23 @@
 """
-117. Longest Increasing Path in a Matrix
-Difficulty: Hard
+Problem:
+Given an m x n integers matrix, return the length of the longest increasing path in matrix. From each cell, you can either move in four directions: left, right, up, or down. You may not move diagonally or move outside the boundary (i.e., wrap-around is not allowed).
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: matrix = [[9,9,4],[6,6,8],[2,1,1]]
+Output: 4
+Explanation: The longest increasing path is [1, 2, 6, 9].
 
-Hint:
-- TBD
+Example 2:
+Input: matrix = [[3,4,5],[3,2,6],[2,2,1]]
+Output: 4
+Explanation: The longest increasing path is [3, 4, 5, 6]. Moving diagonally is not allowed.
 
-Problem Statement:
-Given an m x n matrix, return the length of the longest strictly increasing path moving in 4 directions.
-
-Easy Explanation:
-- Given: matrix.
-- Task: Given an m x n matrix, return the length of the longest strictly increasing path moving in 4 directions.
-- Return: an integer.
-
-Input (Example 1):
-matrix = [[9,9,4],[6,6,8],[2,1,1]]
-
-How to Read the Input:
-- `matrix` = [[9,9,4],[6,6,8],[2,1,1]] (2D list (matrix))
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: matrix = [[9,9,4],[6,6,8],[2,1,1]].
-2. Apply the rule in the problem statement: Given an m x n matrix, return the length of the longest strictly increasing path moving in 4 directions.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: matrix = [[1]]
+Output: 1
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - m == matrix.length

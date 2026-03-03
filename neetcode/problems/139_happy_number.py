@@ -1,42 +1,23 @@
 """
-139. Happy Number
-Difficulty: Easy
+Problem:
+Write an algorithm to determine if a number n is happy. A happy number is a number defined by the following process: - Starting with any positive integer, replace the number by the sum of the squares of its digits. - Repeat the process until the number equals 1 (where it will stay), or it loops endlessly in a cycle which does not include 1. - Those numbers for which this process ends in 1 are happy. Return true if n is a happy number, and false if not.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: n = 19
+Output: true
+Explanation: 1^2 + 9^2 = 82 8^2 + 2^2 = 68 6^2 + 8^2 = 100 1^2 + 0^2 + 0^2 = 1
 
-Hint:
-- TBD
+Example 2:
+Input: n = 2
+Output: false
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given integer `n`, return `True` if it is a happy number, else `False`.
-
-Easy Explanation:
-- Given: n.
-- Task: Given integer `n`, return `True` if it is a happy number, else `False`.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-n = 19
-
-How to Read the Input:
-- `n` = 19 (integer)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: n = 19.
-2. Apply the rule in the problem statement: Given integer `n`, return `True` if it is a happy number, else `False`.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= n <= 2^31 - 1

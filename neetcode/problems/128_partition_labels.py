@@ -1,42 +1,23 @@
 """
-128. Partition Labels
-Difficulty: Medium
+Problem:
+You are given a string s. We want to partition the string into as many parts as possible so that each letter appears in at most one part. For example, the string "ababcc" can be partitioned into ["abab", "cc"], but partitions such as ["aba", "bcc"] or ["ab", "ab", "cc"] are invalid. Note that the partition is done so that after concatenating all the parts in order, the resultant string should be s. Return a list of integers representing the size of these parts.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "ababcbacadefegdehijhklij"
+Output: [9,7,8]
+Explanation: The partition is "ababcbaca", "defegde", "hijhklij". This is a partition so that each letter appears in at most one part. A partition like "ababcbacadefegde", "hijhklij" is incorrect, because it splits s into less parts.
 
-Hint:
-- TBD
+Example 2:
+Input: s = "eccbbbbdec"
+Output: [10]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given string `s`, split it into as many parts as possible so each letter appears in at most one part. Return part lengths.
-
-Easy Explanation:
-- Given: s.
-- Task: Given string `s`, split it into as many parts as possible so each letter appears in at most one part. Return part lengths.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-s = "ababcbacadefegdehijhklij"
-
-How to Read the Input:
-- `s` = "ababcbacadefegdehijhklij" (string)
-
-Output (Example 1):
-[9,7,8]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "ababcbacadefegdehijhklij".
-2. Apply the rule in the problem statement: Given string `s`, split it into as many parts as possible so each letter appears in at most one part. Return part lengths.
-3. For this example, the correct result is [9,7,8].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= s.length <= 500

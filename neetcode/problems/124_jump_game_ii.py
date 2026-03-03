@@ -1,41 +1,23 @@
 """
-124. Jump Game II
-Difficulty: Medium
+Problem:
+You are given a 0-indexed array of integers nums of length n. You are initially positioned at index 0. Each element nums[i] represents the maximum length of a forward jump from index i. In other words, if you are at index i, you can jump to any index (i + j) where: - 0 <= j <= nums[i] and - i + j < n Return the minimum number of jumps to reach index n - 1. The test cases are generated such that you can reach index n - 1.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [2,3,1,1,4]
+Output: 2
+Explanation: The minimum number of jumps to reach the last index is 2. Jump 1 step from index 0 to 1, then 3 steps to the last index.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [2,3,0,1,4]
+Output: 2
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `nums`, return minimum number of jumps to reach last index.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given `nums`, return minimum number of jumps to reach last index.
-- Return: an integer.
-
-Input (Example 1):
-nums = [2,3,1,1,4]
-
-How to Read the Input:
-- `nums` = [2,3,1,1,4] (list of values)
-
-Output (Example 1):
-2
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [2,3,1,1,4].
-2. Apply the rule in the problem statement: Given `nums`, return minimum number of jumps to reach last index.
-3. For this example, the correct result is 2.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 10^4

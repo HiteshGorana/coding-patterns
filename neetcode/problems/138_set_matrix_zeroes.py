@@ -1,42 +1,23 @@
 """
-138. Set Matrix Zeroes
-Difficulty: Medium
+Problem:
+Given an m x n integer matrix matrix, if an element is 0, set its entire row and column to 0's. You must do it in place.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: matrix = [[1,1,1],[1,0,1],[1,1,1]]
+Output: [[1,0,1],[0,0,0],[1,0,1]]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: matrix = [[0,1,2,0],[3,4,5,2],[1,3,1,5]]
+Output: [[0,0,0,0],[0,4,5,0],[0,3,1,0]]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given an m x n matrix, if an element is 0 set its entire row and column to 0 in-place.
-
-Easy Explanation:
-- Given: matrix.
-- Task: Given an m x n matrix, if an element is 0 set its entire row and column to 0 in-place.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-matrix = [[1,1,1],[1,0,1],[1,1,1]]
-
-How to Read the Input:
-- `matrix` = [[1,1,1],[1,0,1],[1,1,1]] (2D list (matrix))
-
-Output (Example 1):
-[[1,0,1],[0,0,0],[1,0,1]]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: matrix = [[1,1,1],[1,0,1],[1,1,1]].
-2. Apply the rule in the problem statement: Given an m x n matrix, if an element is 0 set its entire row and column to 0 in-place.
-3. For this example, the correct result is [[1,0,1],[0,0,0],[1,0,1]].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - m == matrix.length
