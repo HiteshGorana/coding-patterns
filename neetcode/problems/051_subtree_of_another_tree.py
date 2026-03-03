@@ -1,43 +1,23 @@
 """
-51. Subtree of Another Tree
-Difficulty: Easy
+Problem:
+Given the roots of two binary trees root and subRoot, return true if there is a subtree of root with the same structure and node values of subRoot and false otherwise. A subtree of a binary tree tree is a tree that consists of a node in tree and all of this node's descendants. The tree tree could also be considered as a subtree of itself.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: root = [3,4,5,1,2], subRoot = [4,1,2]
+Output: true
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: root = [3,4,5,1,2,null,null,null,null,0], subRoot = [4,1,2]
+Output: false
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given roots root and subRoot, return true if subRoot is a subtree of root.
-
-Easy Explanation:
-- Given: root, subRoot.
-- Task: Given roots root and subRoot, return true if subRoot is a subtree of root.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-root = [3,4,5,1,2], subRoot = [4,1,2]
-
-How to Read the Input:
-- `root` = [3,4,5,1,2] (list of values)
-- `subRoot` = [4,1,2] (list of values)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: root = [3,4,5,1,2], subRoot = [4,1,2].
-2. Apply the rule in the problem statement: Given roots root and subRoot, return true if subRoot is a subtree of root.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - The number of nodes in the root tree is in the range [1, 2000].

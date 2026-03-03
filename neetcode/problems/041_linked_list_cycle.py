@@ -1,41 +1,23 @@
 """
-41. Linked List Cycle
-Difficulty: Easy
+Problem:
+Given head, the head of a linked list, determine if the linked list has a cycle in it. There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the next pointer. Internally, pos is used to denote the index of the node that tail's next pointer is connected to. Note that pos is not passed as a parameter. Return true if there is a cycle in the linked list. Otherwise, return false.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: head = [3,2,0,-4], pos = 1
+Output: true
+Explanation: There is a cycle in the linked list, where the tail connects to the 1st node (0-indexed).
 
-Hint:
-- TBD
+Example 2:
+Input: head = [1,2], pos = 0
+Output: true
+Explanation: There is a cycle in the linked list, where the tail connects to the 0th node.
 
-Problem Statement:
-Given `head` of a linked list, return `True` if the list contains a cycle, else `False`.
-
-Easy Explanation:
-- Given: the input shown in the example.
-- Task: Given `head` of a linked list, return `True` if the list contains a cycle, else `False`.
-- Return: the value/structure requested by the prompt.
-
-Input (Example 1):
-3
-
-How to Read the Input:
-- Use the exact input format shown in Example 1.
-
-Output (Example 1):
-2 -> 0 -> -4` with tail connecting to node index `1` -> `True
-
-How to Read the Output:
-- The returned value should be a required result value.
-
-Example 1 Walkthrough:
-1. Start with the given input: 3.
-2. Apply the rule in the problem statement: Given `head` of a linked list, return `True` if the list contains a cycle, else `False`.
-3. For this example, the correct result is 2 -> 0 -> -4` with tail connecting to node index `1` -> `True.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: head = [1], pos = -1
+Output: false
+Explanation: There is no cycle in the linked list.
 
 Constraints:
 - The number of the nodes in the list is in the range [0, 10^4].

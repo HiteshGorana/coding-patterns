@@ -1,42 +1,23 @@
 """
-30. Koko Eating Bananas
-Difficulty: Medium
+Problem:
+Koko loves to eat bananas. There are n piles of bananas, the i^th pile has piles[i] bananas. The guards have gone and will come back in h hours. Koko can decide her bananas-per-hour eating speed of k. Each hour, she chooses some pile of bananas and eats k bananas from that pile. If the pile has less than k bananas, she eats all of them instead and will not eat any more bananas during this hour. Koko likes to eat slowly but still wants to finish eating all the bananas before the guards return. Return the minimum integer k such that she can eat all the bananas within h hours.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: piles = [3,6,7,11], h = 8
+Output: 4
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: piles = [30,11,23,4,20], h = 5
+Output: 30
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `piles` and `h`, return minimum integer eating speed `k` so Koko finishes within `h` hours.
-
-Easy Explanation:
-- Given: piles, h.
-- Task: Given `piles` and `h`, return minimum integer eating speed `k` so Koko finishes within `h` hours.
-- Return: an integer.
-
-Input (Example 1):
-piles = [3,6,7,11], h = 8
-
-How to Read the Input:
-- `piles` = [3,6,7,11] (list of values)
-- `h` = 8 (integer)
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: piles = [3,6,7,11], h = 8.
-2. Apply the rule in the problem statement: Given `piles` and `h`, return minimum integer eating speed `k` so Koko finishes within `h` hours.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: piles = [30,11,23,4,20], h = 6
+Output: 23
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= piles.length <= 10^4

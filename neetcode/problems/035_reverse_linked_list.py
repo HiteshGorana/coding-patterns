@@ -1,41 +1,23 @@
 """
-35. Reverse Linked List
-Difficulty: Easy
+Problem:
+Given the head of a singly linked list, reverse the list, and return the reversed list.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: head = [1,2,3,4,5]
+Output: [5,4,3,2,1]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: head = [1,2]
+Output: [2,1]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given the head of a singly linked list, reverse the list and return the new head.
-
-Easy Explanation:
-- Given: the input shown in the example.
-- Task: Given the head of a singly linked list, reverse the list and return the new head.
-- Return: the value/structure requested by the prompt.
-
-Input (Example 1):
-1
-
-How to Read the Input:
-- Use the exact input format shown in Example 1.
-
-Output (Example 1):
-2 -> 3 -> 4 -> 5` -> `5 -> 4 -> 3 -> 2 -> 1
-
-How to Read the Output:
-- The returned value should be a required result value.
-
-Example 1 Walkthrough:
-1. Start with the given input: 1.
-2. Apply the rule in the problem statement: Given the head of a singly linked list, reverse the list and return the new head.
-3. For this example, the correct result is 2 -> 3 -> 4 -> 5` -> `5 -> 4 -> 3 -> 2 -> 1.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: head = []
+Output: []
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - The number of nodes in the list is the range [0, 5000].

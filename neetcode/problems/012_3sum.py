@@ -1,42 +1,23 @@
 """
-12. 3Sum
-Difficulty: Medium
+Problem:
+Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0. Notice that the solution set must not contain duplicate triplets.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [-1,0,1,2,-1,-4]
+Output: [[-1,-1,2],[-1,0,1]]
+Explanation: nums[0] + nums[1] + nums[2] = (-1) + 0 + 1 = 0. nums[1] + nums[2] + nums[4] = 0 + 1 + (-1) = 0. nums[0] + nums[3] + nums[4] = (-1) + 2 + (-1) = 0. The distinct triplets are [-1,0,1] and [-1,-1,2]. Notice that the order of the output and the order of the triplets does not matter.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [0,1,1]
+Output: []
+Explanation: The only possible triplet does not sum up to 0.
 
-Problem Statement:
-Return all unique triplets `[a, b, c]` such that `a + b + c = 0`.
-
-Easy Explanation:
-- Given: nums.
-- Task: Return all unique triplets `[a, b, c]` such that `a + b + c = 0`.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-nums = [-1,0,1,2,-1,-4]
-
-How to Read the Input:
-- `nums` = [-1,0,1,2,-1,-4] (list of values)
-
-Output (Example 1):
-[[-1,-1,2],[-1,0,1]]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [-1,0,1,2,-1,-4].
-2. Apply the rule in the problem statement: Return all unique triplets `[a, b, c]` such that `a + b + c = 0`.
-3. For this example, the correct result is [[-1,-1,2],[-1,0,1]].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: nums = [0,0,0]
+Output: [[0,0,0]]
+Explanation: The only possible triplet sums up to 0.
 
 Constraints:
 - 3 <= nums.length <= 3000

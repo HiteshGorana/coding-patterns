@@ -1,41 +1,23 @@
 """
-65. Last Stone Weight
-Difficulty: Easy
+Problem:
+You are given an array of integers stones where stones[i] is the weight of the i^th stone. We are playing a game with the stones. On each turn, we choose the heaviest two stones and smash them together. Suppose the heaviest two stones have weights x and y with x <= y. The result of this smash is: - If x == y, both stones are destroyed, and - If x != y, the stone of weight x is destroyed, and the stone of weight y has new weight y - x. At the end of the game, there is at most one stone left. Return the weight of the last remaining stone. If there are no stones left, return 0.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: stones = [2,7,4,1,8,1]
+Output: 1
+Explanation: We combine 7 and 8 to get 1 so the array converts to [2,4,1,1,1] then, we combine 2 and 4 to get 2 so the array converts to [2,1,1,1] then, we combine 2 and 1 to get 1 so the array converts to [1,1,1] then, we combine 1 and 1 to get 0 so the array converts to [1] then that's the value of the last stone.
 
-Hint:
-- TBD
+Example 2:
+Input: stones = [1]
+Output: 1
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given an array of stone weights, repeatedly smash the two heaviest stones and return the final stone weight (or 0).
-
-Easy Explanation:
-- Given: stones.
-- Task: Given an array of stone weights, repeatedly smash the two heaviest stones and return the final stone weight (or 0).
-- Return: an integer.
-
-Input (Example 1):
-stones = [2,7,4,1,8,1]
-
-How to Read the Input:
-- `stones` = [2,7,4,1,8,1] (list of values)
-
-Output (Example 1):
-1
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: stones = [2,7,4,1,8,1].
-2. Apply the rule in the problem statement: Given an array of stone weights, repeatedly smash the two heaviest stones and return the final stone weight (or 0).
-3. For this example, the correct result is 1.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= stones.length <= 30

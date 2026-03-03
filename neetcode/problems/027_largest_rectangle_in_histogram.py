@@ -1,41 +1,23 @@
 """
-27. Largest Rectangle in Histogram
-Difficulty: Hard
+Problem:
+Given an array of integers heights representing the histogram's bar height where the width of each bar is 1, return the area of the largest rectangle in the histogram.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: heights = [2,1,5,6,2,3]
+Output: 10
+Explanation: The above is a histogram where width of each bar is 1. The largest rectangle is shown in the red area, which has an area = 10 units.
 
-Hint:
-- TBD
+Example 2:
+Input: heights = [2,4]
+Output: 4
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given bar heights, return largest rectangle area in histogram.
-
-Easy Explanation:
-- Given: heights.
-- Task: Given bar heights, return largest rectangle area in histogram.
-- Return: an integer.
-
-Input (Example 1):
-heights = [2,1,5,6,2,3]
-
-How to Read the Input:
-- `heights` = [2,1,5,6,2,3] (list of values)
-
-Output (Example 1):
-10
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: heights = [2,1,5,6,2,3].
-2. Apply the rule in the problem statement: Given bar heights, return largest rectangle area in histogram.
-3. For this example, the correct result is 10.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= heights.length <= 10^5

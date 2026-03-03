@@ -1,42 +1,23 @@
 """
-69. Design Twitter
-Difficulty: Medium
+Problem:
+Design a simplified version of Twitter where users can post tweets, follow/unfollow another user, and is able to see the 10 most recent tweets in the user's news feed. Implement the Twitter class: - Twitter() Initializes your twitter object. - void postTweet(int userId, int tweetId) Composes a new tweet with ID tweetId by the user userId. Each call to this function will be made with a unique tweetId. - List<Integer> getNewsFeed(int userId) Retrieves the 10 most recent tweet IDs in the user's news feed. Each item in the news feed must be posted by users who the user followed or by the user themself. Tweets must be ordered from most recent to least recent. - void follow(int followerId, int followeeId) The user with ID followerId started following the user with ID followeeId. - void unfollow(int followerId, int followeeId) The user with ID followerId started unfollowing the user with ID followeeId.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: TBD
+Output: TBD
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
-Problem Statement:
-Design a simplified Twitter with postTweet, getNewsFeed, follow, and unfollow.
-
-Easy Explanation:
-- Given: operations.
-- Task: Design a simplified Twitter with postTweet, getNewsFeed, follow, and unfollow.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-operations = ["Twitter", "postTweet(1,5)", "getNewsFeed(1)", "follow(1,2)", "postTweet(2,6)", "getNewsFeed(1)", "unfollow(1,2)", "getNewsFeed(1)"]
-
-How to Read the Input:
-- `operations` = ["Twitter", "postTweet(1,5)", "getNewsFeed(1)", "follow(1,2)", "postTweet(2,6)", "getNewsFeed(1)", "unfollow(1,2)", "getNewsFeed(1)"] (list of strings/values)
-
-Output (Example 1):
-[null, null, [5], null, null, [6,5], null, [5]]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: operations = ["Twitter", "postTweet(1,5)", "getNewsFeed(1)", "follow(1,2)", "postTweet(2,6)", "getNewsFeed(1)", "unfollow(1,2)", "getNewsFeed(1)"].
-2. Apply the rule in the problem statement: Design a simplified Twitter with postTweet, getNewsFeed, follow, and unfollow.
-3. For this example, the correct result is [null, null, [5], null, null, [6,5], null, [5]].
-4. Each entry is the return value for each operation in order (`null` for constructors/void operations).
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= userId, followerId, followeeId <= 500

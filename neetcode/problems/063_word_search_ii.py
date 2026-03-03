@@ -1,43 +1,23 @@
 """
-63. Word Search II
-Difficulty: Hard
+Problem:
+Given an m x n board of characters and a list of strings words, return all words on the board. Each word must be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once in a word.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: board = [["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], words = ["oath","pea","eat","rain"]
+Output: ["eat","oath"]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: board = [["a","b"],["c","d"]], words = ["abcb"]
+Output: []
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given a board of letters and a list of words, return all words that can be formed by sequentially adjacent letters.
-
-Easy Explanation:
-- Given: board, words.
-- Task: Given a board of letters and a list of words, return all words that can be formed by sequentially adjacent letters.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-board = [["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], words = ["oath","pea","eat","rain"]
-
-How to Read the Input:
-- `board` = [["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]] (2D list (matrix))
-- `words` = ["oath","pea","eat","rain"] (list of strings/values)
-
-Output (Example 1):
-["eat", "oath"]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: board = [["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], words = ["oath","pea","eat","rain"].
-2. Apply the rule in the problem statement: Given a board of letters and a list of words, return all words that can be formed by sequentially adjacent letters.
-3. For this example, the correct result is ["eat", "oath"].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - m == board.length

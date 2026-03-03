@@ -1,41 +1,23 @@
 """
-23. Evaluate Reverse Polish Notation
-Difficulty: Medium
+Problem:
+You are given an array of strings tokens that represents an arithmetic expression in a Reverse Polish Notation. Evaluate the expression. Return an integer that represents the value of the expression. Note that: - The valid operators are '+', '-', '*', and '/'. - Each operand may be an integer or another expression. - The division between two integers always truncates toward zero. - There will not be any division by zero. - The input represents a valid arithmetic expression in a reverse polish notation. - The answer and all the intermediate calculations can be represented in a 32-bit integer.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: tokens = ["2","1","+","3","*"]
+Output: 9
+Explanation: ((2 + 1) * 3) = 9
 
-Hint:
-- TBD
+Example 2:
+Input: tokens = ["4","13","5","/","+"]
+Output: 6
+Explanation: (4 + (13 / 5)) = 6
 
-Problem Statement:
-Evaluate the value of an arithmetic expression in Reverse Polish Notation.
-
-Easy Explanation:
-- Given: tokens.
-- Task: Evaluate the value of an arithmetic expression in Reverse Polish Notation.
-- Return: an integer.
-
-Input (Example 1):
-tokens = ["2", "1", "+", "3", "*"]
-
-How to Read the Input:
-- `tokens` = ["2", "1", "+", "3", "*"] (list of strings/values)
-
-Output (Example 1):
-9
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: tokens = ["2", "1", "+", "3", "*"].
-2. Apply the rule in the problem statement: Evaluate the value of an arithmetic expression in Reverse Polish Notation.
-3. For this example, the correct result is 9.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: tokens = ["10","6","9","3","+","-11","*","/","*","17","+","5","+"]
+Output: 22
+Explanation: ((10 * (6 / ((9 + 3) * -11))) + 17) + 5 = ((10 * (6 / (12 * -11))) + 17) + 5 = ((10 * (6 / -132)) + 17) + 5 = ((10 * 0) + 17) + 5 = (0 + 17) + 5 = 17 + 5 = 22
 
 Constraints:
 - 1 <= tokens.length <= 10^4

@@ -1,41 +1,23 @@
 """
-104. Palindromic Substrings
-Difficulty: Medium
+Problem:
+Given a string s, return the number of palindromic substrings in it. A string is a palindrome when it reads the same backward as forward. A substring is a contiguous sequence of characters within the string.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "abc"
+Output: 3
+Explanation: Three palindromic strings: "a", "b", "c".
 
-Hint:
-- TBD
+Example 2:
+Input: s = "aaa"
+Output: 6
+Explanation: Six palindromic strings: "a", "a", "a", "aa", "aa", "aaa".
 
-Problem Statement:
-Given a string s, return the number of palindromic substrings in s.
-
-Easy Explanation:
-- Given: s.
-- Task: Given a string s, return the number of palindromic substrings in s.
-- Return: an integer.
-
-Input (Example 1):
-s = "aaa"
-
-How to Read the Input:
-- `s` = "aaa" (string)
-
-Output (Example 1):
-6
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "aaa".
-2. Apply the rule in the problem statement: Given a string s, return the number of palindromic substrings in s.
-3. For this example, the correct result is 6.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= s.length <= 1000

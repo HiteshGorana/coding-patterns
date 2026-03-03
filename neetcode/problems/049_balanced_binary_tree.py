@@ -1,42 +1,23 @@
 """
-49. Balanced Binary Tree
-Difficulty: Easy
-
-Topics:
-- TBD
-
-Companies:
-- TBD
-
-Hint:
-- TBD
-
-Problem Statement:
+Problem:
 Given a binary tree, determine if it is height-balanced.
 
-Easy Explanation:
-- Given: root.
-- Task: Given a binary tree, determine if it is height-balanced.
-- Return: a boolean value (`True` or `False`).
+Examples:
 
-Input (Example 1):
-root = [3,9,20,null,null,15,7]
+Example 1:
+Input: root = [3,9,20,null,null,15,7]
+Output: true
+Explanation: This is the expected result for the given input.
 
-How to Read the Input:
-- `root` = [3,9,20,null,null,15,7] (list with nullable entries)
+Example 2:
+Input: root = [1,2,2,3,3,null,null,4,4]
+Output: false
+Explanation: This is the expected result for the given input.
 
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: root = [3,9,20,null,null,15,7].
-2. Apply the rule in the problem statement: Given a binary tree, determine if it is height-balanced.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: root = []
+Output: true
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - The number of nodes in the tree is in the range [0, 5000].

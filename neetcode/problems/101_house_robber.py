@@ -1,41 +1,23 @@
 """
-101. House Robber
-Difficulty: Medium
+Problem:
+You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security systems connected and it will automatically contact the police if two adjacent houses were broken into on the same night. Given an integer array nums representing the amount of money of each house, return the maximum amount of money you can rob tonight without alerting the police.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [1,2,3,1]
+Output: 4
+Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3). Total amount you can rob = 1 + 3 = 4.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [2,7,9,3,1]
+Output: 12
+Explanation: Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1). Total amount you can rob = 2 + 9 + 1 = 12.
 
-Problem Statement:
-Given non-negative integers representing money in houses, return the maximum amount that can be robbed without robbing adjacent houses.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given non-negative integers representing money in houses, return the maximum amount that can be robbed without robbing adjacent houses.
-- Return: an integer.
-
-Input (Example 1):
-nums = [1,2,3,1]
-
-How to Read the Input:
-- `nums` = [1,2,3,1] (list of values)
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [1,2,3,1].
-2. Apply the rule in the problem statement: Given non-negative integers representing money in houses, return the maximum amount that can be robbed without robbing adjacent houses.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 100

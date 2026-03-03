@@ -1,51 +1,31 @@
 """
-88. Course Schedule II
-Difficulty: Medium
+Problem:
+There are a total of numCourses courses you have to take, labeled from 0 to numCourses - 1. You are given an array prerequisites where prerequisites[i] = [a_i, b_i] indicates that you must take course b_i first if you want to take course a_i. - For example, the pair [0, 1], indicates that to take course 0 you have to first take course 1. Return the ordering of courses you should take to finish all courses. If there are many valid answers, return any of them. If it is impossible to finish all courses, return an empty array.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: numCourses = 2, prerequisites = [[1,0]]
+Output: [0,1]
+Explanation: There are a total of 2 courses to take. To take course 1 you should have finished course 0. So the correct course order is [0,1].
 
-Hint:
-- TBD
+Example 2:
+Input: numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,2,1,3]
+Explanation: There are a total of 4 courses to take. To take course 3 you should have finished both courses 1 and 2. Both courses 1 and 2 should be taken after you finished course 0. So one correct course order is [0,1,2,3]. Another correct ordering is [0,2,1,3].
 
-Problem Statement:
-Return one valid ordering of courses to finish all courses given prerequisite pairs.
-
-Easy Explanation:
-- Given: numCourses, prerequisites.
-- Task: Return one valid ordering of courses to finish all courses given prerequisite pairs.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
-
-How to Read the Input:
-- `numCourses` = 4 (integer)
-- `prerequisites` = [[1,0],[2,0],[3,1],[3,2]] (2D list (matrix))
-
-Output (Example 1):
-[0,1,2,3]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]].
-2. Apply the rule in the problem statement: Return one valid ordering of courses to finish all courses given prerequisite pairs.
-3. For this example, the correct result is [0,1,2,3].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: numCourses = 1, prerequisites = []
+Output: [0]
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= numCourses <= 2000
 - 0 <= prerequisites.length <= numCourses * (numCourses - 1)
 - prerequisites[i].length == 2
-- 0 <= ai, bi < numCourses
-- ai != bi
-- All the pairs [ai, bi] are distinct.
+- 0 <= a_i, b_i < numCourses
+- a_i != b_i
+- All the pairs [a_i, b_i] are distinct.
 
 Follow-up:
 - None specified.

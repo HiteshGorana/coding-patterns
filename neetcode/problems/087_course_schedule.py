@@ -1,49 +1,29 @@
 """
-87. Course Schedule
-Difficulty: Medium
+Problem:
+There are a total of numCourses courses you have to take, labeled from 0 to numCourses - 1. You are given an array prerequisites where prerequisites[i] = [a_i, b_i] indicates that you must take course b_i first if you want to take course a_i. - For example, the pair [0, 1], indicates that to take course 0 you have to first take course 1. Return true if you can finish all courses. Otherwise, return false.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: numCourses = 2, prerequisites = [[1,0]]
+Output: true
+Explanation: There are a total of 2 courses to take. To take course 1 you should have finished course 0. So it is possible.
 
-Hint:
-- TBD
+Example 2:
+Input: numCourses = 2, prerequisites = [[1,0],[0,1]]
+Output: false
+Explanation: There are a total of 2 courses to take. To take course 1 you should have finished course 0, and to take course 0 you should also have finished course 1. So it is impossible.
 
-Problem Statement:
-Given numCourses and prerequisite pairs, return true if you can finish all courses.
-
-Easy Explanation:
-- Given: numCourses, prerequisites.
-- Task: Given numCourses and prerequisite pairs, return true if you can finish all courses.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-numCourses = 2, prerequisites = [[1,0]]
-
-How to Read the Input:
-- `numCourses` = 2 (integer)
-- `prerequisites` = [[1,0]] (2D list (matrix))
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: numCourses = 2, prerequisites = [[1,0]].
-2. Apply the rule in the problem statement: Given numCourses and prerequisite pairs, return true if you can finish all courses.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= numCourses <= 2000
 - 0 <= prerequisites.length <= 5000
 - prerequisites[i].length == 2
-- 0 <= ai, bi < numCourses
+- 0 <= a_i, b_i < numCourses
 - All the pairs prerequisites[i] are unique.
 
 Follow-up:

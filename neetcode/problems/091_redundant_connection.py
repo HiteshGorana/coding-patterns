@@ -1,49 +1,30 @@
 """
-91. Redundant Connection
-Difficulty: Medium
+Problem:
+In this problem, a tree is an undirected graph that is connected and has no cycles. You are given a graph that started as a tree with n nodes labeled from 1 to n, with one additional edge added. The added edge has two different vertices chosen from 1 to n, and was not an edge that already existed. The graph is represented as an array edges of length n where edges[i] = [a_i, b_i] indicates that there is an edge between nodes a_i and b_i in the graph. Return an edge that can be removed so that the resulting graph is a tree of n nodes. If there are multiple answers, return the answer that occurs last in the input.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: edges = [[1,2],[1,3],[2,3]]
+Output: [2,3]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: edges = [[1,2],[2,3],[3,4],[1,4],[1,5]]
+Output: [1,4]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given edges of a graph that started as a tree with one extra edge, return that redundant edge.
-
-Easy Explanation:
-- Given: edges.
-- Task: Given edges of a graph that started as a tree with one extra edge, return that redundant edge.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-edges = [[1,2],[1,3],[2,3]]
-
-How to Read the Input:
-- `edges` = [[1,2],[1,3],[2,3]] (2D list (matrix))
-
-Output (Example 1):
-[2,3]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: edges = [[1,2],[1,3],[2,3]].
-2. Apply the rule in the problem statement: Given edges of a graph that started as a tree with one extra edge, return that redundant edge.
-3. For this example, the correct result is [2,3].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - n == edges.length
 - 3 <= n <= 1000
 - edges[i].length == 2
-- 1 <= ai < bi <= edges.length
-- ai != bi
+- 1 <= a_i < b_i <= edges.length
+- a_i != b_i
 - There are no repeated edges.
 - The given graph is connected.
 

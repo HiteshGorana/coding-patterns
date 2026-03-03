@@ -1,41 +1,23 @@
 """
-42. Find the Duplicate Number
-Difficulty: Medium
+Problem:
+Given an array of integers nums containing n + 1 integers where each integer is in the range [1, n] inclusive. There is only one repeated number in nums, return this repeated number. You must solve the problem without modifying the array nums and using only constant extra space.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [1,3,4,2,2]
+Output: 2
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [3,1,3,4,2]
+Output: 3
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `nums` of length `n + 1` where each number is in `[1, n]`, return the duplicate number.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given `nums` of length `n + 1` where each number is in `[1, n]`, return the duplicate number.
-- Return: an integer.
-
-Input (Example 1):
-nums = [1,3,4,2,2]
-
-How to Read the Input:
-- `nums` = [1,3,4,2,2] (list of values)
-
-Output (Example 1):
-2
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [1,3,4,2,2].
-2. Apply the rule in the problem statement: Given `nums` of length `n + 1` where each number is in `[1, n]`, return the duplicate number.
-3. For this example, the correct result is 2.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: nums = [3,3,3,3,3]
+Output: 3
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= n <= 10^5

@@ -1,43 +1,23 @@
 """
-20. Sliding Window Maximum
-Difficulty: Hard
+Problem:
+You are given an array of integers nums, there is a sliding window of size k which is moving from the very left of the array to the very right. You can only see the k numbers in the window. Each time the sliding window moves right by one position. Return the max sliding window.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [1,3,-1,-3,5,3,6,7], k = 3
+Output: [3,3,5,5,6,7]
+Explanation: Window position Max --------------- ----- [1 3 -1] -3 5 3 6 7 3 1 [3 -1 -3] 5 3 6 7 3 1 3 [-1 -3 5] 3 6 7 5 1 3 -1 [-3 5 3] 6 7 5 1 3 -1 -3 [5 3 6] 7 6 1 3 -1 -3 5 [3 6 7] 7
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [1], k = 1
+Output: [1]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `nums` and `k`, return the maximum in each sliding window of size `k`.
-
-Easy Explanation:
-- Given: nums, k.
-- Task: Given `nums` and `k`, return the maximum in each sliding window of size `k`.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-nums = [1,3,-1,-3,5,3,6,7], k = 3
-
-How to Read the Input:
-- `nums` = [1,3,-1,-3,5,3,6,7] (list of values)
-- `k` = 3 (integer)
-
-Output (Example 1):
-[3,3,5,5,6,7]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [1,3,-1,-3,5,3,6,7], k = 3.
-2. Apply the rule in the problem statement: Given `nums` and `k`, return the maximum in each sliding window of size `k`.
-3. For this example, the correct result is [3,3,5,5,6,7].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 10^5

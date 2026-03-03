@@ -1,41 +1,23 @@
 """
-37. Reorder List
-Difficulty: Medium
+Problem:
+You are given the head of a singly linked-list. The list can be represented as: L_0 → L_1 → … → L_n - 1 → L_n Reorder the list to be on the following form: L_0 → L_n → L_1 → L_n - 1 → L_2 → L_n - 2 → … You may not modify the values in the list's nodes. Only nodes themselves may be changed.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: head = [1,2,3,4]
+Output: [1,4,2,3]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: head = [1,2,3,4,5]
+Output: [1,5,2,4,3]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given list `L0 -> L1 -> . -> Ln`, reorder it to `L0 -> Ln -> L1 -> Ln-1 -> ...`.
-
-Easy Explanation:
-- Given: the input shown in the example.
-- Task: Given list `L0 -> L1 -> ... -> Ln`, reorder it to `L0 -> Ln -> L1 -> Ln-1 -> ...`.
-- Return: the value/structure requested by the prompt.
-
-Input (Example 1):
-1
-
-How to Read the Input:
-- Use the exact input format shown in Example 1.
-
-Output (Example 1):
-2 -> 3 -> 4 -> 5` becomes `1 -> 5 -> 2 -> 4 -> 3
-
-How to Read the Output:
-- The returned value should be a required result value.
-
-Example 1 Walkthrough:
-1. Start with the given input: 1.
-2. Apply the rule in the problem statement: Given list `L0 -> L1 -> . -> Ln`, reorder it to `L0 -> Ln -> L1 -> Ln-1 -> ...`.
-3. For this example, the correct result is 2 -> 3 -> 4 -> 5` becomes `1 -> 5 -> 2 -> 4 -> 3.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - The number of nodes in the list is in the range [1, 5 * 10^4].

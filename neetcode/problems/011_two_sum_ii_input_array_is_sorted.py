@@ -1,43 +1,23 @@
 """
-11. Two Sum II – Input Array Is Sorted
-Difficulty: Medium
+Problem:
+Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number. Let these two numbers be numbers[index_1] and numbers[index_2] where 1 <= index_1 < index_2 <= numbers.length. Return the indices of the two numbers index_1 and index_2, each incremented by one, as an integer array [index_1, index_2] of length 2. The tests are generated such that there is exactly one solution. You may not use the same element twice. Your solution must use only constant extra space.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: numbers = [2,7,11,15], target = 9
+Output: [1,2]
+Explanation: The sum of 2 and 7 is 9. Therefore, index_1 = 1, index_2 = 2. We return [1, 2].
 
-Hint:
-- TBD
+Example 2:
+Input: numbers = [2,3,4], target = 6
+Output: [1,3]
+Explanation: The sum of 2 and 4 is 6. Therefore index_1 = 1, index_2 = 3. We return [1, 3].
 
-Problem Statement:
-Given sorted array `numbers` and `target`, return 1-indexed positions of two numbers adding to `target`.
-
-Easy Explanation:
-- Given: numbers, target.
-- Task: Given sorted array `numbers` and `target`, return 1-indexed positions of two numbers adding to `target`.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-numbers = [2,7,11,15], target = 9
-
-How to Read the Input:
-- `numbers` = [2,7,11,15] (list of values)
-- `target` = 9 (integer)
-
-Output (Example 1):
-[1,2]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: numbers = [2,7,11,15], target = 9.
-2. Apply the rule in the problem statement: Given sorted array `numbers` and `target`, return 1-indexed positions of two numbers adding to `target`.
-3. For this example, the correct result is [1,2].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: numbers = [-1,0], target = -1
+Output: [1,2]
+Explanation: The sum of -1 and 0 is -1. Therefore index_1 = 1, index_2 = 2. We return [1, 2].
 
 Constraints:
 - 2 <= numbers.length <= 3 * 10^4

@@ -1,41 +1,23 @@
 """
-45. Reverse Nodes in K-Group
-Difficulty: Hard
+Problem:
+Given the head of a linked list, reverse the nodes of the list k at a time, and return the modified list. k is a positive integer and is less than or equal to the length of the linked list. If the number of nodes is not a multiple of k then left-out nodes, in the end, should remain as it is. You may not alter the values in the list's nodes, only nodes themselves may be changed.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: head = [1,2,3,4,5], k = 2
+Output: [2,1,4,3,5]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: head = [1,2,3,4,5], k = 3
+Output: [3,2,1,4,5]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `head` and `k`, reverse nodes in groups of size `k`. Remaining nodes less than `k` stay as-is.
-
-Easy Explanation:
-- Given: the input shown in the example.
-- Task: Given `head` and `k`, reverse nodes in groups of size `k`. Remaining nodes less than `k` stay as-is.
-- Return: the value/structure requested by the prompt.
-
-Input (Example 1):
-1
-
-How to Read the Input:
-- Use the exact input format shown in Example 1.
-
-Output (Example 1):
-2 -> 3 -> 4 -> 5`, `k = 2` -> `2 -> 1 -> 4 -> 3 -> 5
-
-How to Read the Output:
-- The returned value should be a required result value.
-
-Example 1 Walkthrough:
-1. Start with the given input: 1.
-2. Apply the rule in the problem statement: Given `head` and `k`, reverse nodes in groups of size `k`. Remaining nodes less than `k` stay as-is.
-3. For this example, the correct result is 2 -> 3 -> 4 -> 5`, `k = 2` -> `2 -> 1 -> 4 -> 3 -> 5.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - The number of nodes in the list is n.

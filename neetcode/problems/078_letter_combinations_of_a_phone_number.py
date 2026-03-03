@@ -1,42 +1,23 @@
 """
-78. Letter Combinations of a Phone Number
-Difficulty: Medium
+Problem:
+Given a string containing digits from 2-9 inclusive, return all possible letter combinations that the number could represent. Return the answer in any order. A mapping of digits to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: digits = "23"
+Output: ["ad","ae","af","bd","be","bf","cd","ce","cf"]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: digits = "2"
+Output: ["a","b","c"]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given a string of digits 2-9, return all possible letter combinations from a phone keypad mapping.
-
-Easy Explanation:
-- Given: digits.
-- Task: Given a string of digits 2-9, return all possible letter combinations from a phone keypad mapping.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-digits = "23"
-
-How to Read the Input:
-- `digits` = "23" (string)
-
-Output (Example 1):
-["ad","ae","af","bd","be","bf","cd","ce","cf"]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: digits = "23".
-2. Apply the rule in the problem statement: Given a string of digits 2-9, return all possible letter combinations from a phone keypad mapping.
-3. For this example, the correct result is ["ad","ae","af","bd","be","bf","cd","ce","cf"].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= digits.length <= 4

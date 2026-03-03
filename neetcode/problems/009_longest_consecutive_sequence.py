@@ -1,41 +1,23 @@
 """
-9. Longest Consecutive Sequence
-Difficulty: Medium
+Problem:
+Given an unsorted array of integers nums, return the length of the longest consecutive elements sequence. You must write an algorithm that runs in O(n) time.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [100,4,200,1,3,2]
+Output: 4
+Explanation: The longest consecutive elements sequence is [1, 2, 3, 4]. Therefore its length is 4.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [0,3,7,2,5,8,4,6,0,1]
+Output: 9
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Return the length of the longest consecutive sequence in `nums`.
-
-Easy Explanation:
-- Given: nums.
-- Task: Return the length of the longest consecutive sequence in `nums`.
-- Return: an integer.
-
-Input (Example 1):
-nums = [100,4,200,1,3,2]
-
-How to Read the Input:
-- `nums` = [100,4,200,1,3,2] (list of values)
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [100,4,200,1,3,2].
-2. Apply the rule in the problem statement: Return the length of the longest consecutive sequence in `nums`.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: nums = [1,0,1,2]
+Output: 3
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 0 <= nums.length <= 10^5

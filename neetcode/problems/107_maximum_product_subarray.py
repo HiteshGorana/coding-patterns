@@ -1,41 +1,23 @@
 """
-107. Maximum Product Subarray
-Difficulty: Medium
+Problem:
+Given an integer array nums, find a subarray that has the largest product, and return the product. The test cases are generated so that the answer will fit in a 32-bit integer. Note that the product of an array with a single element is the value of that element.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [2,3,-2,4]
+Output: 6
+Explanation: [2,3] has the largest product 6.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [-2,0,-1]
+Output: 0
+Explanation: The result cannot be 2, because [-2,-1] is not a subarray.
 
-Problem Statement:
-Given an integer array nums, find the contiguous subarray with the largest product and return that product.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given an integer array nums, find the contiguous subarray with the largest product and return that product.
-- Return: an integer.
-
-Input (Example 1):
-nums = [2,3,-2,4]
-
-How to Read the Input:
-- `nums` = [2,3,-2,4] (list of values)
-
-Output (Example 1):
-6
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [2,3,-2,4].
-2. Apply the rule in the problem statement: Given an integer array nums, find the contiguous subarray with the largest product and return that product.
-3. For this example, the correct result is 6.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 2 * 10^4

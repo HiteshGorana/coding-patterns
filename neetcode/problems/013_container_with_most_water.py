@@ -1,41 +1,23 @@
 """
-13. Container With Most Water
-Difficulty: Medium
+Problem:
+You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the i^th line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water. Return the maximum amount of water a container can store. Notice that you may not slant the container.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: height = [1,8,6,2,5,4,8,3,7]
+Output: 49
+Explanation: The above vertical lines are represented by array [1,8,6,2,5,4,8,3,7]. In this case, the max area of water (blue section) the container can contain is 49.
 
-Hint:
-- TBD
+Example 2:
+Input: height = [1,1]
+Output: 1
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given heights, return max water area between two lines.
-
-Easy Explanation:
-- Given: height.
-- Task: Given heights, return max water area between two lines.
-- Return: an integer.
-
-Input (Example 1):
-height = [1,8,6,2,5,4,8,3,7]
-
-How to Read the Input:
-- `height` = [1,8,6,2,5,4,8,3,7] (list of values)
-
-Output (Example 1):
-49
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: height = [1,8,6,2,5,4,8,3,7].
-2. Apply the rule in the problem statement: Given heights, return max water area between two lines.
-3. For this example, the correct result is 49.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - n == height.length

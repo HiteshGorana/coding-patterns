@@ -1,42 +1,23 @@
 """
-34. Median of Two Sorted Arrays
-Difficulty: Hard
+Problem:
+Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays. The overall run time complexity should be O(log (m+n)).
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums1 = [1,3], nums2 = [2]
+Output: 2.00000
+Explanation: merged array = [1,2,3] and median is 2.
 
-Hint:
-- TBD
+Example 2:
+Input: nums1 = [1,2], nums2 = [3,4]
+Output: 2.50000
+Explanation: merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.
 
-Problem Statement:
-Given two sorted arrays nums1 and nums2, return the median of the two sorted arrays.
-
-Easy Explanation:
-- Given: nums1, nums2.
-- Task: Given two sorted arrays nums1 and nums2, return the median of the two sorted arrays.
-- Return: a numeric value.
-
-Input (Example 1):
-nums1 = [1,3], nums2 = [2]
-
-How to Read the Input:
-- `nums1` = [1,3] (list of values)
-- `nums2` = [2] (list of values)
-
-Output (Example 1):
-2.0
-
-How to Read the Output:
-- The returned value should be a number.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums1 = [1,3], nums2 = [2].
-2. Apply the rule in the problem statement: Given two sorted arrays nums1 and nums2, return the median of the two sorted arrays.
-3. For this example, the correct result is 2.0.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - nums1.length == m

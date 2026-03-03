@@ -1,42 +1,23 @@
 """
-62. Design Add and Search Words Data Structure
-Difficulty: Medium
+Problem:
+Design a data structure that supports adding new words and finding if a string matches any previously added string. Implement the WordDictionary class: - WordDictionary() Initializes the object. - void addWord(word) Adds word to the data structure, it can be matched later. - bool search(word) Returns true if there is any string in the data structure that matches word or false otherwise. word may contain dots '.' where dots can be matched with any letter. Example: Input ["WordDictionary","addWord","addWord","addWord","search","search","search","search"] [[],["bad"],["dad"],["mad"],["pad"],["bad"],[".ad"],["b.."]] Output [null,null,null,null,false,true,true,true] Explanation WordDictionary wordDictionary = new WordDictionary(); wordDictionary.addWord("bad"); wordDictionary.addWord("dad"); wordDictionary.addWord("mad"); wordDictionary.search("pad"); // return False wordDictionary.search("bad"); // return True wordDictionary.search(".ad"); // return True wordDictionary.search("b.."); // return True
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
-Hint:
-- TBD
+Example 2:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
-Problem Statement:
-Design a data structure that supports adding words and searching words where "." can match any letter.
-
-Easy Explanation:
-- Given: operations.
-- Task: Design a data structure that supports adding words and searching words where "." can match any letter.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-operations = ["WordDictionary", "addWord("bad")", "addWord("dad")", "addWord("mad")", "search("pad")", "search("bad")", "search(".ad")", "search("b..")"]
-
-How to Read the Input:
-- `operations` = ["WordDictionary", "addWord("bad")", "addWord("dad")", "addWord("mad")", "search("pad")", "search("bad")", "search(".ad")", "search("b..")"] (list of strings/values)
-
-Output (Example 1):
-[null, null, null, null, False, True, True, True]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: operations = ["WordDictionary", "addWord("bad")", "addWord("dad")", "addWord("mad")", "search("pad")", "search("bad")", "search(".ad")", "search("b..")"].
-2. Apply the rule in the problem statement: Design a data structure that supports adding words and searching words where "." can match any letter.
-3. For this example, the correct result is [null, null, null, null, False, True, True, True].
-4. Each entry is the return value for each operation in order (`null` for constructors/void operations).
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= word.length <= 25

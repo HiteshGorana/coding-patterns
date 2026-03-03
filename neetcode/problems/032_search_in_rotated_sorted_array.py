@@ -1,42 +1,23 @@
 """
-32. Search in Rotated Sorted Array
-Difficulty: Medium
+Problem:
+There is an integer array nums sorted in ascending order (with distinct values). Prior to being passed to your function, nums is possibly left rotated at an unknown index k (1 <= k < nums.length) such that the resulting array is [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]] (0-indexed). For example, [0,1,2,4,5,6,7] might be left rotated by 3 indices and become [4,5,6,7,0,1,2]. Given the array nums after the possible rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums. You must write an algorithm with O(log n) runtime complexity.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [4,5,6,7,0,1,2], target = 0
+Output: 4
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [4,5,6,7,0,1,2], target = 3
+Output: -1
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given rotated sorted array `nums` (distinct values) and `target`, return target index or `-1`.
-
-Easy Explanation:
-- Given: nums, target.
-- Task: Given rotated sorted array `nums` (distinct values) and `target`, return target index or `-1`.
-- Return: an integer.
-
-Input (Example 1):
-nums = [4,5,6,7,0,1,2], target = 0
-
-How to Read the Input:
-- `nums` = [4,5,6,7,0,1,2] (list of values)
-- `target` = 0 (integer)
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [4,5,6,7,0,1,2], target = 0.
-2. Apply the rule in the problem statement: Given rotated sorted array `nums` (distinct values) and `target`, return target index or `-1`.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: nums = [1], target = 0
+Output: -1
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= nums.length <= 5000

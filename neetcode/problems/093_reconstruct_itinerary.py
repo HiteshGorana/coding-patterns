@@ -1,50 +1,31 @@
 """
-93. Reconstruct Itinerary
-Difficulty: Hard
+Problem:
+You are given a list of airline tickets where tickets[i] = [from_i, to_i] represent the departure and the arrival airports of one flight. Reconstruct the itinerary in order and return it. All of the tickets belong to a man who departs from "JFK", thus, the itinerary must begin with "JFK". If there are multiple valid itineraries, you should return the itinerary that has the smallest lexical order when read as a single string. - For example, the itinerary ["JFK", "LGA"] has a smaller lexical order than ["JFK", "LGB"]. You may assume all tickets form at least one valid itinerary. You must use all the tickets once and only once.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: tickets = [["MUC","LHR"],["JFK","MUC"],["SFO","SJC"],["LHR","SFO"]]
+Output: ["JFK","MUC","LHR","SFO","SJC"]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: tickets = [["JFK","SFO"],["JFK","ATL"],["SFO","ATL"],["ATL","JFK"],["ATL","SFO"]]
+Output: ["JFK","ATL","JFK","SFO","ATL","SFO"]
+Explanation: Another possible reconstruction is ["JFK","SFO","ATL","JFK","ATL","SFO"] but it is larger in lexical order.
 
-Problem Statement:
-Given flight tickets [from, to], reconstruct the itinerary starting from JFK using all tickets exactly once and choosing lexical order when multiple valid routes exist.
-
-Easy Explanation:
-- Given: tickets.
-- Task: Given flight tickets [from, to], reconstruct the itinerary starting from JFK using all tickets exactly once and choosing lexical order when multiple valid routes exist.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-tickets = [["MUC","LHR"],["JFK","MUC"],["SFO","SJC"],["LHR","SFO"]]
-
-How to Read the Input:
-- `tickets` = [["MUC","LHR"],["JFK","MUC"],["SFO","SJC"],["LHR","SFO"]] (2D list (matrix))
-
-Output (Example 1):
-["JFK","MUC","LHR","SFO","SJC"]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: tickets = [["MUC","LHR"],["JFK","MUC"],["SFO","SJC"],["LHR","SFO"]].
-2. Apply the rule in the problem statement: Given flight tickets [from, to], reconstruct the itinerary starting from JFK using all tickets exactly once and choosing lexical order when multiple valid routes exist.
-3. For this example, the correct result is ["JFK","MUC","LHR","SFO","SJC"].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= tickets.length <= 300
 - tickets[i].length == 2
-- fromi.length == 3
-- toi.length == 3
-- fromi and toi consist of uppercase English letters.
-- fromi != toi
+- from_i.length == 3
+- to_i.length == 3
+- from_i and to_i consist of uppercase English letters.
+- from_i != to_i
 
 Follow-up:
 - None specified.

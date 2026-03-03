@@ -1,41 +1,23 @@
 """
-16. Longest Substring Without Repeating Characters
-Difficulty: Medium
+Problem:
+Given a string s, find the length of the longest substring without duplicate characters.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "abcabcbb"
+Output: 3
+Explanation: The answer is "abc", with the length of 3. Note that "bca" and "cab" are also correct answers.
 
-Hint:
-- TBD
+Example 2:
+Input: s = "bbbbb"
+Output: 1
+Explanation: The answer is "b", with the length of 1.
 
-Problem Statement:
-Given string `s`, return length of the longest substring without repeating characters.
-
-Easy Explanation:
-- Given: s.
-- Task: Given string `s`, return length of the longest substring without repeating characters.
-- Return: an integer.
-
-Input (Example 1):
-s = "abcabcbb"
-
-How to Read the Input:
-- `s` = "abcabcbb" (string)
-
-Output (Example 1):
-3
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "abcabcbb".
-2. Apply the rule in the problem statement: Given string `s`, return length of the longest substring without repeating characters.
-3. For this example, the correct result is 3.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: s = "pwwkew"
+Output: 3
+Explanation: The answer is "wke", with the length of 3. Notice that the answer must be a substring, "pwke" is a subsequence and not a substring.
 
 Constraints:
 - 0 <= s.length <= 5 * 10^4

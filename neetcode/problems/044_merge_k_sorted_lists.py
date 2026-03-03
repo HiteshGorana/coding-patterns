@@ -1,42 +1,23 @@
 """
-44. Merge K Sorted Lists
-Difficulty: Hard
+Problem:
+You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: lists = [[1,4,5],[1,3,4],[2,6]]
+Output: [1,1,2,3,4,4,5,6]
+Explanation: The linked-lists are: [ 1->4->5, 1->3->4, 2->6 ] merging them into one sorted linked list: 1->1->2->3->4->4->5->6
 
-Hint:
-- TBD
+Example 2:
+Input: lists = []
+Output: []
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `k` sorted linked lists, merge them into one sorted linked list.
-
-Easy Explanation:
-- Given: the input shown in the example.
-- Task: Given `k` sorted linked lists, merge them into one sorted linked list.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-[[1,4,5],[1,3,4],[2,6]]
-
-How to Read the Input:
-- Use the exact input format shown in Example 1.
-
-Output (Example 1):
-[1,1,2,3,4,4,5,6]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: [[1,4,5],[1,3,4],[2,6]].
-2. Apply the rule in the problem statement: Given `k` sorted linked lists, merge them into one sorted linked list.
-3. For this example, the correct result is [1,1,2,3,4,4,5,6].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: lists = [[]]
+Output: []
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - k == lists.length

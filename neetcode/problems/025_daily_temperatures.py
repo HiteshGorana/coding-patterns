@@ -1,42 +1,23 @@
 """
-25. Daily Temperatures
-Difficulty: Medium
+Problem:
+Given an array of integers temperatures represents the daily temperatures, return an array answer such that answer[i] is the number of days you have to wait after the i^th day to get a warmer temperature. If there is no future day for which this is possible, keep answer[i] == 0 instead.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: temperatures = [73,74,75,71,69,72,76,73]
+Output: [1,1,4,2,1,1,0,0]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: temperatures = [30,40,50,60]
+Output: [1,1,1,0]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given daily temperatures, return for each day how many days until a warmer temperature. If none, return `0`.
-
-Easy Explanation:
-- Given: temps.
-- Task: Given daily temperatures, return for each day how many days until a warmer temperature. If none, return `0`.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-temps = [73,74,75,71,69,72,76,73]
-
-How to Read the Input:
-- `temps` = [73,74,75,71,69,72,76,73] (list of values)
-
-Output (Example 1):
-[1,1,4,2,1,1,0,0]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: temps = [73,74,75,71,69,72,76,73].
-2. Apply the rule in the problem statement: Given daily temperatures, return for each day how many days until a warmer temperature. If none, return `0`.
-3. For this example, the correct result is [1,1,4,2,1,1,0,0].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: temperatures = [30,60,90]
+Output: [1,1,0]
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= temperatures.length <= 10^5

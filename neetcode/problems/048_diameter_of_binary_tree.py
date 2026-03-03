@@ -1,41 +1,23 @@
 """
-48. Diameter of Binary Tree
-Difficulty: Easy
+Problem:
+Given the root of a binary tree, return the length of the diameter of the tree. The diameter of a binary tree is the length of the longest path between any two nodes in a tree. This path may or may not pass through the root. The length of a path between two nodes is represented by the number of edges between them.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: root = [1,2,3,4,5]
+Output: 3
+Explanation: 3 is the length of the path [4,2,1,3] or [5,2,1,3].
 
-Hint:
-- TBD
+Example 2:
+Input: root = [1,2]
+Output: 1
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given the root of a binary tree, return the length of the diameter (longest path between any two nodes).
-
-Easy Explanation:
-- Given: root.
-- Task: Given the root of a binary tree, return the length of the diameter (longest path between any two nodes).
-- Return: an integer.
-
-Input (Example 1):
-root = [1,2,3,4,5]
-
-How to Read the Input:
-- `root` = [1,2,3,4,5] (list of values)
-
-Output (Example 1):
-3
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: root = [1,2,3,4,5].
-2. Apply the rule in the problem statement: Given the root of a binary tree, return the length of the diameter (longest path between any two nodes).
-3. For this example, the correct result is 3.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - The number of nodes in the tree is in the range [1, 10^4].

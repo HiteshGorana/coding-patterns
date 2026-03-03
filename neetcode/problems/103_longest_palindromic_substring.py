@@ -1,41 +1,23 @@
 """
-103. Longest Palindromic Substring
-Difficulty: Medium
+Problem:
+Given a string s, return the longest palindromic substring in s.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "babad"
+Output: "bab"
+Explanation: "aba" is also a valid answer.
 
-Hint:
-- TBD
+Example 2:
+Input: s = "cbbd"
+Output: "bb"
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given a string s, return its longest palindromic substring.
-
-Easy Explanation:
-- Given: s.
-- Task: Given a string s, return its longest palindromic substring.
-- Return: a string.
-
-Input (Example 1):
-s = "babad"
-
-How to Read the Input:
-- `s` = "babad" (string)
-
-Output (Example 1):
-"bab"
-
-How to Read the Output:
-- The returned value should be a string.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "babad".
-2. Apply the rule in the problem statement: Given a string s, return its longest palindromic substring.
-3. For this example, the correct result is "bab".
-4. This string is the required result for the given input.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= s.length <= 1000

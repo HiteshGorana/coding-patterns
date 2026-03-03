@@ -1,42 +1,23 @@
 """
-53. Binary Tree Level Order Traversal
-Difficulty: Medium
+Problem:
+Given the root of a binary tree, return the level order traversal of its nodes' values. (i.e., from left to right, level by level).
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: root = [3,9,20,null,null,15,7]
+Output: [[3],[9,20],[15,7]]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: root = [1]
+Output: [[1]]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Return the level order traversal of a binary tree as a list of levels.
-
-Easy Explanation:
-- Given: root.
-- Task: Return the level order traversal of a binary tree as a list of levels.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-root = [3,9,20,null,null,15,7]
-
-How to Read the Input:
-- `root` = [3,9,20,null,null,15,7] (list with nullable entries)
-
-Output (Example 1):
-[[3], [9,20], [15,7]]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: root = [3,9,20,null,null,15,7].
-2. Apply the rule in the problem statement: Return the level order traversal of a binary tree as a list of levels.
-3. For this example, the correct result is [[3], [9,20], [15,7]].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: root = []
+Output: []
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - The number of nodes in the tree is in the range [0, 2000].

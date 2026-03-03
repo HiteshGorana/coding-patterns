@@ -1,42 +1,23 @@
 """
-28. Binary Search
-Difficulty: Easy
+Problem:
+Given an array of integers nums which is sorted in ascending order, and an integer target, write a function to search target in nums. If target exists, then return its index. Otherwise, return -1. You must write an algorithm with O(log n) runtime complexity.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [-1,0,3,5,9,12], target = 9
+Output: 4
+Explanation: 9 exists in nums and its index is 4
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [-1,0,3,5,9,12], target = 2
+Output: -1
+Explanation: 2 does not exist in nums so return -1
 
-Problem Statement:
-Given sorted array `nums` and `target`, return its index or `-1` if not found.
-
-Easy Explanation:
-- Given: nums, target.
-- Task: Given sorted array `nums` and `target`, return its index or `-1` if not found.
-- Return: an integer.
-
-Input (Example 1):
-nums = [-1,0,3,5,9,12], target = 9
-
-How to Read the Input:
-- `nums` = [-1,0,3,5,9,12] (list of values)
-- `target` = 9 (integer)
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [-1,0,3,5,9,12], target = 9.
-2. Apply the rule in the problem statement: Given sorted array `nums` and `target`, return its index or `-1` if not found.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= nums.length <= 10^4

@@ -1,42 +1,23 @@
 """
-68. Task Scheduler
-Difficulty: Medium
+Problem:
+You are given an array of CPU tasks, each labeled with a letter from A to Z, and a number n. Each CPU interval can be idle or allow the completion of one task. Tasks can be completed in any order, but there's a constraint: there has to be a gap of at least n intervals between two tasks with the same label. Return the minimum number of CPU intervals required to complete all tasks.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: tasks = ["A","A","A","B","B","B"], n = 2
+Output: 8
+Explanation: A possible sequence is: A -> B -> idle -> A -> B -> idle -> A -> B. After completing task A, you must wait two intervals before doing A again. The same applies to task B. In the 3^rd interval, neither A nor B can be done, so you idle. By the 4^th interval, you can do A again as 2 intervals have passed.
 
-Hint:
-- TBD
+Example 2:
+Input: tasks = ["A","C","A","B","D","B"], n = 1
+Output: 6
+Explanation: A possible sequence is: A -> B -> C -> D -> A -> B. With a cooling interval of 1, you can repeat a task after just one other task.
 
-Problem Statement:
-Given tasks and cooldown `n`, return least intervals needed to execute all tasks.
-
-Easy Explanation:
-- Given: tasks, n.
-- Task: Given tasks and cooldown `n`, return least intervals needed to execute all tasks.
-- Return: an integer.
-
-Input (Example 1):
-tasks = ["A","A","A","B","B","B"], n = 2
-
-How to Read the Input:
-- `tasks` = ["A","A","A","B","B","B"] (list of strings/values)
-- `n` = 2 (integer)
-
-Output (Example 1):
-8
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: tasks = ["A","A","A","B","B","B"], n = 2.
-2. Apply the rule in the problem statement: Given tasks and cooldown `n`, return least intervals needed to execute all tasks.
-3. For this example, the correct result is 8.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: tasks = ["A","A","A", "B","B","B"], n = 3
+Output: 10
+Explanation: A possible sequence is: A -> B -> idle -> idle -> A -> B -> idle -> idle -> A -> B. There are only two types of tasks, A and B, which need to be separated by 3 intervals. This leads to idling twice between repetitions of these tasks.
 
 Constraints:
 - 1 <= tasks.length <= 10^4

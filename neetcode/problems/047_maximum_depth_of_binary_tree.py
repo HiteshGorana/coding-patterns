@@ -1,41 +1,23 @@
 """
-47. Maximum Depth of Binary Tree
-Difficulty: Easy
+Problem:
+Given the root of a binary tree, return its maximum depth. A binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: root = [3,9,20,null,null,15,7]
+Output: 3
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: root = [1,null,2]
+Output: 2
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Return the maximum depth of a binary tree.
-
-Easy Explanation:
-- Given: root.
-- Task: Return the maximum depth of a binary tree.
-- Return: an integer.
-
-Input (Example 1):
-root = [3,9,20,null,null,15,7]
-
-How to Read the Input:
-- `root` = [3,9,20,null,null,15,7] (list with nullable entries)
-
-Output (Example 1):
-3
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: root = [3,9,20,null,null,15,7].
-2. Apply the rule in the problem statement: Return the maximum depth of a binary tree.
-3. For this example, the correct result is 3.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - The number of nodes in the tree is in the range [0, 10^4].

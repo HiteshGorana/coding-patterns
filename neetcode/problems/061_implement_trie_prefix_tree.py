@@ -1,42 +1,23 @@
 """
-61. Implement Trie (Prefix Tree)
-Difficulty: Medium
+Problem:
+A trie (pronounced as "try") or prefix tree is a tree data structure used to efficiently store and retrieve keys in a dataset of strings. There are various applications of this data structure, such as autocomplete and spellchecker. Implement the Trie class: - Trie() Initializes the trie object. - void insert(String word) Inserts the string word into the trie. - boolean search(String word) Returns true if the string word is in the trie (i.e., was inserted before), and false otherwise. - boolean startsWith(String prefix) Returns true if there is a previously inserted string word that has the prefix prefix, and false otherwise.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: TBD
+Output: TBD
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
-Problem Statement:
-Implement a trie with insert, search, and startsWith operations.
-
-Easy Explanation:
-- Given: operations.
-- Task: Implement a trie with insert, search, and startsWith operations.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-operations = ["Trie", "insert("apple")", "search("apple")", "search("app")", "startsWith("app")", "insert("app")", "search("app")"]
-
-How to Read the Input:
-- `operations` = ["Trie", "insert("apple")", "search("apple")", "search("app")", "startsWith("app")", "insert("app")", "search("app")"] (list of strings/values)
-
-Output (Example 1):
-[null, null, True, False, True, null, True]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: operations = ["Trie", "insert("apple")", "search("apple")", "search("app")", "startsWith("app")", "insert("app")", "search("app")"].
-2. Apply the rule in the problem statement: Implement a trie with insert, search, and startsWith operations.
-3. For this example, the correct result is [null, null, True, False, True, null, True].
-4. Each entry is the return value for each operation in order (`null` for constructors/void operations).
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= word.length, prefix.length <= 2000

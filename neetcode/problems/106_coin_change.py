@@ -1,42 +1,23 @@
 """
-106. Coin Change
-Difficulty: Medium
+Problem:
+You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money. Return the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return -1. You may assume that you have an infinite number of each kind of coin.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: coins = [1,2,5], amount = 11
+Output: 3
+Explanation: 11 = 5 + 5 + 1
 
-Hint:
-- TBD
+Example 2:
+Input: coins = [2], amount = 3
+Output: -1
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given coin denominations and an amount, return the minimum number of coins needed to make that amount, or -1.
-
-Easy Explanation:
-- Given: coins, amount.
-- Task: Given coin denominations and an amount, return the minimum number of coins needed to make that amount, or -1.
-- Return: an integer.
-
-Input (Example 1):
-coins = [1,2,5], amount = 11
-
-How to Read the Input:
-- `coins` = [1,2,5] (list of values)
-- `amount` = 11 (integer)
-
-Output (Example 1):
-3
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: coins = [1,2,5], amount = 11.
-2. Apply the rule in the problem statement: Given coin denominations and an amount, return the minimum number of coins needed to make that amount, or -1.
-3. For this example, the correct result is 3.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: coins = [1], amount = 0
+Output: 0
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= coins.length <= 12

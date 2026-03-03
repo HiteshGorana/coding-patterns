@@ -1,41 +1,23 @@
 """
-14. Trapping Rain Water
-Difficulty: Hard
+Problem:
+Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: height = [0,1,0,2,1,0,1,3,2,1,2,1]
+Output: 6
+Explanation: The above elevation map (black section) is represented by array [0,1,0,2,1,0,1,3,2,1,2,1]. In this case, 6 units of rain water (blue section) are being trapped.
 
-Hint:
-- TBD
+Example 2:
+Input: height = [4,2,0,3,2,5]
+Output: 9
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given elevation map `height`, compute total trapped rain water.
-
-Easy Explanation:
-- Given: height.
-- Task: Given elevation map `height`, compute total trapped rain water.
-- Return: an integer.
-
-Input (Example 1):
-height = [0,1,0,2,1,0,1,3,2,1,2,1]
-
-How to Read the Input:
-- `height` = [0,1,0,2,1,0,1,3,2,1,2,1] (list of values)
-
-Output (Example 1):
-6
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: height = [0,1,0,2,1,0,1,3,2,1,2,1].
-2. Apply the rule in the problem statement: Given elevation map `height`, compute total trapped rain water.
-3. For this example, the correct result is 6.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - n == height.length

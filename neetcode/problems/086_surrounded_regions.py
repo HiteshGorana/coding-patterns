@@ -1,42 +1,23 @@
 """
-86. Surrounded Regions
-Difficulty: Medium
+Problem:
+You are given an m x n matrix board containing letters 'X' and 'O', capture regions that are surrounded: - Connect: A cell is connected to adjacent cells horizontally or vertically. - Region: To form a region connect every 'O' cell. - Surround: A region is surrounded if none of the 'O' cells in that region are on the edge of the board. Such regions are completely enclosed by 'X' cells. To capture a surrounded region, replace all 'O's with 'X's in-place within the original board. You do not need to return anything.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: board = [["X","X","X","X"],["X","O","O","X"],["X","X","O","X"],["X","O","X","X"]]
+Output: [["X","X","X","X"],["X","X","X","X"],["X","X","X","X"],["X","O","X","X"]]
+Explanation: In the above diagram, the bottom region is not captured because it is on the edge of the board and cannot be surrounded.
 
-Hint:
-- TBD
+Example 2:
+Input: board = [["X"]]
+Output: [["X"]]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Capture all regions of "O" that are completely surrounded by "X" in a 2D board.
-
-Easy Explanation:
-- Given: board.
-- Task: Capture all regions of "O" that are completely surrounded by "X" in a 2D board.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-board = [["X","X","X","X"],["X","O","O","X"],["X","X","O","X"],["X","O","X","X"]]
-
-How to Read the Input:
-- `board` = [["X","X","X","X"],["X","O","O","X"],["X","X","O","X"],["X","O","X","X"]] (2D list (matrix))
-
-Output (Example 1):
-[["X","X","X","X"],["X","X","X","X"],["X","X","X","X"],["X","O","X","X"]]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: board = [["X","X","X","X"],["X","O","O","X"],["X","X","O","X"],["X","O","X","X"]].
-2. Apply the rule in the problem statement: Capture all regions of "O" that are completely surrounded by "X" in a 2D board.
-3. For this example, the correct result is [["X","X","X","X"],["X","X","X","X"],["X","X","X","X"],["X","O","X","X"]].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - m == board.length

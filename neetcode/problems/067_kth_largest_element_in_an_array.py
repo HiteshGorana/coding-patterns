@@ -1,42 +1,23 @@
 """
-67. Kth Largest Element in an Array
-Difficulty: Medium
+Problem:
+Given an integer array nums and an integer k, return the k^th largest element in the array. Note that it is the k^th largest element in the sorted order, not the k^th distinct element. Can you solve it without sorting?
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [3,2,1,5,6,4], k = 2
+Output: 5
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [3,2,3,1,2,4,5,5,6], k = 4
+Output: 4
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given integer array `nums` and integer `k`, return the kth largest element in `nums`.
-
-Easy Explanation:
-- Given: nums, k.
-- Task: Given integer array `nums` and integer `k`, return the kth largest element in `nums`.
-- Return: an integer.
-
-Input (Example 1):
-nums = [3,2,1,5,6,4], k = 2
-
-How to Read the Input:
-- `nums` = [3,2,1,5,6,4] (list of values)
-- `k` = 2 (integer)
-
-Output (Example 1):
-5
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [3,2,1,5,6,4], k = 2.
-2. Apply the rule in the problem statement: Given integer array `nums` and integer `k`, return the kth largest element in `nums`.
-3. For this example, the correct result is 5.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= k <= nums.length <= 10^5

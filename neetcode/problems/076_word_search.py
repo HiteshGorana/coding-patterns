@@ -1,43 +1,23 @@
 """
-76. Word Search
-Difficulty: Medium
+Problem:
+Given an m x n grid of characters board and a string word, return true if word exists in the grid. The word can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"
+Output: true
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "SEE"
+Output: true
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given a 2D board and a word, return true if the word exists in the grid by adjacent moves without reusing cells.
-
-Easy Explanation:
-- Given: board, word.
-- Task: Given a 2D board and a word, return true if the word exists in the grid by adjacent moves without reusing cells.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"
-
-How to Read the Input:
-- `board` = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]] (2D list (matrix))
-- `word` = "ABCCED" (string)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED".
-2. Apply the rule in the problem statement: Given a 2D board and a word, return true if the word exists in the grid by adjacent moves without reusing cells.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCB"
+Output: false
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - m == board.length

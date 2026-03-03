@@ -1,42 +1,23 @@
 """
-57. Kth Smallest Element in a BST
-Difficulty: Medium
+Problem:
+Given the root of a binary search tree, and an integer k, return the k^th smallest value (1-indexed) of all the values of the nodes in the tree.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: root = [3,1,4,null,2], k = 1
+Output: 1
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: root = [5,3,6,2,4,null,null,1], k = 3
+Output: 3
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given a BST and an integer k, return the kth smallest value in the tree.
-
-Easy Explanation:
-- Given: root, k.
-- Task: Given a BST and an integer k, return the kth smallest value in the tree.
-- Return: an integer.
-
-Input (Example 1):
-root = [3,1,4,null,2], k = 1
-
-How to Read the Input:
-- `root` = [3,1,4,null,2] (list with nullable entries)
-- `k` = 1 (integer)
-
-Output (Example 1):
-1
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: root = [3,1,4,null,2], k = 1.
-2. Apply the rule in the problem statement: Given a BST and an integer k, return the kth smallest value in the tree.
-3. For this example, the correct result is 1.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - The number of nodes in the tree is n.

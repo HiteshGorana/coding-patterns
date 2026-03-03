@@ -1,42 +1,23 @@
 """
-1. Contains Duplicate
-Difficulty: Easy
+Problem:
+Given an integer array nums, return true if any value appears at least twice in the array, and return false if every element is distinct.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [1,2,3,1]
+Output: true
+Explanation: The element 1 occurs at the indices 0 and 3.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [1,2,3,4]
+Output: false
+Explanation: All elements are distinct.
 
-Problem Statement:
-Return `True` if any value appears at least twice, else `False`.
-
-Easy Explanation:
-- Given: nums.
-- Task: Return `True` if any value appears at least twice, else `False`.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-nums = [1,2,3,1]
-
-How to Read the Input:
-- `nums` = [1,2,3,1] (list of values)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [1,2,3,1].
-2. Apply the rule in the problem statement: Return `True` if any value appears at least twice, else `False`.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: nums = [1,1,1,3,3,4,3,2,4,2]
+Output: true
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= nums.length <= 10^5

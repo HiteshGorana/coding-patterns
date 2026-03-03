@@ -1,43 +1,23 @@
 """
-92. Word Ladder
-Difficulty: Hard
+Problem:
+A transformation sequence from word beginWord to word endWord using a dictionary wordList is a sequence of words beginWord -> s_1 -> s_2 -> ... -> s_k such that: - Every adjacent pair of words differs by a single letter. - Every s_i for 1 <= i <= k is in wordList. Note that beginWord does not need to be in wordList. - s_k == endWord Given two words, beginWord and endWord, and a dictionary wordList, return the number of words in the shortest transformation sequence from beginWord to endWord, or 0 if no such sequence exists.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]
+Output: 5
+Explanation: One shortest transformation sequence is "hit" -> "hot" -> "dot" -> "dog" -> cog", which is 5 words long.
 
-Hint:
-- TBD
+Example 2:
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log"]
+Output: 0
+Explanation: The endWord "cog" is not in wordList, therefore there is no valid transformation sequence.
 
-Problem Statement:
-Given beginWord, endWord, and a word list, return the shortest transformation sequence length.
-
-Easy Explanation:
-- Given: beginWord, endWord, wordList.
-- Task: Given beginWord, endWord, and a word list, return the shortest transformation sequence length.
-- Return: an integer.
-
-Input (Example 1):
-beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]
-
-How to Read the Input:
-- `beginWord` = "hit" (string)
-- `endWord` = "cog" (string)
-- `wordList` = ["hot","dot","dog","lot","log","cog"] (list of strings/values)
-
-Output (Example 1):
-5
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"].
-2. Apply the rule in the problem statement: Given beginWord, endWord, and a word list, return the shortest transformation sequence length.
-3. For this example, the correct result is 5.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= beginWord.length <= 10

@@ -1,42 +1,23 @@
 """
-6. Product of Array Except Self
-Difficulty: Medium
+Problem:
+Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i]. The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer. You must write an algorithm that runs in O(n) time and without using the division operation.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: nums = [1,2,3,4]
+Output: [24,12,8,6]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: nums = [-1,1,0,-3,3]
+Output: [0,0,9,0,0]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `nums`, return array `answer` where `answer[i]` is product of all elements except `nums[i]`, without division.
-
-Easy Explanation:
-- Given: nums.
-- Task: Given `nums`, return array `answer` where `answer[i]` is product of all elements except `nums[i]`, without division.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-nums = [1,2,3,4]
-
-How to Read the Input:
-- `nums` = [1,2,3,4] (list of values)
-
-Output (Example 1):
-[24,12,8,6]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: nums = [1,2,3,4].
-2. Apply the rule in the problem statement: Given `nums`, return array `answer` where `answer[i]` is product of all elements except `nums[i]`, without division.
-3. For this example, the correct result is [24,12,8,6].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 2 <= nums.length <= 10^5

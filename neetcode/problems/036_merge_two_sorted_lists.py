@@ -1,43 +1,23 @@
 """
-36. Merge Two Sorted Lists
-Difficulty: Easy
+Problem:
+You are given the heads of two sorted linked lists list1 and list2. Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists. Return the head of the merged linked list.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: list1 = [1,2,4], list2 = [1,3,4]
+Output: [1,1,2,3,4,4]
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: list1 = [], list2 = []
+Output: []
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Merge two sorted linked lists and return the merged sorted list.
-
-Easy Explanation:
-- Given: list1, list2.
-- Task: Merge two sorted linked lists and return the merged sorted list.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-list1 = [1,2,4], list2 = [1,3,4]
-
-How to Read the Input:
-- `list1` = [1,2,4] (list of values)
-- `list2` = [1,3,4] (list of values)
-
-Output (Example 1):
-[1,1,2,3,4,4]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: list1 = [1,2,4], list2 = [1,3,4].
-2. Apply the rule in the problem statement: Merge two sorted linked lists and return the merged sorted list.
-3. For this example, the correct result is [1,1,2,3,4,4].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: list1 = [], list2 = [0]
+Output: [0]
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - The number of nodes in both lists is in the range [0, 50].

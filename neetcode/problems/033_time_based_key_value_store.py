@@ -1,42 +1,23 @@
 """
-33. Time Based Key-Value Store
-Difficulty: Medium
+Problem:
+Design a time-based key-value data structure that can store multiple values for the same key at different time stamps and retrieve the key's value at a certain timestamp. Implement the TimeMap class: - TimeMap() Initializes the object of the data structure. - void set(String key, String value, int timestamp) Stores the key key with the value value at the given time timestamp. - String get(String key, int timestamp) Returns a value such that set was called previously, with timestamp_prev <= timestamp. If there are multiple such values, it returns the value associated with the largest timestamp_prev. If there are no values, it returns "".
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: TBD
+Output: TBD
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
-Problem Statement:
-Design a time-based key-value store that can set and get values by key and timestamp, returning the latest value at or before the query timestamp.
-
-Easy Explanation:
-- Given: operations.
-- Task: Design a time-based key-value store that can set and get values by key and timestamp, returning the latest value at or before the query timestamp.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-operations = ["TimeMap", "set("foo","bar",1)", "get("foo",1)", "get("foo",3)", "set("foo","bar2",4)", "get("foo",4)", "get("foo",5)"]
-
-How to Read the Input:
-- `operations` = ["TimeMap", "set("foo","bar",1)", "get("foo",1)", "get("foo",3)", "set("foo","bar2",4)", "get("foo",4)", "get("foo",5)"] (list of strings/values)
-
-Output (Example 1):
-[null, null, "bar", "bar", null, "bar2", "bar2"]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: operations = ["TimeMap", "set("foo","bar",1)", "get("foo",1)", "get("foo",3)", "set("foo","bar2",4)", "get("foo",4)", "get("foo",5)"].
-2. Apply the rule in the problem statement: Design a time-based key-value store that can set and get values by key and timestamp, returning the latest value at or before the query timestamp.
-3. For this example, the correct result is [null, null, "bar", "bar", null, "bar2", "bar2"].
-4. Each entry is the return value for each operation in order (`null` for constructors/void operations).
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= key.length, value.length <= 100

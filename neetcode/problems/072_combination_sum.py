@@ -1,43 +1,23 @@
 """
-72. Combination Sum
-Difficulty: Medium
+Problem:
+Given an array of distinct integers candidates and a target integer target, return a list of all unique combinations of candidates where the chosen numbers sum to target. You may return the combinations in any order. The same number may be chosen from candidates an unlimited number of times. Two combinations are unique if the frequency of at least one of the chosen numbers is different. The test cases are generated such that the number of unique combinations that sum up to target is less than 150 combinations for the given input.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: candidates = [2,3,6,7], target = 7
+Output: [[2,2,3],[7]]
+Explanation: 2 and 3 are candidates, and 2 + 2 + 3 = 7. Note that 2 can be used multiple times. 7 is a candidate, and 7 = 7. These are the only two combinations.
 
-Hint:
-- TBD
+Example 2:
+Input: candidates = [2,3,5], target = 8
+Output: [[2,2,2,2],[2,3,3],[3,5]]
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given candidates and a target, return all unique combinations where candidates may be reused and sum to target.
-
-Easy Explanation:
-- Given: candidates, target.
-- Task: Given candidates and a target, return all unique combinations where candidates may be reused and sum to target.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-candidates = [2,3,6,7], target = 7
-
-How to Read the Input:
-- `candidates` = [2,3,6,7] (list of values)
-- `target` = 7 (integer)
-
-Output (Example 1):
-[[2,2,3], [7]]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: candidates = [2,3,6,7], target = 7.
-2. Apply the rule in the problem statement: Given candidates and a target, return all unique combinations where candidates may be reused and sum to target.
-3. For this example, the correct result is [[2,2,3], [7]].
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: candidates = [2], target = 1
+Output: []
+Explanation: This is the expected result for the given input.
 
 Constraints:
 - 1 <= candidates.length <= 30

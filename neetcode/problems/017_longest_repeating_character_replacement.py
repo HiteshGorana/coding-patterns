@@ -1,42 +1,23 @@
 """
-17. Longest Repeating Character Replacement
-Difficulty: Medium
+Problem:
+You are given a string s and an integer k. You can choose any character of the string and change it to any other uppercase English character. You can perform this operation at most k times. Return the length of the longest substring containing the same letter you can get after performing the above operations.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "ABAB", k = 2
+Output: 4
+Explanation: Replace the two 'A's with two 'B's or vice versa.
 
-Hint:
-- TBD
+Example 2:
+Input: s = "AABABBA", k = 1
+Output: 4
+Explanation: Replace the one 'A' in the middle with 'B' and form "AABBBBA". The substring "BBBB" has the longest repeating letters, which is 4. There may exists other ways to achieve this answer too.
 
-Problem Statement:
-Given uppercase string `s` and integer `k`, return length of longest substring that can be turned into all same char by replacing at most `k` chars.
-
-Easy Explanation:
-- Given: s, k.
-- Task: Given uppercase string `s` and integer `k`, return length of longest substring that can be turned into all same char by replacing at most `k` chars.
-- Return: an integer.
-
-Input (Example 1):
-s = "AABABBA", k = 1
-
-How to Read the Input:
-- `s` = "AABABBA" (string)
-- `k` = 1 (integer)
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "AABABBA", k = 1.
-2. Apply the rule in the problem statement: Given uppercase string `s` and integer `k`, return length of longest substring that can be turned into all same char by replacing at most `k` chars.
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= s.length <= 10^5

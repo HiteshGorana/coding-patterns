@@ -1,43 +1,23 @@
 """
-29. Search a 2D Matrix
-Difficulty: Medium
+Problem:
+You are given an m x n integer matrix matrix with the following two properties: - Each row is sorted in non-decreasing order. - The first integer of each row is greater than the last integer of the previous row. Given an integer target, return true if target is in matrix or false otherwise. You must write a solution in O(log(m * n)) time complexity.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3
+Output: true
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 13
+Output: false
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given `m x n` matrix where each row is sorted and first value of each row is greater than last value of previous row, return `True` if target exists.
-
-Easy Explanation:
-- Given: matrix, target.
-- Task: Given `m x n` matrix where each row is sorted and first value of each row is greater than last value of previous row, return `True` if target exists.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3
-
-How to Read the Input:
-- `matrix` = [[1,3,5,7],[10,11,16,20],[23,30,34,60]] (2D list (matrix))
-- `target` = 3 (integer)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3.
-2. Apply the rule in the problem statement: Given `m x n` matrix where each row is sorted and first value of each row is greater than last value of previous row, return `True` if target exists.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - m == matrix.length

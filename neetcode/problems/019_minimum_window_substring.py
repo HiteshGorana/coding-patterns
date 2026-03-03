@@ -1,42 +1,23 @@
 """
-19. Minimum Window Substring
-Difficulty: Hard
+Problem:
+Given two strings s and t of lengths m and n respectively, return the minimum window substring of s such that every character in t (including duplicates) is included in the window. If there is no such substring, return the empty string "". The testcases will be generated such that the answer is unique.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "ADOBECODEBANC", t = "ABC"
+Output: "BANC"
+Explanation: The minimum window substring "BANC" includes 'A', 'B', and 'C' from string t.
 
-Hint:
-- TBD
+Example 2:
+Input: s = "a", t = "a"
+Output: "a"
+Explanation: The entire string s is the minimum window.
 
-Problem Statement:
-Given strings `s` and `t`, return the minimum window in `s` containing all chars of `t` (with multiplicity). If none, return `""`.
-
-Easy Explanation:
-- Given: s, t.
-- Task: Given strings `s` and `t`, return the minimum window in `s` containing all chars of `t` (with multiplicity). If none, return `""`.
-- Return: a string.
-
-Input (Example 1):
-s = "ADOBECODEBANC", t = "ABC"
-
-How to Read the Input:
-- `s` = "ADOBECODEBANC" (string)
-- `t` = "ABC" (string)
-
-Output (Example 1):
-"BANC"
-
-How to Read the Output:
-- The returned value should be a string.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "ADOBECODEBANC", t = "ABC".
-2. Apply the rule in the problem statement: Given strings `s` and `t`, return the minimum window in `s` containing all chars of `t` (with multiplicity). If none, return `""`.
-3. For this example, the correct result is "BANC".
-4. This string is the required result for the given input.
+Example 3:
+Input: s = "a", t = "aa"
+Output: ""
+Explanation: Both 'a's from t must be included in the window. Since the largest window of s only has one 'a', return empty string.
 
 Constraints:
 - m == s.length

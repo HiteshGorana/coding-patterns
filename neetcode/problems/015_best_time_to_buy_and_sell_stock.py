@@ -1,41 +1,23 @@
 """
-15. Best Time to Buy and Sell Stock
-Difficulty: Easy
+Problem:
+You are given an array prices where prices[i] is the price of a given stock on the i^th day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock. Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: prices = [7,1,5,3,6,4]
+Output: 5
+Explanation: Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6-1 = 5. Note that buying on day 2 and selling on day 1 is not allowed because you must buy before you sell.
 
-Hint:
-- TBD
+Example 2:
+Input: prices = [7,6,4,3,1]
+Output: 0
+Explanation: In this case, no transactions are done and the max profit = 0.
 
-Problem Statement:
-Given prices where prices[i] is the stock price on day i, return the maximum profit from one buy and one sell.
-
-Easy Explanation:
-- Given: prices.
-- Task: Given prices where prices[i] is the stock price on day i, return the maximum profit from one buy and one sell.
-- Return: an integer.
-
-Input (Example 1):
-prices = [7,1,5,3,6,4]
-
-How to Read the Input:
-- `prices` = [7,1,5,3,6,4] (list of values)
-
-Output (Example 1):
-5
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: prices = [7,1,5,3,6,4].
-2. Apply the rule in the problem statement: Given prices where prices[i] is the stock price on day i, return the maximum profit from one buy and one sell.
-3. For this example, the correct result is 5.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= prices.length <= 10^5

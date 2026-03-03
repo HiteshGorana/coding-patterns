@@ -1,43 +1,23 @@
 """
-2. Valid Anagram
-Difficulty: Easy
+Problem:
+Given two strings s and t, return true if t is an anagram of s, and false otherwise.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: s = "anagram", t = "nagaram"
+Output: true
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: s = "rat", t = "car"
+Output: false
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Return `True` if `t` is an anagram of `s`, else `False`.
-
-Easy Explanation:
-- Given: s, t.
-- Task: Return `True` if `t` is an anagram of `s`, else `False`.
-- Return: a boolean value (`True` or `False`).
-
-Input (Example 1):
-s = "anagram", t = "nagaram"
-
-How to Read the Input:
-- `s` = "anagram" (string)
-- `t` = "nagaram" (string)
-
-Output (Example 1):
-True
-
-How to Read the Output:
-- The returned value should be a boolean.
-- Return `True` if the condition is satisfied; otherwise return `False`.
-
-Example 1 Walkthrough:
-1. Start with the given input: s = "anagram", t = "nagaram".
-2. Apply the rule in the problem statement: Return `True` if `t` is an anagram of `s`, else `False`.
-3. For this example, the correct result is True.
-4. For this input, the required condition is satisfied, so the result is `True`.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - 1 <= s.length, t.length <= 5 * 10^4

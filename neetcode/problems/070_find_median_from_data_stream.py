@@ -1,42 +1,23 @@
 """
-70. Find Median from Data Stream
-Difficulty: Hard
+Problem:
+The median is the middle value in an ordered integer list. If the size of the list is even, there is no middle value, and the median is the mean of the two middle values. - For example, for arr = [2,3,4], the median is 3. - For example, for arr = [2,3], the median is (2 + 3) / 2 = 2.5. Implement the MedianFinder class: - MedianFinder() initializes the MedianFinder object. - void addNum(int num) adds the integer num from the data stream to the data structure. - double findMedian() returns the median of all elements so far. Answers within 10^-5 of the actual answer will be accepted.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: TBD
+Output: TBD
+Explanation: This is the expected result for the given input.
 
-Hint:
-- TBD
+Example 2:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
-Problem Statement:
-Design a data structure that supports adding integers from a stream and returning the median at any time.
-
-Easy Explanation:
-- Given: operations.
-- Task: Design a data structure that supports adding integers from a stream and returning the median at any time.
-- Return: a list/array in the required format.
-
-Input (Example 1):
-operations = ["addNum(1)", "addNum(2)", "findMedian()", "addNum(3)", "findMedian()"]
-
-How to Read the Input:
-- `operations` = ["addNum(1)", "addNum(2)", "findMedian()", "addNum(3)", "findMedian()"] (list of strings/values)
-
-Output (Example 1):
-[null, null, 1.5, null, 2.0]
-
-How to Read the Output:
-- The returned value should be a list/array.
-- The order and structure should match the problem requirement.
-
-Example 1 Walkthrough:
-1. Start with the given input: operations = ["addNum(1)", "addNum(2)", "findMedian()", "addNum(3)", "findMedian()"].
-2. Apply the rule in the problem statement: Design a data structure that supports adding integers from a stream and returning the median at any time.
-3. For this example, the correct result is [null, null, 1.5, null, 2.0].
-4. Each entry is the return value for each operation in order (`null` for constructors/void operations).
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - -10^5 <= num <= 10^5

@@ -1,41 +1,23 @@
 """
-81. Max Area of Island
-Difficulty: Medium
+Problem:
+You are given an m x n binary matrix grid. An island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical.) You may assume all four edges of the grid are surrounded by water. The area of an island is the number of cells with a value 1 in the island. Return the maximum area of an island in grid. If there is no island, return 0.
 
-Topics:
-- TBD
+Examples:
 
-Companies:
-- TBD
+Example 1:
+Input: grid = [[0,0,1,0,0,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,1,1,0,1,0,0,0,0,0,0,0,0],[0,1,0,0,1,1,0,0,1,0,1,0,0],[0,1,0,0,1,1,0,0,1,1,1,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0],[0,0,0,0,0,0,0,1,1,1,0,0,0],[0,0,0,0,0,0,0,1,1,0,0,0,0]]
+Output: 6
+Explanation: The answer is not 11, because the island must be connected 4-directionally.
 
-Hint:
-- TBD
+Example 2:
+Input: grid = [[0,0,0,0,0,0,0,0]]
+Output: 0
+Explanation: This is the expected result for the given input.
 
-Problem Statement:
-Given a binary grid, return the maximum area of an island (connected 1s in 4 directions).
-
-Easy Explanation:
-- Given: grid.
-- Task: Given a binary grid, return the maximum area of an island (connected 1s in 4 directions).
-- Return: an integer.
-
-Input (Example 1):
-grid = [[0,0,1,0,0,0,1,1],[0,0,1,0,1,0,1,1],[0,0,0,0,1,0,0,0],[1,1,0,0,0,0,0,0]]
-
-How to Read the Input:
-- `grid` = [[0,0,1,0,0,0,1,1],[0,0,1,0,1,0,1,1],[0,0,0,0,1,0,0,0],[1,1,0,0,0,0,0,0]] (2D list (matrix))
-
-Output (Example 1):
-4
-
-How to Read the Output:
-- The returned value should be an integer.
-
-Example 1 Walkthrough:
-1. Start with the given input: grid = [[0,0,1,0,0,0,1,1],[0,0,1,0,1,0,1,1],[0,0,0,0,1,0,0,0],[1,1,0,0,0,0,0,0]].
-2. Apply the rule in the problem statement: Given a binary grid, return the maximum area of an island (connected 1s in 4 directions).
-3. For this example, the correct result is 4.
-4. This output matches the required format and the rule defined in the prompt.
+Example 3:
+Input: TBD
+Output: TBD
+Explanation: Add another valid example to practice edge cases.
 
 Constraints:
 - m == grid.length
