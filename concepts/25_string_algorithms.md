@@ -1,261 +1,311 @@
-String Algorithm Lookup: A Deep & Structured Guide
+# String Algorithm Lookup — Deep Structured Explanation
 
-1. The Basics — Definition & Core Components
-What is a String?
-A string is a sequence of characters. Think of it as a necklace of beads, where each bead is a character.
+---
 
-"HELLO" → [H] [E] [L] [L] [O]
-            0   1   2   3   4   ← index positions
+## 1. The Basics — Definition & Core Components
 
+### What is a String?
 
-What is a String Lookup Algorithm?
-A string lookup algorithm is a systematic method for finding whether a pattern (a smaller string) exists inside a text (a larger string), and where it exists.
+A **string** is a finite sequence of characters drawn from some alphabet (letters, digits, symbols). Think of it as a necklace — each bead is a character, and the order matters.
 
-TEXT:    "the cat sat on the mat"
-PATTERN: "sat"
-RESULT:  Found at index 8 ✓
+```
+"hello" → [ h | e | l | l | o ]
+index  →    0   1   2   3   4
+```
 
+### What is String Lookup?
 
-Core Components
+String lookup (also called **string searching** or **pattern matching**) is the process of finding whether a smaller string (the **pattern**) exists inside a larger string (the **text**), and if so, *where*.
 
+> **Formal Definition:** Given text T of length n and pattern P of length m (where m ≤ n), find all positions i such that T[i..i+m-1] = P.
 
+---
 
-|Component           |Definition                              |Example                    |
-|--------------------|----------------------------------------|---------------------------|
-|**Text (T)**        |The haystack — string being searched    |`"the cat sat on the mat"` |
-|**Pattern (P)**     |The needle — string being looked for    |`"sat"`                    |
-|**Index / Position**|Where the match starts in T             |`8`                        |
-|**Window**          |A sliding view of T equal to length of P|`"cat"`, `"at "`, `"t s"` …|
-|**Match**           |When window == pattern                  |✓                          |
-|**Mismatch**        |When window ≠ pattern                   |✗                          |
+### Core Components
 
-2. How It Works — The Naive Algorithm First
-Before smart algorithms, understand the brute-force approach. Every other algorithm is an optimization of this.
-The Sliding Window Model
-Imagine sliding a paper cutout (the pattern) across a sentence (the text), one step at a time:
+| Component | Role | Example |
+|---|---|---|
+| **Text (T)** | The haystack — the string you search *in* | `"the cat sat on the mat"` |
+| **Pattern (P)** | The needle — what you're looking *for* | `"cat"` |
+| **Index / Position** | Where a match begins (0-based) | Position `4` |
+| **Match** | A confirmed occurrence of P in T | ✅ |
+| **Mismatch** | A position where characters don't align | ❌ |
+| **Shift** | How far P is slid right after a mismatch | Move by 1, 2, or more |
+| **Alphabet (Σ)** | The set of possible characters | `{a–z}`, ASCII, Unicode |
 
-TEXT:    T H E   C A T   S A T   O N
-         ↑
-STEP 1: [T H E] vs "SAT" → ✗ mismatch → slide right
+---
 
-         . ↑
-STEP 2:  [H E  ] vs "SAT" → ✗ → slide right
+### The Sliding Window Mental Model
 
-                     ... keep sliding ...
+The most important intuition: **imagine sliding the pattern like a stencil across the text**, comparing at each position.
 
-                 ↑
-STEP 8:         [S A T] vs "SAT" → ✓ MATCH at index 8!
+```
+Text:    t h e   c a t   s a t   o n   t h e   m a t
+Pattern:         c a t
+                 ↑ try here → MATCH at index 4
 
+Pattern:                   s a t
+                           ↑ try here → MATCH at index 8
+```
 
-Brute Force Code Logic
+Every algorithm is essentially a smarter version of this sliding process.
 
-for i from 0 to len(T) - len(P):
-    match = true
-    for j from 0 to len(P):
-        if T[i+j] ≠ P[j]:
-            match = false
-            break
-    if match: return i   ← found at position i
-return -1                ← not found
+---
 
+## 2. How It Works — The Algorithm Family
 
-Time Complexity of Brute Force
+There is no single "string lookup" algorithm. There is a **family**, each using a different strategy to slide more intelligently. Here's the landscape:
 
-Worst case: O(n × m)
-  n = length of text
-  m = length of pattern
+```
+String Lookup Algorithms
+│
+├── Naive (Brute Force)
+├── Knuth-Morris-Pratt (KMP)
+├── Boyer-Moore
+├── Rabin-Karp (Hashing)
+└── Aho-Corasick (Multi-pattern)
+```
 
-Example: T = "AAAAAAB", P = "AAAB"
-Every window almost matches before failing → very slow.
+---
 
+### Algorithm 1 — Naive (Brute Force)
 
-3. The Smart Algorithms — Cause & Effect
-3A. KMP (Knuth-Morris-Pratt)
-The core insight: When a mismatch happens, you already know part of the text you just compared. Don’t throw that knowledge away.
-The Analogy: Reading a Book with a Bookmark
-In brute force, every mismatch sends you all the way back. KMP is like using a bookmark — when you lose your place, you go back only as far as your bookmark, not the beginning.
-The Failure Function (LPS Table)
-KMP precomputes a table called LPS (Longest Proper Prefix which is also Suffix) for the pattern.
+**Strategy:** Try every possible position. Compare character by character. Move by 1 on mismatch.
 
+**Process:**
+```
+Text:    A B C A B D A B C
+Pattern: A B C
+─────────────────────────
+Step 1:  A B C           → MATCH at 0
+Step 2:    B C ?         → A≠B, mismatch
+Step 3:      C ?         → A≠C, mismatch
+Step 4:        A B C     → nope (D at 5)
+...
+```
+
+**Pseudocode:**
+```
+for i from 0 to n - m:
+    for j from 0 to m - 1:
+        if T[i+j] ≠ P[j]: break
+    if j == m: report match at i
+```
+
+**Complexity:**
+- Time: O(n × m) — worst case (e.g., `"AAAAAAB"` searching for `"AAAB"`)
+- Space: O(1)
+
+**Analogy:** Like manually re-reading a book from scratch every time you want to find a word, even if you just read that page.
+
+---
+
+### Algorithm 2 — Knuth-Morris-Pratt (KMP)
+
+**Core Insight:** When a mismatch occurs, you've already matched some characters. That matched prefix tells you how far you can skip — you don't need to re-compare what you already know.
+
+#### Step 1 — Build the Failure Function (LPS Array)
+
+LPS = **Longest Proper Prefix which is also a Suffix**. It encodes self-overlap in the pattern.
+
+```
+Pattern:  A  B  A  B  C
+Index:    0  1  2  3  4
+LPS:      0  0  1  2  0
+
+Meaning: "ABAB" has a prefix "AB" that is also a suffix → overlap length = 2
+```
+
+#### Step 2 — Use LPS to Skip
+
+```
+Text:    A B A B C A B A B D
 Pattern: A B A B C
+─────────────────────────────
+i=0..4:  A B A B C → MATCH at 0
+i=5:     Continue with j = LPS[4] = 0, start fresh
+```
 
-LPS computation:
-  A → no prefix/suffix match → LPS[0] = 0
-  AB → no match             → LPS[1] = 0
-  ABA → "A" matches         → LPS[2] = 1
-  ABAB → "AB" matches       → LPS[3] = 2
-  ABABC → no match          → LPS[4] = 0
+When mismatch at j, jump to `j = LPS[j-1]` instead of restarting from j=0.
 
-LPS Table: [0, 0, 1, 2, 0]
+**Complexity:**
+- Time: O(n + m) — guaranteed linear
+- Space: O(m) — for LPS array
 
+**Analogy:** Like a detective who remembers what they've already read. If a chapter starts with the same words as another, they skip re-reading the overlap.
 
-What this means: On a mismatch at position 3 (B), instead of restarting from scratch, you jump back to position LPS[2] = 1. You skip redundant comparisons.
-KMP Complexity
+---
 
-Preprocessing (LPS): O(m)
-Searching:           O(n)
-Total:               O(n + m)  ← always, no worst case trap
+### Algorithm 3 — Boyer-Moore
 
+**Core Insight:** Compare the pattern **right to left**. Use two heuristics to make large jumps.
 
-3B. Boyer-Moore Algorithm
-Core insight: Compare the pattern from right to left, and use two heuristics to skip large chunks.
-The Analogy: Proofreading a Document Backwards
-You read the last character of the pattern first. If it doesn’t appear anywhere in the text’s current window, you can skip the entire window length forward. This is why Boyer-Moore is often the fastest in practice.
+#### Bad Character Heuristic
+When a mismatch occurs at text character `c`, shift the pattern so that the **rightmost occurrence of `c` in the pattern** aligns with it. If `c` doesn't appear in the pattern at all, shift the entire pattern past `c`.
 
-TEXT:    X A B C D A B C Y
-PATTERN:     A B C
-                 ↑ (compare right to left)
+```
+Text:    X Y Z A B C D
+Pattern:         B C D
+                   ↑ mismatch: text has 'A', pattern has 'B'
+                   'A' doesn't appear in pattern → shift entire pattern past 'A'
+```
 
-'D' not in pattern → skip entire window forward!
+#### Good Suffix Heuristic
+When a mismatch occurs after matching a suffix, shift using the last occurrence of that matched suffix elsewhere in the pattern.
 
+**Complexity:**
+- Time: O(n/m) best case (faster than linear!), O(n × m) worst case
+- Space: O(m + Σ)
 
-Two Heuristics
+**Analogy:** Like proofreading backwards — you catch the most distinctive characters first and can skip large chunks of text instantly.
 
-1. BAD CHARACTER RULE:
-   On mismatch, align pattern so bad character
-   aligns with its rightmost occurrence in pattern.
+---
 
-2. GOOD SUFFIX RULE:
-   If suffix matched before mismatch, shift pattern
-   to align that suffix with its next occurrence.
+### Algorithm 4 — Rabin-Karp (Hashing)
 
-Take the MAX of both skips → huge jumps possible.
+**Core Insight:** Instead of comparing character-by-character, **hash the pattern** and compare hashes. Recompute the hash of each text window in O(1) using a **rolling hash**.
 
+```
+Pattern: "cat"  → hash = 312
+Text window "the" → hash = 201  ≠ skip
+Text window "he " → hash = 198  ≠ skip
+Text window "e c" → hash = 290  ≠ skip
+Text window "cat" → hash = 312  = verify character by character → MATCH
+```
 
-Boyer-Moore Complexity
+**Rolling Hash Formula:**
+```
+hash("cat") = (c × p² + a × p¹ + t × p⁰) mod q
+New window hash = (old_hash - T[i] × p^(m-1)) × p + T[i+m]
+```
 
-Best case:  O(n/m)  ← sub-linear! Skips most of text
-Worst case: O(n × m) for highly repetitive patterns
+**Complexity:**
+- Average Time: O(n + m)
+- Worst case: O(n × m) — hash collisions
+- Space: O(1)
 
+**Analogy:** Like checking book ISBNs instead of reading entire books. Only open the book if the ISBN matches.
 
-3C. Rabin-Karp (Rolling Hash)
-Core insight: Instead of comparing characters, compare hash values (numeric fingerprints).
-The Analogy: Fingerprinting
-Instead of comparing two people face-by-face (slow), you compare fingerprints (fast). If fingerprints differ, skip. If they match, then verify face-to-face.
+---
 
-TEXT:    "abcde"   PATTERN: "cde"
+### Algorithm 5 — Aho-Corasick (Multi-Pattern)
 
-Hash("cde") = 3+4+5 = 12   (simplified hash)
+**Core Insight:** When you have **many patterns** to find simultaneously, build a finite automaton (trie + failure links) from all patterns and scan the text only once.
 
-Window 1: hash("abc") = 1+2+3 = 6  ≠ 12 → skip
-Window 2: hash("bcd") = 2+3+4 = 9  ≠ 12 → skip
-Window 3: hash("cde") = 3+4+5 = 12 = 12 → verify → MATCH ✓
+```
+Patterns: {"he", "she", "his", "hers"}
+Text:     "ushers"
+Result:   Found "she" at 1, "he" at 2, "hers" at 2
+```
 
+**Complexity:**
+- Build: O(sum of all pattern lengths)
+- Search: O(n + total matches)
 
-The “Rolling” Part
-You don’t recompute the hash from scratch every step. You roll it:
+**Analogy:** Instead of sending one detective per suspect, brief a single detective on all suspects at once and let them scan the scene once.
 
-New hash = (Old hash - leftmost char value) + new rightmost char value
+---
 
-This makes each slide O(1) instead of O(m).
+## 3. Side-by-Side Algorithm Comparison
 
+```
+Algorithm      | Best Case  | Worst Case | Space  | Key Idea
+──────────────────────────────────────────────────────────────
+Naive          | O(n)       | O(n×m)     | O(1)   | Try everything
+KMP            | O(n+m)     | O(n+m)     | O(m)   | Failure function / LPS
+Boyer-Moore    | O(n/m)     | O(n×m)     | O(m+Σ) | Right-to-left + skip tables
+Rabin-Karp     | O(n+m)     | O(n×m)     | O(1)   | Rolling hash
+Aho-Corasick   | O(n+Σpat)  | O(n+Σpat)  | O(Σpat)| Trie automaton
+```
 
-Rabin-Karp Complexity
+---
 
-Average: O(n + m)
-Worst case: O(n × m) — if hash collisions are frequent
-Best use: Multi-pattern search (search for k patterns simultaneously)
+## 4. Why & What If — Edge Cases & Variations
 
+### Why does KMP guarantee O(n+m)?
 
-4. Visual Algorithm Comparison Diagram
+Because the two pointers `i` (text) and `j` (pattern) **never go backwards together**. `i` only ever moves forward, and `j` resets using the LPS — so total work is bounded by `n + m`.
 
-TEXT LENGTH (n) = 1000, PATTERN LENGTH (m) = 10
+### What if the pattern is longer than the text?
 
-BRUTE FORCE:  ████████████████████████████  O(n×m) = ~10,000 ops
-KMP:          ████████████                  O(n+m) = ~1,010 ops
-RABIN-KARP:   ████████████                  O(n+m) = ~1,010 ops (avg)
-BOYER-MOORE:  ██████                        O(n/m) = ~100 ops (best)
+Immediately return "not found" — no algorithm even starts. This is an O(1) early exit.
 
+### What if the pattern is empty?
 
-5. Why & What If — Edge Cases & Variations
-❓ Why does KMP never go backward in the text?
-Because the LPS table encodes all the “already matched” information. The text pointer only moves forward — making it truly linear.
-❓ What if the pattern is longer than the text?
-Immediate return: no match possible. This is always the first check any implementation should make.
+By convention, an empty pattern matches at every position (0 through n). Most implementations handle this as a special case.
 
-len(P) > len(T) → return -1 immediately
+### What if there are hash collisions in Rabin-Karp?
 
+A hash match triggers a **character-by-character verification**. True collisions are rare with a good hash, but they're why worst-case is O(n×m).
 
-❓ What if the pattern appears multiple times?
-All algorithms can be adapted to collect all positions, not just return the first.
+### What if the text is a stream (you can't store it all)?
 
-TEXT: "abababab"   PATTERN: "ab"
-KMP finds: [0, 2, 4, 6]
+Sliding window approaches like KMP and Rabin-Karp naturally handle streaming because they process characters left to right without backtracking on the text.
 
+### What if the alphabet is huge (Unicode)?
 
-❓ What if there are Unicode characters or emojis?
-Strings become multi-byte. A character like 😊 is 4 bytes in UTF-8. Naive index math breaks — you must work with code points, not bytes.
-❓ What if we need case-insensitive search?
-Normalize both text and pattern to lowercase before running any algorithm.
+Boyer-Moore's bad-character table grows with alphabet size. For Unicode (130,000+ characters), you'd use a hash map instead of an array to store the table.
 
-T.lower() and P.lower() → then search
+### What if you need fuzzy/approximate matching?
 
+Exact lookup algorithms won't help. You need **edit distance** (Levenshtein) or **bitap algorithm** — a fundamentally different class of problem.
 
-❓ What if the pattern contains wildcards?
-Standard algorithms won’t work. You need regex matching or the bitap algorithm, which encodes the pattern as bitmasks.
+---
 
-6. Practical Real-World Applications
+## 5. Practical Real-World Applications
 
+### Text Editors — Ctrl+F / Find & Replace
+Every "find in file" feature uses a variant of Boyer-Moore or KMP under the hood. The pattern is your search query; the text is the file content.
 
+### Search Engines — Web Crawlers & Indexing
+Rabin-Karp's rolling hash is used to detect **duplicate content** across billions of web pages by fingerprinting document chunks.
 
-|Use Case                         |Algorithm Used              |Why                                 |
-|---------------------------------|----------------------------|------------------------------------|
-|`Ctrl+F` in a browser/text editor|Boyer-Moore or KMP          |Speed on large documents            |
-|DNA sequence matching            |KMP / Aho-Corasick          |Long texts, repetitive patterns     |
-|Spam/virus signature detection   |Aho-Corasick                |Many patterns at once               |
-|Git diff / file comparison       |Dynamic programming variant |Finding longest common substring    |
-|Search engines (indexing)        |Suffix arrays / Suffix trees|Millisecond lookups at massive scale|
-|Plagiarism detection             |Rabin-Karp                  |Rolling hash over document chunks   |
-|Autocomplete / autocorrect       |Trie (prefix tree)          |Fast prefix matching                |
+### Antivirus / Malware Detection
+Aho-Corasick powers signature scanning — thousands of malware signatures (patterns) are matched simultaneously against file contents (text) in one pass.
 
-7. Comparison With Related Concepts
+### Bioinformatics — DNA Sequence Matching
+Genomes like human DNA (~3 billion characters) are searched for gene sequences using Boyer-Moore variants optimized for the 4-character alphabet `{A, T, G, C}`.
 
-STRING LOOKUP FAMILY TREE:
+### Network Intrusion Detection (IDS)
+Tools like Snort use Aho-Corasick to scan network packets for thousands of attack signatures in real time.
 
-Exact Match ──────┬── Brute Force       (simple, slow)
-                  ├── KMP               (linear, smart skip)
-                  ├── Boyer-Moore       (fastest in practice)
-                  └── Rabin-Karp        (hashing, multi-pattern)
+### Plagiarism Detection
+Rabin-Karp's rolling hash detects copied substrings across documents by comparing hash fingerprints of overlapping chunks.
 
-Approximate Match ┬── Levenshtein       (edit distance)
-                  └── Fuzzy search      (typo-tolerant)
+### Database Query Optimization — LIKE Operator
+`SQL LIKE '%cat%'` internally uses a string search algorithm. Databases optimize this with indexes (like trigram indexes in PostgreSQL) to avoid full table scans.
 
-Multi-Pattern ────┬── Aho-Corasick      (KMP generalized)
-                  └── Rabin-Karp        (multiple hashes)
+---
 
-Structural ───────┬── Suffix Array      (preprocess text, fast queries)
-                  ├── Suffix Tree       (O(n) construction)
-                  └── Trie              (prefix-based)
+## 6. Comparisons with Related Concepts
 
+| Concept | Similarity | Key Difference |
+|---|---|---|
+| **Binary Search** | Also a lookup algorithm | Works on *sorted arrays*, not strings |
+| **Regular Expressions** | Also searches text for patterns | Patterns can be *non-literal* (wildcards, quantifiers) — compiled to automata |
+| **Edit Distance (Levenshtein)** | Also compares strings | Measures *similarity*, not exact location |
+| **Suffix Arrays / Trees** | Also used for string search | Preprocesses the *text* (not pattern) for repeated queries |
+| **Hash Tables** | Also uses hashing | Looks up *whole keys*, not substrings |
+| **Tries** | Used in Aho-Corasick | A data structure that *builds on* string lookup |
 
-Key Differentiators
+---
 
+## 7. Long-Term Retention Tips
 
+**Build a mental hierarchy of the problem, not the algorithms.** Every algorithm answers: *"How cleverly can I shift the pattern after a mismatch?"* Naive = shift 1. KMP = shift using prefix overlap. Boyer-Moore = shift using character tables.
 
-|             |KMP         |Boyer-Moore |Rabin-Karp  |
-|-------------|------------|------------|------------|
-|Direction    |Left → Right|Right → Left|Left → Right|
-|Preprocessing|Pattern     |Pattern     |Pattern     |
-|Best Case    |O(n)        |**O(n/m)**  |O(n+m)      |
-|Multi-pattern|No          |No          |**Yes**     |
-|Simplicity   |Medium      |Complex     |Medium      |
+**Anchor each algorithm to an analogy:**
+- Naive → Reading every word in a book to find one
+- KMP → A detective who remembers what they've read
+- Boyer-Moore → Proofreading backwards and skipping chunks
+- Rabin-Karp → Checking ISBNs before opening books
+- Aho-Corasick → One detective briefed on all suspects at once
 
-8. Memory Tips — How to Retain This
-Mnemonics
-	∙	KMP = “Keep Moving Persistently” — the text pointer never goes back
-	∙	Boyer-Moore = “Big Moves” — famous for large skip jumps
-	∙	Rabin-Karp = “Rolling Karpet” — rolls the hash across the text
-Mental Models to Lock In
-	1.	Every algorithm is a smarter sliding window. The window is always the same size as the pattern. The only difference is how far you slide after a mismatch.
-	2.	Preprocessing trades setup time for search time. KMP spends O(m) building the LPS table so it can search in O(n). This is the classic “sharpen the axe before chopping” trade-off.
-	3.	Hashing = fingerprinting. Rabin-Karp never compares characters if fingerprints differ — same logic as why police use fingerprints before DNA tests.
-Practice Progression
+**Remember the trade-off axes:**
+- Preprocessing cost vs. search speed
+- Space used vs. shifts gained
+- Single pattern vs. multi-pattern
 
-Week 1: Implement brute force from scratch
-Week 2: Implement KMP + understand LPS table
-Week 3: Implement Rabin-Karp with rolling hash
-Week 4: Study Boyer-Moore bad character rule
-Week 5: Explore Aho-Corasick for multi-pattern
+**Practice one concrete example by hand** for Naive and KMP — trace the LPS array manually at least once. The muscle memory of building the failure function makes KMP stick permanently.
 
-
-The golden rule of string lookup: The goal is always to avoid redundant comparisons. Every smart algorithm is simply a different strategy for skipping work you’ve already done.
+**The master question to ask yourself:** *"When a mismatch happens, what information did I just learn, and how can I use it to shift farther than 1?"* That question is the entire intellectual history of string search algorithms from 1970 to today.
