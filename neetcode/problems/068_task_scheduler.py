@@ -11,24 +11,38 @@ Companies:
 Hint:
 - TBD
 
-Problem:
+Problem Statement:
 Given tasks and cooldown `n`, return least intervals needed to execute all tasks.
 
-What This Problem Is Asking:
+Easy Explanation:
 - Given: tasks, n.
 - Task: Given tasks and cooldown `n`, return least intervals needed to execute all tasks.
 - Return: an integer.
 
-Example 1:
+Input (Example 1):
+tasks = ["A","A","A","B","B","B"], n = 2
 
-Input: tasks = ["A","A","A","B","B","B"], n = 2
-Output: 8
-Explanation: This is the computed value that satisfies the prompt for the given input.
+How to Read the Input:
+- `tasks` = ["A","A","A","B","B","B"] (list of strings/values)
+- `n` = 2 (integer)
+
+Output (Example 1):
+8
+
+How to Read the Output:
+- The returned value should be an integer.
+
+Example 1 Walkthrough:
+1. Start with the given input: tasks = ["A","A","A","B","B","B"], n = 2.
+2. Apply the rule in the problem statement: Given tasks and cooldown `n`, return least intervals needed to execute all tasks.
+3. For this example, the correct result is 8.
+4. This output matches the required format and the rule defined in the prompt.
 
 Constraints:
 - 1 <= tasks.length <= 10^4
 - tasks[i] is an uppercase English letter.
 - 0 <= n <= 100
+
 Follow-up:
 - None specified.
 """

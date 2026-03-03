@@ -11,25 +11,38 @@ Companies:
 Hint:
 - TBD
 
-Problem:
+Problem Statement:
 Given an m x n matrix, return the length of the longest strictly increasing path moving in 4 directions.
 
-What This Problem Is Asking:
+Easy Explanation:
 - Given: matrix.
 - Task: Given an m x n matrix, return the length of the longest strictly increasing path moving in 4 directions.
 - Return: an integer.
 
-Example 1:
+Input (Example 1):
+matrix = [[9,9,4],[6,6,8],[2,1,1]]
 
-Input: matrix = [[9,9,4],[6,6,8],[2,1,1]]
-Output: 4
-Explanation: This is the computed value that satisfies the prompt for the given input.
+How to Read the Input:
+- `matrix` = [[9,9,4],[6,6,8],[2,1,1]] (2D list (matrix))
+
+Output (Example 1):
+4
+
+How to Read the Output:
+- The returned value should be an integer.
+
+Example 1 Walkthrough:
+1. Start with the given input: matrix = [[9,9,4],[6,6,8],[2,1,1]].
+2. Apply the rule in the problem statement: Given an m x n matrix, return the length of the longest strictly increasing path moving in 4 directions.
+3. For this example, the correct result is 4.
+4. This output matches the required format and the rule defined in the prompt.
 
 Constraints:
 - m == matrix.length
 - n == matrix[i].length
 - 1 <= m, n <= 200
 - 0 <= matrix[i][j] <= 2^31 - 1
+
 Follow-up:
 - None specified.
 """

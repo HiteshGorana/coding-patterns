@@ -11,25 +11,38 @@ Companies:
 Hint:
 - TBD
 
-Problem:
+Problem Statement:
 Given a binary grid, return the maximum area of an island (connected 1s in 4 directions).
 
-What This Problem Is Asking:
+Easy Explanation:
 - Given: grid.
 - Task: Given a binary grid, return the maximum area of an island (connected 1s in 4 directions).
 - Return: an integer.
 
-Example 1:
+Input (Example 1):
+grid = [[0,0,1,0,0,0,1,1],[0,0,1,0,1,0,1,1],[0,0,0,0,1,0,0,0],[1,1,0,0,0,0,0,0]]
 
-Input: grid = [[0,0,1,0,0,0,1,1],[0,0,1,0,1,0,1,1],[0,0,0,0,1,0,0,0],[1,1,0,0,0,0,0,0]]
-Output: 4
-Explanation: This is the computed value that satisfies the prompt for the given input.
+How to Read the Input:
+- `grid` = [[0,0,1,0,0,0,1,1],[0,0,1,0,1,0,1,1],[0,0,0,0,1,0,0,0],[1,1,0,0,0,0,0,0]] (2D list (matrix))
+
+Output (Example 1):
+4
+
+How to Read the Output:
+- The returned value should be an integer.
+
+Example 1 Walkthrough:
+1. Start with the given input: grid = [[0,0,1,0,0,0,1,1],[0,0,1,0,1,0,1,1],[0,0,0,0,1,0,0,0],[1,1,0,0,0,0,0,0]].
+2. Apply the rule in the problem statement: Given a binary grid, return the maximum area of an island (connected 1s in 4 directions).
+3. For this example, the correct result is 4.
+4. This output matches the required format and the rule defined in the prompt.
 
 Constraints:
 - m == grid.length
 - n == grid[i].length
 - 1 <= m, n <= 50
 - grid[i][j] is either 0 or 1.
+
 Follow-up:
 - None specified.
 """

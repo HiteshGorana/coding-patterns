@@ -11,19 +11,32 @@ Companies:
 Hint:
 - TBD
 
-Problem:
+Problem Statement:
 Given `k` sorted linked lists, merge them into one sorted linked list.
 
-What This Problem Is Asking:
+Easy Explanation:
 - Given: the input shown in the example.
 - Task: Given `k` sorted linked lists, merge them into one sorted linked list.
 - Return: a list/array in the required format.
 
-Example 1:
+Input (Example 1):
+[[1,4,5],[1,3,4],[2,6]]
 
-Input: [[1,4,5],[1,3,4],[2,6]]
-Output: [1,1,2,3,4,4,5,6]
-Explanation: This list is the correct result produced from the given input according to the problem rules.
+How to Read the Input:
+- Use the exact input format shown in Example 1.
+
+Output (Example 1):
+[1,1,2,3,4,4,5,6]
+
+How to Read the Output:
+- The returned value should be a list/array.
+- The order and structure should match the problem requirement.
+
+Example 1 Walkthrough:
+1. Start with the given input: [[1,4,5],[1,3,4],[2,6]].
+2. Apply the rule in the problem statement: Given `k` sorted linked lists, merge them into one sorted linked list.
+3. For this example, the correct result is [1,1,2,3,4,4,5,6].
+4. This output matches the required format and the rule defined in the prompt.
 
 Constraints:
 - k == lists.length
@@ -32,6 +45,7 @@ Constraints:
 - -10^4 <= lists[i][j] <= 10^4
 - lists[i] is sorted in ascending order.
 - The sum of lists[i].length will not exceed 10^4.
+
 Follow-up:
 - None specified.
 """
